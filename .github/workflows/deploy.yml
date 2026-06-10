@@ -7,6 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Ensure Cloudflare Pages production branch
+        run: |
+          curl --fail-with-body -X PATCH "https://api.cloudflare.com/client/v4/accounts/af27f3bbca2209ff9cb2c77a2e47184a/pages/projects/project1" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"production_branch":"main"}'
       - uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
