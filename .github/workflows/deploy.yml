@@ -13,3 +13,4 @@ jobs:
           accountId: af27f3bbca2209ff9cb2c77a2e47184a
           projectName: project1
           directory: .
+          branch: main
