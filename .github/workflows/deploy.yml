@@ -7,6 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare static site
+        run: |
+          rm -rf dist
+          mkdir dist
+          cp index.html dist/index.html
       - name: Ensure Cloudflare Pages production branch
         run: |
           curl --fail-with-body -X PATCH "https://api.cloudflare.com/client/v4/accounts/af27f3bbca2209ff9cb2c77a2e47184a/pages/projects/project1" \
@@ -18,5 +23,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: af27f3bbca2209ff9cb2c77a2e47184a
           projectName: project1
-          directory: .
+          directory: dist
           branch: main
