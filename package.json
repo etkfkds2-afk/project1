@@ -1,0 +1,11 @@
+{
+  "name": "lotto-generator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.0"
+  }
+}
