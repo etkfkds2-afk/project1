@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로또 번호 생성기</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #1a202c;
+      margin-bottom: 32px;
+    }
+
+    .generator {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      text-align: center;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .balls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+      min-height: 60px;
+      align-items: center;
+    }
+
+    .ball {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #fff;
+      animation: pop 0.3s ease;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(0); opacity: 0; }
+      70%  { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .range-1  { background: #f6b93b; }
+    .range-2  { background: #4fc3f7; }
+    .range-3  { background: #ef5350; }
+    .range-4  { background: #66bb6a; }
+    .range-5  { background: #ab47bc; }
+
+    button {
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 36px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #4338ca;
+    }
+
+    /* History */
+    .history-section {
+      width: 100%;
+      max-width: 480px;
+      margin-top: 36px;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .history-header h2 {
+      font-size: 1.2rem;
+      color: #2d3748;
+    }
+
+    .clear-btn {
+      background: none;
+      border: 1px solid #e53e3e;
+      color: #e53e3e;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .clear-btn:hover {
+      background: #e53e3e;
+      color: #fff;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .history-index {
+      font-size: 0.8rem;
+      color: #a0aec0;
+      min-width: 28px;
+      font-weight: 600;
+    }
+
+    .history-balls {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .history-balls .ball {
+      width: 36px;
+      height: 36px;
+      font-size: 0.85rem;
+      animation: none;
+    }
+
+    .history-time {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: #a0aec0;
+      white-space: nowrap;
+    }
+
+    .empty-msg {
+      text-align: center;
+      color: #a0aec0;
+      font-size: 0.9rem;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎰 로또 번호 생성기</h1>
+
+  <div class="generator">
+    <div class="balls" id="balls">
+      <span style="color:#a0aec0; font-size:0.9rem">버튼을 눌러 번호를 생성하세요</span>
+    </div>
+    <button onclick="generate()">번호 생성</button>
+  </div>
+
+  <div class="history-section">
+    <div class="history-header">
+      <h2>생성 히스토리</h2>
+      <button class="clear-btn" onclick="clearHistory()">전체 삭제</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <p class="empty-msg" id="emptyMsg">아직 생성된 번호가 없습니다.</p>
+    </div>
+  </div>
+
+  <script>
+    const history = [];
+
+    function ballColor(n) {
+      if (n <= 10) return 'range-1';
+      if (n <= 20) return 'range-2';
+      if (n <= 30) return 'range-3';
+      if (n <= 40) return 'range-4';
+      return 'range-5';
+    }
+
+    function makeBall(n, small = false) {
+      const div = document.createElement('div');
+      div.className = `ball ${ballColor(n)}`;
+      div.textContent = n;
+      return div;
+    }
+
+    function generate() {
+      const nums = new Set();
+      while (nums.size < 6) nums.add(Math.floor(Math.random() * 45) + 1);
+      const sorted = [...nums].sort((a, b) => a - b);
+
+      // 현재 번호 표시
+      const ballsEl = document.getElementById('balls');
+      ballsEl.innerHTML = '';
+      sorted.forEach(n => ballsEl.appendChild(makeBall(n)));
+
+      // 히스토리에 추가
+      const now = new Date();
+      const time = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+      history.unshift({ nums: sorted, time });
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      const empty = document.getElementById('emptyMsg');
+
+      if (history.length === 0) {
+        list.innerHTML = '';
+        list.appendChild(empty);
+        return;
+      }
+
+      list.innerHTML = '';
+      history.forEach((entry, i) => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+
+        const idx = document.createElement('span');
+        idx.className = 'history-index';
+        idx.textContent = `#${history.length - i}`;
+
+        const ballsWrap = document.createElement('div');
+        ballsWrap.className = 'history-balls';
+        entry.nums.forEach(n => ballsWrap.appendChild(makeBall(n)));
+
+        const timeEl = document.createElement('span');
+        timeEl.className = 'history-time';
+        timeEl.textContent = entry.time;
+
+        item.appendChild(idx);
+        item.appendChild(ballsWrap);
+        item.appendChild(timeEl);
+        list.appendChild(item);
+      });
+    }
+
+    function clearHistory() {
+      if (history.length === 0) return;
+      history.length = 0;
+      renderHistory();
+    }
+  </script>
+</body>
+</html>
