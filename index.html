@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>로또 번호 생성기</title>
+  <meta name="description" content="중복 없는 로또 번호를 빠르게 생성하고 최근 기록을 저장하는 간단한 번호 생성기입니다." />
+  <meta property="og:title" content="로또 번호 생성기" />
+  <meta property="og:description" content="로또 번호 1게임 또는 5게임을 생성하고, 결과를 복사하고, 최근 기록을 확인하세요." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#4f46e5" />
   <style>
     * {
       box-sizing: border-box;
@@ -21,15 +26,32 @@
       min-height: 100vh;
     }
 
+    main {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     h1 {
       font-size: 2rem;
       color: #1a202c;
-      margin-bottom: 32px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .lead {
+      color: #4a5568;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 28px;
+      max-width: 480px;
+      text-align: center;
     }
 
     .generator {
       background: #fff;
-      border-radius: 16px;
+      border-radius: 8px;
       padding: 32px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.08);
       text-align: center;
@@ -45,6 +67,30 @@
       margin-bottom: 28px;
       min-height: 60px;
       align-items: center;
+    }
+
+    .result-group {
+      border-top: 1px solid #edf2f7;
+      padding-top: 18px;
+      width: 100%;
+    }
+
+    .result-group:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .result-title {
+      color: #718096;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+
+    .result-group .balls {
+      margin-bottom: 0;
+      min-height: auto;
     }
 
     .ball {
@@ -86,6 +132,47 @@
 
     button:hover {
       background: #4338ca;
+    }
+
+    button:focus-visible {
+      outline: 3px solid #a5b4fc;
+      outline-offset: 3px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .secondary-btn {
+      background: #2d3748;
+    }
+
+    .secondary-btn:hover {
+      background: #1a202c;
+    }
+
+    .copy-btn {
+      background: #0f766e;
+    }
+
+    .copy-btn:hover {
+      background: #115e59;
+    }
+
+    .copy-btn:disabled {
+      background: #a0aec0;
+      cursor: not-allowed;
+    }
+
+    .toast {
+      min-height: 20px;
+      margin-top: 16px;
+      color: #0f766e;
+      font-size: 0.9rem;
+      font-weight: 600;
     }
 
     /* History */
@@ -131,7 +218,7 @@
 
     .history-item {
       background: #fff;
-      border-radius: 12px;
+      border-radius: 8px;
       padding: 14px 18px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       display: flex;
@@ -178,30 +265,119 @@
       font-size: 0.9rem;
       padding: 20px 0;
     }
+
+    @media (max-width: 420px) {
+      body {
+        padding: 28px 12px;
+      }
+
+      h1 {
+        font-size: 1.7rem;
+      }
+
+      .generator {
+        padding: 24px 18px;
+      }
+
+      .ball {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+      }
+
+      button {
+        width: 100%;
+        padding: 13px 18px;
+      }
+
+      .history-header {
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .clear-btn {
+        width: auto;
+      }
+
+      .history-item {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .history-balls {
+        flex: 1 1 calc(100% - 44px);
+      }
+
+      .history-time {
+        flex-basis: 100%;
+        margin-left: 40px;
+      }
+
+      .history-balls .ball {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>🎰 로또 번호 생성기</h1>
+  <main>
+    <h1>로또 번호 생성기</h1>
+    <p class="lead">중복 없는 6개 번호를 생성하고 최근 기록을 자동으로 저장합니다.</p>
 
-  <div class="generator">
-    <div class="balls" id="balls">
-      <span style="color:#a0aec0; font-size:0.9rem">버튼을 눌러 번호를 생성하세요</span>
+    <div class="generator">
+      <div class="balls" id="balls" aria-live="polite" aria-label="생성된 로또 번호">
+        <span class="empty-msg">버튼을 눌러 번호를 생성하세요.</span>
+      </div>
+      <div class="actions">
+        <button type="button" id="generateOneBtn">1게임 생성</button>
+        <button type="button" class="secondary-btn" id="generateFiveBtn">5게임 생성</button>
+        <button type="button" class="copy-btn" id="copyBtn" disabled>복사</button>
+      </div>
+      <p class="toast" id="toast" aria-live="polite"></p>
     </div>
-    <button onclick="generate()">번호 생성</button>
-  </div>
 
-  <div class="history-section">
-    <div class="history-header">
-      <h2>생성 히스토리</h2>
-      <button class="clear-btn" onclick="clearHistory()">전체 삭제</button>
+    <div class="history-section" aria-labelledby="historyTitle">
+      <div class="history-header">
+        <h2 id="historyTitle">생성 히스토리</h2>
+        <button type="button" class="clear-btn" id="clearBtn">전체 삭제</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <p class="empty-msg">아직 생성된 번호가 없습니다.</p>
+      </div>
     </div>
-    <div class="history-list" id="historyList">
-      <p class="empty-msg" id="emptyMsg">아직 생성된 번호가 없습니다.</p>
-    </div>
-  </div>
+  </main>
 
   <script>
-    const history = [];
+    const STORAGE_KEY = 'lotto-generator-history';
+    const MAX_HISTORY = 20;
+    const history = loadHistory();
+    let currentGames = [];
+    let toastTimer;
+
+    const ballsEl = document.getElementById('balls');
+    const historyListEl = document.getElementById('historyList');
+    const copyBtn = document.getElementById('copyBtn');
+    const toastEl = document.getElementById('toast');
+
+    document.getElementById('generateOneBtn').addEventListener('click', () => generate(1));
+    document.getElementById('generateFiveBtn').addEventListener('click', () => generate(5));
+    document.getElementById('copyBtn').addEventListener('click', copyCurrentGames);
+    document.getElementById('clearBtn').addEventListener('click', clearHistory);
+
+    renderHistory();
 
     function ballColor(n) {
       if (n <= 10) return 'range-1';
@@ -211,41 +387,95 @@
       return 'range-5';
     }
 
-    function makeBall(n, small = false) {
+    function loadHistory() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!Array.isArray(saved)) return [];
+        return saved
+          .filter(entry => Array.isArray(entry.nums) && typeof entry.time === 'string')
+          .slice(0, MAX_HISTORY);
+      } catch {
+        return [];
+      }
+    }
+
+    function saveHistory() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+      } catch {
+        showToast('현재 브라우저에서는 히스토리 저장을 사용할 수 없습니다.');
+      }
+    }
+
+    function makeBall(n) {
       const div = document.createElement('div');
       div.className = `ball ${ballColor(n)}`;
       div.textContent = n;
+      div.setAttribute('aria-label', `${n}번`);
       return div;
     }
 
-    function generate() {
+    function createNumbers() {
       const nums = new Set();
       while (nums.size < 6) nums.add(Math.floor(Math.random() * 45) + 1);
-      const sorted = [...nums].sort((a, b) => a - b);
+      return [...nums].sort((a, b) => a - b);
+    }
 
-      // 현재 번호 표시
-      const ballsEl = document.getElementById('balls');
+    function generate(count) {
+      currentGames = Array.from({ length: count }, createNumbers);
+
+      renderCurrentGames();
+      addToHistory(currentGames);
+      copyBtn.disabled = false;
+      showToast(`${count}게임을 생성했습니다.`);
+    }
+
+    function renderCurrentGames() {
       ballsEl.innerHTML = '';
-      sorted.forEach(n => ballsEl.appendChild(makeBall(n)));
 
-      // 히스토리에 추가
-      const now = new Date();
-      const time = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-      history.unshift({ nums: sorted, time });
+      currentGames.forEach((nums, index) => {
+        const group = document.createElement('div');
+        group.className = 'result-group';
+
+        if (currentGames.length > 1) {
+          const title = document.createElement('p');
+          title.className = 'result-title';
+          title.textContent = `${index + 1}게임`;
+          group.appendChild(title);
+        }
+
+        const wrap = document.createElement('div');
+        wrap.className = 'balls';
+        nums.forEach(n => wrap.appendChild(makeBall(n)));
+        group.appendChild(wrap);
+        ballsEl.appendChild(group);
+      });
+    }
+
+    function addToHistory(games) {
+      const time = formatTime(new Date());
+      games.slice().reverse().forEach(nums => {
+        history.unshift({ nums, time });
+      });
+      history.splice(MAX_HISTORY);
+      saveHistory();
       renderHistory();
     }
 
-    function renderHistory() {
-      const list = document.getElementById('historyList');
-      const empty = document.getElementById('emptyMsg');
+    function formatTime(date) {
+      return `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}:${date.getSeconds().toString().padStart(2,'0')}`;
+    }
 
+    function renderHistory() {
+      historyListEl.innerHTML = '';
       if (history.length === 0) {
-        list.innerHTML = '';
-        list.appendChild(empty);
+        const empty = document.createElement('p');
+        empty.className = 'empty-msg';
+        empty.textContent = '아직 생성된 번호가 없습니다.';
+        historyListEl.appendChild(empty);
         return;
       }
 
-      list.innerHTML = '';
       history.forEach((entry, i) => {
         const item = document.createElement('div');
         item.className = 'history-item';
@@ -265,14 +495,39 @@
         item.appendChild(idx);
         item.appendChild(ballsWrap);
         item.appendChild(timeEl);
-        list.appendChild(item);
+        historyListEl.appendChild(item);
       });
+    }
+
+    async function copyCurrentGames() {
+      if (currentGames.length === 0) return;
+
+      const text = currentGames
+        .map((nums, index) => `${index + 1}게임: ${nums.join(', ')}`)
+        .join('\n');
+
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('번호를 복사했습니다.');
+      } catch {
+        showToast('복사를 지원하지 않는 브라우저입니다.');
+      }
+    }
+
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      toastEl.textContent = message;
+      toastTimer = setTimeout(() => {
+        toastEl.textContent = '';
+      }, 1800);
     }
 
     function clearHistory() {
       if (history.length === 0) return;
       history.length = 0;
+      saveHistory();
       renderHistory();
+      showToast('히스토리를 삭제했습니다.');
     }
   </script>
 </body>
