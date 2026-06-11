@@ -163,8 +163,8 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
 </div>
 <div class="cards">
   <div class="card bl"><div class="lbl">전체 건수</div><div class="val" id="ct">-</div></div>
-  <div class="card gr"><div class="lbl">완납 대관수납</div><div class="val" id="ca">-</div></div>
-  <div class="card or"><div class="lbl">청소보증금 보유</div><div class="val" id="cd">-</div></div>
+  <div class="card gr"><div class="lbl">완납 수납액 (보증금 제외)</div><div class="val" id="ca">-</div></div>
+  <div class="card or"><div class="lbl">보유 중인 보증금</div><div class="val" id="cd">-</div></div>
   <div class="card bl"><div class="lbl">완납</div><div class="val" id="c1">-</div></div>
   <div class="card"><div class="lbl">예약금</div><div class="val" id="c2">-</div></div>
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
@@ -297,18 +297,20 @@ function pk(line){
   return'';
 }
 
-function parseDesc(raw){
+function parseDesc(raw,year=''){
   const text=sh(raw||'');
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   const txns=[];let dep=0;const memos=[];let pendingDep=0;
   for(const line of lines){
-    const dm=line.match(/^(\d{6,8})\s*/);
+    const dm=line.match(/^(\d{4,8})\s*/);
     if(dm){
       const ds=dm[1];
       let date=ds;
       if(ds.length===8)date=`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6)}`;
       else if(ds.length===7)date=`${ds.slice(0,4)}-0${ds.slice(4,5)}-${ds.slice(5)}`;
       else if(ds.length===6)date=`${ds.slice(0,4)}-${ds.slice(4)}`;
+      else if(ds.length===4){const y=year||String(new Date().getFullYear());date=`${y}-${ds.slice(0,2)}-${ds.slice(2)}`;}
+      else continue;
       const method=gm(line);
       const kind=pk(line);
       const isRef=/→\s*환불|환불완료|환불해줘야|환급/.test(line);
@@ -370,7 +372,7 @@ function parseEv(ev,branch){
   if(/^\[취소\]/.test(title)||(/취소/.test(title)&&!/예약금/.test(title)))status='취소';
   else if(/완납/.test(title))status='완납';
   else if(/예약금/.test(title))status='예약금';
-  const pd=parseDesc(ev.description);
+  const pd=parseDesc(ev.description,date.slice(0,4));
   const o=ov[ev.id]||{};
   const baseStatus=o.status||status;
   const payStatus=baseStatus==='취소'?'취소':(pd.balance||baseStatus==='완납')?'완납':pd.reservation?'예약금 입금':'미입금';
@@ -385,7 +387,7 @@ function parseEv(ev,branch){
 
 function isRel(ev){
   const t=ev.summary||'',d=ev.description||'';
-  return/완납|예약금/.test(t)||/\d{7,8}[^\n]*원/.test(d);
+  return/완납|예약금/.test(t)||/\d{4,8}[^\n]*원/.test(d);
 }
 
 function hasCowork(){return !!window.cowork?.callMcpTool}
