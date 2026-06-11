@@ -288,8 +288,6 @@ function parseDesc(raw){
       if(ds.length===8)date=`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6)}`;
       else if(ds.length===7)date=`${ds.slice(0,4)}-0${ds.slice(4,5)}-${ds.slice(5)}`;
       else if(ds.length===6)date=`${ds.slice(0,4)}-${ds.slice(4)}`;
-      const amts=[...line.matchAll(/([0-9,]+)원/g)];
-      if(!amts.length)continue;
       const method=gm(line);
       const kind=pk(line);
       const isRef=/→\s*환불|환불완료|환불해줘야|환급/.test(line);
@@ -298,6 +296,10 @@ function parseDesc(raw){
                 line.match(/청소보증금\s*([0-9,]+)원\s*포함/)||
                 line.match(/보증금\s*([0-9,]+)원\s*포함/))?.[1];
       const diAmt=di?pa(di):pendingDep;pendingDep=0;
+      // Strip deposit annotation before scanning amounts to avoid double-counting
+      const lineForAmts=di?line.replace(/[（(]청소보증금\s*[0-9,]+원\s*포함[）)]/,'').replace(/청소보증금\s*[0-9,]+원\s*포함/,'').replace(/보증금\s*[0-9,]+원\s*포함/,''):line;
+      const amts=[...lineForAmts.matchAll(/([0-9,]+)원/g)];
+      if(!amts.length)continue;
       // Standalone deposit line
       const isl=/[（(]보증금[）)]/.test(line)||(/청소보증금/.test(line)&&!diAmt&&amts.length===1);
       const name=line.slice(dm[0].length).match(/^([가-힣A-Za-z()_\s\w]+?)(?:\s+(?:개인|법인|신신|카드|국민|\d))/)?.[1]?.trim()||'';
@@ -305,7 +307,7 @@ function parseDesc(raw){
       const mixedCorpCash=/법인계좌|법인|세금계산서|계산서/.test(line)&&/개인계좌|개인|현금/.test(line)&&amts.length>1;
       amts.forEach((m,i)=>{
         const amt=pa(m[1]);if(!amt)return;
-        const seg=line.slice(prevEnd,m.index+m[0].length);
+        const seg=lineForAmts.slice(prevEnd,m.index+m[0].length);
         const localMethod=gm(seg)==='기타'?method:gm(seg);
         const personalDeposit=mixedCorpCash&&localMethod==='현금';
         txns.push({date,name,method:localMethod,kind,amount:amt,isRef,isDep:(i===0&&isl)||personalDeposit,diAmt:i===0?diAmt:0});
