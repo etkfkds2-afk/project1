@@ -38,6 +38,7 @@ th.brcol{min-width:72px}
 th.moneycol{min-width:118px}
 th.paycol{min-width:118px}
 th.datecol{min-width:108px}
+th.statuscol{min-width:96px}
 th.titlecol{min-width:260px}
 th.notecol{min-width:180px}
 td{padding:8px 11px;border-top:1px solid #f2f2f2;vertical-align:middle}
@@ -56,6 +57,8 @@ td.r{text-align:right}
 .date2{font-size:12px;line-height:1.35;white-space:nowrap}
 .date2 .sub{display:block;color:#999;font-size:11px}
 .oktxt{color:#15803d;font-weight:700}.waittxt{color:#b35000;font-weight:700}.badtxt{color:#991b1b;font-weight:700}
+.statuscell{min-width:96px;white-space:nowrap}
+.statuscell .editcell{width:100%;justify-content:center}
 .dash{color:#ccc}
 .note{font-size:11px;color:#aaa;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .editcell{display:inline-flex;align-items:center;min-width:42px;min-height:26px;padding:2px 5px;border-radius:4px;cursor:text;white-space:nowrap}
@@ -154,7 +157,7 @@ td.r{text-align:right}
 <table>
   <thead><tr>
     <th style="width:18px"></th>
-    <th class="datecol">대관일</th><th class="brcol">지점</th><th class="titlecol">행사명</th><th>수납상태</th>
+    <th class="datecol">대관일</th><th class="brcol">지점</th><th class="titlecol">행사명</th><th class="statuscol">수납상태</th>
     <th class="datecol">예약금 입금</th><th class="datecol">잔금 입금</th>
     <th class="r moneycol">보증금 제외 수납</th><th class="r moneycol">청소보증금</th><th class="paycol">결제방법</th><th>메모</th>
   </tr></thead>
@@ -557,7 +560,7 @@ function render(){
           <button class="rawbtn" onclick="openRaw('${ev.id}',event)">원문</button>
         </div>
       </td>
-      <td><span class="${sc}">${cell(ev.id,'payStatus',ev.payStatus,'select')}</span></td>
+      <td class="statuscell"><span class="${sc}">${cell(ev.id,'payStatus',ev.payStatus,'select')}</span></td>
       <td><div class="date2">${cell(ev.id,'reservationDate',ev.reservationDate,'date')}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
       <td><div class="date2">${cell(ev.id,'balanceDate',ev.balanceDate,'date')}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
       <td class="r moneycell">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
