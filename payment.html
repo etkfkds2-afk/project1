@@ -80,6 +80,10 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
 .restbtn{border:none;background:#f0fff4;color:#38a169;cursor:pointer;font-size:11px;padding:3px 7px;border-radius:4px;font-weight:700;transition:all 0.15s}
 .restbtn:hover{background:#c6f6d5}
 .hidden-row{opacity:0.45}
+.chkcell{width:36px;text-align:center;padding:8px 4px}
+.rowchk{width:16px;height:16px;cursor:pointer;accent-color:#3498db}
+.btn-danger{background:#e53e3e;color:#fff}
+.btn-danger:disabled{opacity:0.4;transform:none;cursor:default}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,0.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:100;backdrop-filter:blur(4px)}
 .modal.show{display:flex}
 .modal-card{width:min(760px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25)}
@@ -150,6 +154,8 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
   </select>
   <input id="sq" class="search" placeholder="검색" oninput="render()">
   <div class="sp"></div>
+  <button id="delbtn" class="btn btn-danger" onclick="deleteSelected()" disabled>삭제 (0)</button>
+  <button class="btn btn-danger" onclick="deleteAll()" style="opacity:0.85">전체 삭제</button>
   <button id="thbtn" class="btn btn-hidden" onclick="toggleHidden()">🗑 숨긴 항목</button>
   <button id="rb" class="btn btn-reload" onclick="loadAll()">🔄 새로고침</button>
   <button class="btn btn-export" onclick="doExport()">📊 CSV 내보내기</button>
@@ -165,6 +171,7 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
 <div class="tw">
 <div class="paygrid">
   <div class="ghead">
+    <div class="gcell chkcell"><input type="checkbox" id="allchk" onclick="toggleSelectAll(event)"></div>
     <div class="gcell"><span class="hchip">대관일</span></div>
     <div class="gcell"><span class="hchip">지점</span></div>
     <div class="gcell"><span class="hchip">행사명</span></div>
@@ -211,6 +218,7 @@ const TOOL='mcp__7562d3df-f0a0-4481-87e0-f6c4660717b3__list_events';
 let allData=[], ov={};
 let refreshTimer=null;
 let showHidden=false;
+let selectedIds=new Set();
 let googleReady=null, tokenClient=null;
 const open=new Set();
 try{ov=JSON.parse(localStorage.getItem('atm_ov')||'{}')}catch(e){}
@@ -502,7 +510,7 @@ async function fetchEvs(calId,year){
 
 async function loadAll(){
   const btn=document.getElementById('rb');
-  btn.disabled=true;btn.textContent='⏳ 로딩 중...';
+  btn.disabled=true;btn.textContent='⏳ 로딩 중...';selectedIds.clear();
   document.getElementById('tb').innerHTML='<div class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</div>';
   const year=document.getElementById('sy').value;
   try{
@@ -589,6 +597,7 @@ function render(){
     // 상태값에서 공백 제거하여 CSS 클래스로 사용 (예: '예약금 입금' -> 's예약금입금')
     const sCls='s'+ev.payStatus.replace(/\s+/g,'');
     rows.push(`<div class="grow${ev.hidden?' hidden-row':''}">
+      <div class="gcell chkcell"><input type="checkbox" class="rowchk" ${selectedIds.has(ev.id)?'checked':''} onclick="toggleSelect('${ev.id}',event)"></div>
       <div class="gcell datecell">${cell(ev.id,'date',ev.date,'date')}</div>
       <div class="gcell"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></div>
       <div class="gcell">
@@ -612,6 +621,45 @@ function render(){
     </div>`);
   }
   document.getElementById('tb').innerHTML=rows.join('');
+  const allChk=document.getElementById('allchk');
+  if(allChk){
+    allChk.checked=data.length>0&&data.every(e=>selectedIds.has(e.id));
+    allChk.indeterminate=!allChk.checked&&data.some(e=>selectedIds.has(e.id));
+  }
+  updateSelectionUI();
+}
+
+function toggleSelect(id,e){
+  e?.stopPropagation();
+  if(selectedIds.has(id))selectedIds.delete(id);
+  else selectedIds.add(id);
+  updateSelectionUI();
+}
+function toggleSelectAll(e){
+  e?.stopPropagation();
+  const data=getFiltered();
+  if(data.every(ev=>selectedIds.has(ev.id)))data.forEach(ev=>selectedIds.delete(ev.id));
+  else data.forEach(ev=>selectedIds.add(ev.id));
+  render();
+}
+function updateSelectionUI(){
+  const cnt=selectedIds.size;
+  const btn=document.getElementById('delbtn');
+  if(btn){btn.disabled=cnt===0;btn.textContent=`삭제${cnt>0?' ('+cnt+')':''}`;}
+}
+function deleteSelected(){
+  if(!selectedIds.size)return;
+  selectedIds.forEach(id=>setOv(id,'hidden',true));
+  selectedIds.clear();
+  render();
+}
+function deleteAll(){
+  const data=getFiltered();
+  if(!data.length)return;
+  if(!confirm(`현재 보이는 ${data.length}건을 모두 삭제하겠습니까?`))return;
+  data.forEach(ev=>setOv(ev.id,'hidden',true));
+  selectedIds.clear();
+  render();
 }
 
 function hideRow(id,e){
