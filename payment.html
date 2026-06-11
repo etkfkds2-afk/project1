@@ -49,7 +49,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .card .val{font-size:22px;font-weight:850;color:var(--text);font-variant-numeric:tabular-nums}
 .card.bl .val{color:var(--blue)}.card.gr .val{color:var(--green)}.card.or .val{color:#ea580c}
 .tw{padding:0 28px 44px;overflow-x:auto}
-.paygrid{width:100%;min-width:1220px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
+.paygrid{width:100%;min-width:1420px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
 .ghead{background:var(--panel-soft)}
 .grow{background:#fff}
 .grow:hover{background:#fbfdff}
@@ -83,8 +83,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .editinp{width:100%;min-width:64px;height:32px;border:2px solid var(--blue);border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
 .editarea{width:100%;min-height:68px;border:2px solid var(--blue);border-radius:6px;padding:7px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.45;outline:none}
 .editnum{text-align:right}
-.titlecell{display:flex;align-items:center;gap:8px;white-space:nowrap;min-width:0}
-.titletext{display:inline-block;white-space:nowrap;max-width:128px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+.titlecell{display:flex;align-items:center;gap:8px;white-space:normal;min-width:0}
+.titletext{display:inline-block;white-space:normal;max-width:none;overflow:visible;text-overflow:clip;vertical-align:middle;line-height:1.45}
 .rawbtn,.mini{border:1px solid var(--line-strong);background:#fff;color:#4b5563;border-radius:6px;height:26px;padding:0 9px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .rawbtn:hover,.mini:hover{background:#f9fafb;color:#111827;border-color:#9ca3af}
 .delbtn{border:1px solid transparent;background:transparent;color:#cbd5e1;cursor:pointer;font-size:12px;padding:4px 7px;border-radius:5px;line-height:1.2;font-weight:800;transition:all .15s}
@@ -221,16 +221,16 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <table class="paygrid">
   <colgroup>
     <col style="width:36px">
-    <col style="width:96px">
-    <col style="width:72px">
-    <col style="width:176px">
-    <col style="width:98px">
-    <col style="width:108px">
-    <col style="width:108px">
-    <col style="width:108px">
     <col style="width:90px">
-    <col style="width:110px">
-    <col>
+    <col style="width:70px">
+    <col style="width:460px">
+    <col style="width:94px">
+    <col style="width:100px">
+    <col style="width:100px">
+    <col style="width:100px">
+    <col style="width:86px">
+    <col style="width:100px">
+    <col style="width:130px">
     <col style="width:54px">
   </colgroup>
   <thead class="ghead">
