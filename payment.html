@@ -301,22 +301,36 @@ function normStatus(v){return v==='예약금'?'예약금 입금':v}
 function setOv(id,key,val){
   if(!ov[id])ov[id]={};
   ov[id][key]=val;
-  saveOv();
   const ev=allData.find(e=>e.id===id);
   if(ev){
     if(key==='methodsText')ev.methods=String(val||'').split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
-  else ev[key]=key==='payStatus'?normStatus(val):val;
+    else ev[key]=key==='payStatus'?normStatus(val):val;
+    // 예약금/잔금 → 총입금액 연쇄
+    if(key==='reservationAmount'||key==='balanceAmount'){
+      ev.totalIn=(ev.reservationAmount||0)+(ev.balanceAmount||0);
+      delete ov[id].netIn; // 수동 보증금제외수납 오버라이드 해제
+    }
+    // 총입금액/청소보증금 → 보증금제외수납 연쇄 (보증금제외수납 직접 편집 제외)
+    if(key!=='netIn')
+      ev.netIn=Math.max(0,(ev.totalIn||0)-(ev.dep||0));
   }
+  saveOv();
 }
 function applyOverrides(row,o){
   ['date','branch','title','payStatus','reservationDate','balanceDate','notes'].forEach(k=>{
     if(o[k]!==undefined)row[k]=k==='payStatus'?normStatus(o[k]):o[k];
   });
-  ['reservationAmount','balanceAmount','netIn','dep'].forEach(k=>{
+  ['reservationAmount','balanceAmount','dep','totalIn','netIn'].forEach(k=>{
     if(o[k]!==undefined)row[k]=Number(o[k])||0;
   });
   if(o.methodsText!==undefined)row.methods=String(o.methodsText).split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
   if(o.hidden!==undefined)row.hidden=!!o.hidden;
+  // 예약금/잔금 오버라이드 → 총입금액 재계산 (직접 총입금액 오버라이드보다 우선)
+  if(o.reservationAmount!==undefined||o.balanceAmount!==undefined)
+    row.totalIn=(row.reservationAmount||0)+(row.balanceAmount||0);
+  // 보증금제외수납 직접 오버라이드 없으면 자동 계산
+  if(o.netIn===undefined)
+    row.netIn=Math.max(0,(row.totalIn||0)-(row.dep||0));
   return row;
 }
 
