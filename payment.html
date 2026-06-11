@@ -509,6 +509,13 @@ async function fetchCoworkEvs(calId,year){
 
 async function fetchGoogleEvs(calId,year){
   await ensureGoogleToken('');
+  // calendar 서비스가 로드될 때까지 잠시 대기 (최대 3초)
+  for(let i=0; i<30; i++) {
+    if(gapi.client.calendar) break;
+    await new Promise(r=>setTimeout(r,100));
+  }
+  if(!gapi.client.calendar) throw new Error('Google Calendar API 서비스 로드 실패');
+  
   const all=[];let pageToken=null;
   do{
     const r=await gapi.client.calendar.events.list({
