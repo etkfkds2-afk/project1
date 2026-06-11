@@ -29,13 +29,17 @@ select:focus,.search:focus{border-color:#2d5986}
 .card .val{font-size:18px;font-weight:700;color:#222}
 .card.bl .val{color:#1e3a5f}.card.gr .val{color:#1a7340}.card.or .val{color:#c75000}
 .tw{padding:0 20px 24px;overflow-x:auto}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);table-layout:fixed;min-width:1220px}
-thead tr{background:#f8f9fc}
-th{padding:8px 11px;text-align:left;font-size:11px;font-weight:700;color:#777;white-space:nowrap;border-bottom:2px solid #eee}
-th.r{text-align:right}
-td{padding:8px 11px;border-top:1px solid #f2f2f2;vertical-align:middle}
-td.r{text-align:right}
-.er:hover td{background:#f6f8ff}
+.paygrid{min-width:1380px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.ghead,.grow{display:grid;grid-template-columns:104px 82px minmax(240px,1fr) 96px 124px 124px 138px 130px 116px 260px;align-items:center}
+.ghead{background:#f8f9fc;border-bottom:1px solid #e8ebf1;padding:7px 0}
+.grow{border-top:1px solid #f2f2f2;min-height:58px}
+.grow:hover{background:#f6f8ff}
+.gcell{padding:8px 11px;min-width:0}
+.gcell.r{text-align:right}
+.ghead .gcell{font-size:11px;font-weight:700;color:#55606f;white-space:nowrap}
+.hchip{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:24px;padding:0 8px;border:1px solid #d9dee8;border-radius:6px;background:#fff;box-shadow:0 1px 1px rgba(0,0,0,.03)}
+.ghead .r .hchip{float:right}
+.gridmsg{padding:50px;text-align:center;color:#bbb}
 .bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap}
 .s완납{background:#dcf5e7;color:#1a6640}.s예약금{background:#fff0d6;color:#b35000}
 .s취소{background:#fce8ec;color:#991b1b}.s기타{background:#f0f0f0;color:#888}
@@ -146,26 +150,21 @@ td.r{text-align:right}
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
 </div>
 <div class="tw">
-<table>
-  <colgroup>
-    <col style="width:108px">
-    <col style="width:78px">
-    <col style="width:260px">
-    <col style="width:96px">
-    <col style="width:116px">
-    <col style="width:116px">
-    <col style="width:128px">
-    <col style="width:124px">
-    <col style="width:118px">
-    <col style="width:140px">
-  </colgroup>
-  <thead><tr>
-    <th class="datecol">대관일</th><th class="brcol">지점</th><th class="titlecol">행사명</th><th class="statuscol">수납상태</th>
-    <th class="datecol">예약금 입금</th><th class="datecol">잔금 입금</th>
-    <th class="r moneycol">보증금 제외 수납</th><th class="r moneycol">청소보증금</th><th class="paycol">결제방법</th><th>메모</th>
-  </tr></thead>
-  <tbody id="tb"><tr><td colspan="10" class="loader"><div class="spin"></div>데이터 로딩 중...</td></tr></tbody>
-</table>
+<div class="paygrid">
+  <div class="ghead">
+    <div class="gcell"><span class="hchip">대관일</span></div>
+    <div class="gcell"><span class="hchip">지점</span></div>
+    <div class="gcell"><span class="hchip">행사명</span></div>
+    <div class="gcell"><span class="hchip">수납상태</span></div>
+    <div class="gcell"><span class="hchip">예약금 입금</span></div>
+    <div class="gcell"><span class="hchip">잔금 입금</span></div>
+    <div class="gcell r"><span class="hchip">보증금 제외 수납</span></div>
+    <div class="gcell r"><span class="hchip">청소보증금</span></div>
+    <div class="gcell"><span class="hchip">결제방법</span></div>
+    <div class="gcell"><span class="hchip">메모</span></div>
+  </div>
+  <div id="tb"><div class="gridmsg"><div class="spin"></div>데이터 로딩 중...</div></div>
+</div>
 </div>
 </div>
 <div id="rawModal" class="modal" onclick="closeRaw(event)">
@@ -394,7 +393,7 @@ async function ensureGoogleToken(prompt=''){
 
 function showGoogleSetup(msg=''){
   const origin=location.origin;
-  document.getElementById('tb').innerHTML=`<tr><td colspan="10" class="empty">
+  document.getElementById('tb').innerHTML=`<div class="gridmsg">
     <div class="setup">
       <h2>Google Calendar 연결</h2>
       <p>${msg||'방금 새로 만든 OAuth 2.0 웹 클라이언트 ID를 입력하세요.'}</p>
@@ -407,7 +406,7 @@ function showGoogleSetup(msg=''){
       </div>
       <p class="muted">클라이언트 ID는 ...apps.googleusercontent.com 으로 끝납니다. 클라이언트 비밀번호는 넣지 않습니다.</p>
     </div>
-  </td></tr>`;
+  </div>`;
 }
 
 async function saveGoogleClient(e){
@@ -475,7 +474,7 @@ async function fetchEvs(calId,year){
 async function loadAll(){
   const btn=document.getElementById('rb');
   btn.disabled=true;btn.textContent='⏳ 로딩 중...';
-  document.getElementById('tb').innerHTML='<tr><td colspan="10" class="loader"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
+  document.getElementById('tb').innerHTML='<div class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</div>';
   const year=document.getElementById('sy').value;
   try{
     if(!hasCowork()&&!getGoogleClientId()){showGoogleSetup();return}
@@ -488,7 +487,7 @@ async function loadAll(){
     render();
   }catch(e){
     if(!hasCowork())showGoogleSetup(`오류: ${e.message}`);
-    else document.getElementById('tb').innerHTML=`<tr><td colspan="10" style="color:#c00;padding:20px">오류: ${e.message}</td></tr>`;
+    else document.getElementById('tb').innerHTML=`<div class="gridmsg" style="color:#c00">오류: ${e.message}</div>`;
   }finally{btn.disabled=false;btn.textContent='🔄 새로고침'}
 }
 
@@ -552,29 +551,29 @@ function render(){
   document.getElementById('c1').textContent=완납.length+'건';
   document.getElementById('c2').textContent=data.filter(e=>e.payStatus==='예약금').length+'건';
   document.getElementById('c3').textContent=data.filter(e=>e.payStatus==='취소').length+'건';
-  if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="10" class="empty">해당 데이터 없음</td></tr>';return}
+  if(!data.length){document.getElementById('tb').innerHTML='<div class="gridmsg">해당 데이터 없음</div>';return}
   const rows=[];
   for(const ev of data){
     const bc=ev.branch==='문래점'?'brm':'brs';
     const methodText=ev.methods.join('+')||'기타';
     const sc=ev.payStatus==='완납'?'oktxt':ev.payStatus==='취소'?'badtxt':'waittxt';
-    rows.push(`<tr class="er">
-      <td class="datecell">${cell(ev.id,'date',ev.date,'date')}</td>
-      <td style="min-width:72px"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></td>
-      <td>
+    rows.push(`<div class="grow">
+      <div class="gcell datecell">${cell(ev.id,'date',ev.date,'date')}</div>
+      <div class="gcell"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></div>
+      <div class="gcell">
         <div class="titlecell">
           <span class="titletext" title="${esc(ev.title)}">${cell(ev.id,'title',ev.title,'text')}</span>
           <button class="rawbtn" onclick="openRaw('${ev.id}',event)">원문</button>
         </div>
-      </td>
-      <td class="statuscell"><span class="${sc}">${cell(ev.id,'payStatus',ev.payStatus,'select')}</span></td>
-      <td><div class="date2">${cell(ev.id,'reservationDate',ev.reservationDate,'date')}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
-      <td><div class="date2">${cell(ev.id,'balanceDate',ev.balanceDate,'date')}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
-      <td class="r moneycell">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
-      <td class="r moneycell">${cell(ev.id,'dep',ev.dep,'money','dep')}</td>
-      <td class="paycell">${cell(ev.id,'methodsText',methodText,'text','bdg m'+methodText.split('+')[0])}</td>
-      <td class="notecell"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'area')}</span></td>
-    </tr>`);
+      </div>
+      <div class="gcell statuscell"><span class="${sc}">${cell(ev.id,'payStatus',ev.payStatus,'select')}</span></div>
+      <div class="gcell"><div class="date2">${cell(ev.id,'reservationDate',ev.reservationDate,'date')}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></div>
+      <div class="gcell"><div class="date2">${cell(ev.id,'balanceDate',ev.balanceDate,'date')}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></div>
+      <div class="gcell r moneycell">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</div>
+      <div class="gcell r moneycell">${cell(ev.id,'dep',ev.dep,'money','dep')}</div>
+      <div class="gcell paycell">${cell(ev.id,'methodsText',methodText,'text','bdg m'+methodText.split('+')[0])}</div>
+      <div class="gcell notecell"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'area')}</span></div>
+    </div>`);
   }
   document.getElementById('tb').innerHTML=rows.join('');
 }
