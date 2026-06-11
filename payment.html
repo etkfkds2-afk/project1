@@ -30,19 +30,19 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
 .card .lbl{font-size:11px;color:#7f8c8d;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:600}
 .card .val{font-size:20px;font-weight:800;color:#2c3e50}
 .card.bl .val{color:#2980b9}.card.gr .val{color:#27ae60}.card.or .val{color:#d35400}
-.tw{padding:0 24px 40px;overflow-x:auto}
-.paygrid{width:max-content;min-width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.05);border:1px solid #e1e8ed}
-/* Grid Columns: 콘텐츠 길이에 맞춰 자동 확장되도록 수정 */
-.ghead,.grow{display:grid;grid-template-columns:110px 90px minmax(300px, max-content) 115px 130px 130px 140px 130px 120px 400px;align-items:center}
-.ghead{background:#f8f9fa;border-bottom:1px solid #e1e8ed;padding:10px 0}
-.grow{border-top:1px solid #f1f3f5;min-height:64px}
+.tw{padding:0 24px 40px;overflow-x:auto;overflow-y:hidden}
+.paygrid{width:max-content;min-width:100%;background:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.05);border:1px solid #e1e8ed;display:inline-block;vertical-align:top}
+/* Grid Columns: 콘텐츠 길이에 맞게 최적화 */
+.ghead,.grow{display:grid;grid-template-columns:120px 90px minmax(300px, max-content) 115px 140px 140px 150px 130px 120px minmax(300px, 600px);align-items:stretch}
+.ghead{background:#f8f9fa;border-bottom:1px solid #e1e8ed;position:sticky;top:0;z-index:2}
+.grow{border-top:1px solid #f1f3f5;min-height:56px;background:#fff}
 .grow:hover{background:#f8faff}
-.gcell{padding:10px 14px;min-width:0}
-.gcell.r{text-align:right}
-.ghead .gcell{font-size:12px;font-weight:700;color:#64748b;white-space:nowrap}
-.hchip{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:28px;padding:0 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.02)}
-.ghead .r .hchip{float:right}
-.gridmsg{padding:60px;text-align:center;color:#94a3b8;font-size:15px}
+.gcell{padding:10px 14px;display:flex;align-items:center;min-width:0;border-right:1px solid #f1f3f5}
+.gcell:last-child{border-right:none}
+.gcell.r{justify-content:flex-end;text-align:right}
+.ghead .gcell{font-size:12px;font-weight:700;color:#64748b;justify-content:center;background:#f8f9fa}
+.hchip{display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;padding:4px 0}
+.gridmsg{padding:60px;text-align:center;color:#94a3b8;font-size:15px;width:1000px}
 .bdg{display:inline-flex;align-items:center;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
 .s완납{background:#e6fffa;color:#047857;border:1px solid #b2f5ea}
 .s예약금입금{background:#fffaf0;color:#9c4221;border:1px solid #feebc8}
@@ -54,20 +54,22 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
 .amt{font-weight:700;font-variant-numeric:tabular-nums;color:#1a3a5f}
 .dep{font-weight:700;font-variant-numeric:tabular-nums;color:#c05621}
 .moneycell,.datecell,.statuscell,.paycell{white-space:nowrap}
-.date2{font-size:13px;line-height:1.4}
+.date2{font-size:13px;line-height:1.4;width:100%}
 .date2 .sub{display:block;color:#94a3b8;font-size:11px;margin-top:2px}
 .oktxt{color:#059669;font-weight:700}.waittxt{color:#d97706;font-weight:700}.badtxt{color:#dc2626;font-weight:700}
-.statuscell{white-space:nowrap}
+.statuscell{justify-content:center}
 .dash{color:#cbd5e0}
-.note{font-size:12px;color:#64748b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5;max-height:36px}
-.editcell{display:inline-flex;align-items:center;width:100%;min-height:30px;padding:4px 8px;border-radius:6px;cursor:text;white-space:nowrap;transition:all 0.15s}
-.areacell{white-space:normal;line-height:1.4;align-items:flex-start;max-height:40px}
+.note{font-size:12px;color:#64748b;line-height:1.5;word-break:break-all}
+.editcell{display:inline-flex;align-items:center;padding:4px 8px;border-radius:6px;cursor:text;white-space:nowrap;transition:all 0.15s;min-height:30px}
+.areacell{white-space:normal;line-height:1.4;align-items:flex-start;min-width:100%}
 .editcell:hover{background:#f1f5f9;box-shadow:inset 0 0 0 1px #cbd5e0}
-.editinp{width:100%;min-width:0;height:30px;border:2px solid #3498db;border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
-.editarea{width:100%;height:44px;border:2px solid #3498db;border-radius:6px;padding:6px 8px;font:inherit;background:#fff;resize:none;line-height:1.4;outline:none}
+.editinp{width:100%;min-width:60px;height:30px;border:2px solid #3498db;border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
+.editarea{width:100%;min-height:44px;border:2px solid #3498db;border-radius:6px;padding:6px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.4;outline:none}
 .editnum{text-align:right}
-.titlecell{display:flex;align-items:center;gap:8px;width:100%}
-.titletext{overflow:visible;white-space:nowrap}
+.titlecell{display:flex;align-items:center;gap:10px;white-space:nowrap;width:max-content}
+.titletext{display:inline-block;white-space:nowrap}
+.rawbtn{flex-shrink:0;border:1px solid #e2e8f0;background:#fff;color:#64748b;border-radius:6px;height:26px;padding:0 10px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.rawbtn:hover{background:#f8fafc;color:#1a3a5f;border-color:#cbd5e0}
 .rawbtn{border:1px solid #e2e8f0;background:#fff;color:#64748b;border-radius:6px;height:24px;padding:0 8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s}
 .rawbtn:hover{background:#f8fafc;color:#1a3a5f;border-color:#cbd5e0}
 .mini{border:1px solid #e2e8f0;background:#fff;color:#64748b;border-radius:6px;height:26px;padding:0 10px;font-size:12px;font-weight:600;cursor:pointer}
