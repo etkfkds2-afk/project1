@@ -29,8 +29,8 @@ select:focus,.search:focus{border-color:#2d5986}
 .card .val{font-size:18px;font-weight:700;color:#222}
 .card.bl .val{color:#1e3a5f}.card.gr .val{color:#1a7340}.card.or .val{color:#c75000}
 .tw{padding:0 20px 24px;overflow-x:auto}
-.paygrid{min-width:1380px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.ghead,.grow{display:grid;grid-template-columns:104px 82px minmax(240px,1fr) 96px 124px 124px 138px 130px 116px 260px;align-items:center}
+.paygrid{min-width:1480px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.ghead,.grow{display:grid;grid-template-columns:104px 82px 210px 126px 124px 124px 138px 130px 116px 426px;align-items:center}
 .ghead{background:#f8f9fc;border-bottom:1px solid #e8ebf1;padding:7px 0}
 .grow{border-top:1px solid #f2f2f2;min-height:58px}
 .grow:hover{background:#f6f8ff}
@@ -55,7 +55,7 @@ select:focus,.search:focus{border-color:#2d5986}
 .statuscell{min-width:96px;white-space:nowrap}
 .statuscell .editcell{width:100%;justify-content:center}
 .dash{color:#ccc}
-.note{font-size:11px;color:#777;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;max-height:30px}
+.note{font-size:11px;color:#777;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45;max-height:34px}
 .editcell{display:inline-flex;align-items:center;width:100%;min-height:26px;padding:2px 5px;border-radius:4px;cursor:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .areacell{white-space:normal;line-height:1.35;align-items:flex-start;max-height:36px}
 .editcell:hover{background:#fff7d6;box-shadow:inset 0 0 0 1px #f0d37a}
@@ -65,7 +65,7 @@ select:focus,.search:focus{border-color:#2d5986}
 .paycell .editcell{width:100%;justify-content:center}
 .titlecell{display:flex;align-items:center;gap:6px;width:100%}
 .titletext{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.notecell{width:100%;height:36px;overflow:hidden}
+.notecell{width:100%;min-height:40px;overflow:hidden}
 .rawbtn,.mini{border:1px solid #d5d5d5;background:#fff;color:#555;border-radius:5px;height:24px;padding:0 7px;font-size:11px;cursor:pointer;white-space:nowrap}
 .rawbtn:hover,.mini:hover{background:#eef2fc;border-color:#b9c6e6}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:24px;z-index:100}
@@ -134,7 +134,7 @@ select:focus,.search:focus{border-color:#2d5986}
   </select>
   <select id="ss" onchange="render()">
     <option value="">전체 상태</option>
-    <option value="완납">완납</option><option value="예약금">예약금</option><option value="미입금">미입금</option><option value="취소">취소</option>
+    <option value="완납">완납</option><option value="예약금 입금">예약금 입금</option><option value="미입금">미입금</option><option value="취소">취소</option>
   </select>
   <input id="sq" class="search" placeholder="검색" oninput="render()">
   <div class="sp"></div>
@@ -203,6 +203,7 @@ try{ov=JSON.parse(localStorage.getItem('atm_ov')||'{}')}catch(e){}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function saveOv(){try{localStorage.setItem('atm_ov',JSON.stringify(ov))}catch(e){}}
 function cleanNum(v){return pa(String(v||'').replace(/[^\d,]/g,''))}
+function normStatus(v){return v==='예약금'?'예약금 입금':v}
 function setOv(id,key,val){
   if(!ov[id])ov[id]={};
   ov[id][key]=val;
@@ -210,12 +211,12 @@ function setOv(id,key,val){
   const ev=allData.find(e=>e.id===id);
   if(ev){
     if(key==='methodsText')ev.methods=String(val||'').split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
-    else ev[key]=val;
+  else ev[key]=key==='payStatus'?normStatus(val):val;
   }
 }
 function applyOverrides(row,o){
   ['date','branch','title','payStatus','reservationDate','balanceDate','notes'].forEach(k=>{
-    if(o[k]!==undefined)row[k]=o[k];
+    if(o[k]!==undefined)row[k]=k==='payStatus'?normStatus(o[k]):o[k];
   });
   ['reservationAmount','balanceAmount','netIn','dep'].forEach(k=>{
     if(o[k]!==undefined)row[k]=Number(o[k])||0;
@@ -295,12 +296,19 @@ function parseDesc(raw){
       // Standalone deposit line
       const isl=/[（(]보증금[）)]/.test(line)||(/청소보증금/.test(line)&&!di&&amts.length===1);
       const name=line.slice(dm[0].length).match(/^([가-힣A-Za-z()_\s\w]+?)(?:\s+(?:개인|법인|신신|카드|국민|\d))/)?.[1]?.trim()||'';
+      let prevEnd=dm[0].length;
+      const mixedCorpCash=/법인계좌|법인|세금계산서|계산서/.test(line)&&/개인계좌|개인|현금/.test(line)&&amts.length>1;
       amts.forEach((m,i)=>{
         const amt=pa(m[1]);if(!amt)return;
-        txns.push({date,name,method,kind,amount:amt,isRef,isDep:i===0&&isl,diAmt:i===0?diAmt:0});
+        const seg=line.slice(prevEnd,m.index+m[0].length);
+        const localMethod=gm(seg)==='기타'?method:gm(seg);
+        const personalDeposit=mixedCorpCash&&localMethod==='현금';
+        txns.push({date,name,method:localMethod,kind,amount:amt,isRef,isDep:(i===0&&isl)||personalDeposit,diAmt:i===0?diAmt:0});
+        prevEnd=m.index+m[0].length;
       });
       if(isl&&amts[0])dep+=pa(amts[0][1]);
       else if(diAmt)dep+=diAmt;
+      else if(mixedCorpCash)dep+=txns.filter(t=>t.date===date&&t.isDep&&t.method==='현금').reduce((s,t)=>s+t.amount,0);
       continue;
     }
     if(/청소보증금/.test(line)&&/안받았음|생략|면제/.test(line))memos.push('청소보증금 미수취');
@@ -333,7 +341,7 @@ function parseEv(ev,branch){
   const pd=parseDesc(ev.description);
   const o=ov[ev.id]||{};
   const baseStatus=o.status||status;
-  const payStatus=baseStatus==='취소'?'취소':(pd.balance||baseStatus==='완납')?'완납':pd.reservation?'예약금':'미입금';
+  const payStatus=baseStatus==='취소'?'취소':(pd.balance||baseStatus==='완납')?'완납':pd.reservation?'예약금 입금':'미입금';
   const row={id:ev.id,date,branch,title,status:baseStatus,
     payStatus,totalIn:pd.totalIn,netIn:pd.netIn,dep:pd.dep,methods:pd.methods,txns:pd.txns,
     reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||0,
@@ -513,7 +521,7 @@ function editCell(e,id,key,type='text'){
   let input;
   if(type==='select'){
     input=document.createElement('select');
-    const opts=key==='branch'?['문래점','신논현점']:['완납','예약금','미입금','취소'];
+    const opts=key==='branch'?['문래점','신논현점']:['완납','예약금 입금','미입금','취소'];
     opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;input.appendChild(o)});
     input.className='editinp';
   }else if(type==='area'){
@@ -549,7 +557,7 @@ function render(){
   document.getElementById('ca').textContent=fa(완납.reduce((s,e)=>s+e.netIn,0));
   document.getElementById('cd').textContent=fa(data.reduce((s,e)=>s+e.dep,0));
   document.getElementById('c1').textContent=완납.length+'건';
-  document.getElementById('c2').textContent=data.filter(e=>e.payStatus==='예약금').length+'건';
+  document.getElementById('c2').textContent=data.filter(e=>e.payStatus==='예약금 입금').length+'건';
   document.getElementById('c3').textContent=data.filter(e=>e.payStatus==='취소').length+'건';
   if(!data.length){document.getElementById('tb').innerHTML='<div class="gridmsg">해당 데이터 없음</div>';return}
   const rows=[];
