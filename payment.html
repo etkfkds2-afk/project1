@@ -354,8 +354,10 @@ function parseDesc(raw){
   const explicitRes=pays.find(t=>t.kind==='예약금');
   const explicitBal=pays.find(t=>t.kind==='잔금');
   const reservation=explicitRes||pays[0]||null;
-  const balance=explicitBal||pays.find(t=>reservation&&t!==reservation)||null;
-  return{txns,totalIn,dep,netIn:Math.max(0,totalIn-dep),methods:methods.length?methods:['기타'],memos,reservation,balance};
+  const balPays=pays.filter(t=>t!==reservation);
+  const balance=explicitBal||balPays[0]||null;
+  const balanceNetTotal=balPays.reduce((s,t)=>s+t.net,0);
+  return{txns,totalIn,dep,netIn:Math.max(0,totalIn-dep),methods:methods.length?methods:['기타'],memos,reservation,balance,balanceNetTotal};
 }
 
 function parseEv(ev,branch){
@@ -374,7 +376,7 @@ function parseEv(ev,branch){
   const row={id:ev.id,date,branch,title,status:baseStatus,
     payStatus,totalIn:pd.totalIn,netIn:pd.netIn,dep:pd.dep,methods:pd.methods,txns:pd.txns,
     reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||0,
-    balanceDate:pd.balance?.date||'',balanceAmount:pd.balance?.net||0,
+    balanceDate:pd.balance?.date||'',balanceAmount:pd.balanceNetTotal||0,
     notes:o.notes!==undefined?o.notes:pd.memos.slice(0,3).join(' / '),
     rawTitle:title,rawDesc:ev.description||'',rawStart,rawEnd,rawBranch:branch};
   return applyOverrides(row,o);
