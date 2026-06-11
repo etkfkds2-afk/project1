@@ -31,17 +31,16 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
 .card .val{font-size:20px;font-weight:800;color:#2c3e50}
 .card.bl .val{color:#2980b9}.card.gr .val{color:#27ae60}.card.or .val{color:#d35400}
 .tw{padding:0 24px 40px;overflow-x:auto}
-.paygrid{display:table;width:max-content;min-width:100%;background:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.05);border-collapse:separate;border-spacing:0;border:1px solid #e1e8ed;table-layout:auto}
-.ghead{display:table-header-group;background:#f8f9fa;position:sticky;top:0;z-index:10}
-#tb{display:table-row-group}
-.grow{display:table-row;background:#fff}
+.paygrid{width:100%;background:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.05);border-collapse:collapse;border:1px solid #e1e8ed;table-layout:fixed}
+.ghead{background:#f8f9fa}
+.grow{background:#fff}
 .grow:hover{background:#f8faff}
-.gcell{display:table-cell;padding:12px 14px;vertical-align:middle;border-bottom:1px solid #f1f3f5;border-right:1px solid #f1f3f5;min-width:80px;white-space:nowrap}
+.gcell{padding:10px 12px;vertical-align:middle;border-bottom:1px solid #f1f3f5;border-right:1px solid #f1f3f5;white-space:nowrap;overflow:hidden;font-size:14px;color:#2c3e50}
 .gcell:last-child{border-right:none}
-.ghead .gcell{font-size:12px;font-weight:700;color:#64748b;text-align:center;background:#f8f9fa;border-bottom:2px solid #e1e8ed;height:44px}
+.ghead .gcell{font-size:12px;font-weight:700;color:#64748b;text-align:center;background:#f8f9fa;border-bottom:2px solid #e1e8ed;height:44px;position:sticky;top:0;z-index:10}
 .gcell.r{text-align:right}
 .hchip{display:inline-block;padding:2px 0}
-.gridmsg{display:table-caption;caption-side:bottom;padding:60px;text-align:center;color:#94a3b8;font-size:15px}
+.gridmsg{padding:60px;text-align:center;color:#94a3b8;font-size:15px}
 .bdg{display:inline-flex;align-items:center;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
 .s완납{background:#e6fffa;color:#047857;border:1px solid #b2f5ea}
 .s예약금입금{background:#fffaf0;color:#9c4221;border:1px solid #feebc8}
@@ -59,7 +58,7 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
 .statuscell{text-align:center}
 .dash{color:#cbd5e0}
 .note{font-size:12px;color:#64748b;line-height:1.5;display:block;word-break:break-word;overflow-wrap:anywhere;min-width:200px}
-.gcell.notecell{white-space:normal}
+.gcell.notecell{white-space:normal;overflow:visible}
 .editcell{display:inline-flex;align-items:center;padding:4px 8px;border-radius:6px;cursor:text;white-space:nowrap;transition:all 0.15s;min-height:30px}
 .areacell{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.5;align-items:flex-start;width:100%}
 .editcell:hover{background:#f1f5f9;box-shadow:inset 0 0 0 1px #cbd5e0}
@@ -170,23 +169,41 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
 </div>
 <div class="tw">
-<div class="paygrid">
-  <div class="ghead">
-    <div class="gcell chkcell"><input type="checkbox" id="allchk" onclick="toggleSelectAll(event)"></div>
-    <div class="gcell"><span class="hchip">대관일</span></div>
-    <div class="gcell"><span class="hchip">지점</span></div>
-    <div class="gcell"><span class="hchip">행사명</span></div>
-    <div class="gcell"><span class="hchip">수납상태</span></div>
-    <div class="gcell"><span class="hchip">예약금 입금</span></div>
-    <div class="gcell"><span class="hchip">잔금 입금</span></div>
-    <div class="gcell r"><span class="hchip">보증금 제외 수납</span></div>
-    <div class="gcell r"><span class="hchip">청소보증금</span></div>
-    <div class="gcell"><span class="hchip">결제방법</span></div>
-    <div class="gcell"><span class="hchip">메모</span></div>
-    <div class="gcell" style="width:40px"></div>
-  </div>
-  <div id="tb"><div class="gridmsg"><div class="spin"></div>데이터 로딩 중...</div></div>
-</div>
+<table class="paygrid">
+  <colgroup>
+    <col style="width:36px">
+    <col style="width:84px">
+    <col style="width:52px">
+    <col style="width:196px">
+    <col style="width:82px">
+    <col style="width:108px">
+    <col style="width:108px">
+    <col style="width:104px">
+    <col style="width:90px">
+    <col style="width:84px">
+    <col>
+    <col style="width:40px">
+  </colgroup>
+  <thead class="ghead">
+    <tr>
+      <th class="gcell chkcell"><input type="checkbox" id="allchk" onclick="toggleSelectAll(event)"></th>
+      <th class="gcell"><span class="hchip">대관일</span></th>
+      <th class="gcell"><span class="hchip">지점</span></th>
+      <th class="gcell"><span class="hchip">행사명</span></th>
+      <th class="gcell"><span class="hchip">수납상태</span></th>
+      <th class="gcell"><span class="hchip">예약금 입금</span></th>
+      <th class="gcell"><span class="hchip">잔금 입금</span></th>
+      <th class="gcell r"><span class="hchip">보증금 제외 수납</span></th>
+      <th class="gcell r"><span class="hchip">청소보증금</span></th>
+      <th class="gcell"><span class="hchip">결제방법</span></th>
+      <th class="gcell"><span class="hchip">메모</span></th>
+      <th class="gcell"></th>
+    </tr>
+  </thead>
+  <tbody id="tb">
+    <tr><td colspan="12" class="gridmsg"><div class="spin"></div>데이터 로딩 중...</td></tr>
+  </tbody>
+</table>
 </div>
 </div>
 <div id="rawModal" class="modal" onclick="closeRaw(event)">
@@ -435,7 +452,7 @@ async function ensureGoogleToken(prompt=''){
 
 function showGoogleSetup(msg=''){
   const origin=location.origin;
-  document.getElementById('tb').innerHTML=`<div class="gridmsg">
+  document.getElementById('tb').innerHTML=`<tr><td colspan="12" class="gridmsg">
     <div class="setup">
       <h2>Google Calendar 연결</h2>
       <p>${msg||'방금 새로 만든 OAuth 2.0 웹 클라이언트 ID를 입력하세요.'}</p>
@@ -448,7 +465,7 @@ function showGoogleSetup(msg=''){
       </div>
       <p class="muted">클라이언트 ID는 ...apps.googleusercontent.com 으로 끝납니다. 클라이언트 비밀번호는 넣지 않습니다.</p>
     </div>
-  </div>`;
+  </td></tr>`;
 }
 
 async function saveGoogleClient(e){
@@ -516,7 +533,7 @@ async function fetchEvs(calId,year){
 async function loadAll(){
   const btn=document.getElementById('rb');
   btn.disabled=true;btn.textContent='⏳ 로딩 중...';selectedIds.clear();
-  document.getElementById('tb').innerHTML='<div class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</div>';
+  document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
   const year=document.getElementById('sy').value;
   try{
     if(!hasCowork()&&!getGoogleClientId()){showGoogleSetup();return}
@@ -529,7 +546,7 @@ async function loadAll(){
     render();
   }catch(e){
     if(!hasCowork())showGoogleSetup(`오류: ${e.message}`);
-    else document.getElementById('tb').innerHTML=`<div class="gridmsg" style="color:#c00">오류: ${e.message}</div>`;
+    else document.getElementById('tb').innerHTML=`<tr><td colspan="12" class="gridmsg" style="color:#c00">오류: ${e.message}</td></tr>`;
   }finally{btn.disabled=false;btn.textContent='🔄 새로고침'}
 }
 
@@ -594,36 +611,35 @@ function render(){
   document.getElementById('c1').textContent=완납.length+'건';
   document.getElementById('c2').textContent=data.filter(e=>e.payStatus==='예약금 입금').length+'건';
   document.getElementById('c3').textContent=data.filter(e=>e.payStatus==='취소').length+'건';
-  if(!data.length){document.getElementById('tb').innerHTML='<div class="gridmsg">해당 조건의 데이터가 없습니다.</div>';return}
+  if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg">해당 조건의 데이터가 없습니다.</td></tr>';return}
   const rows=[];
   for(const ev of data){
     const bc=ev.branch==='문래점'?'brm':'brs';
     const methodText=ev.methods.join('+')||'기타';
-    // 상태값에서 공백 제거하여 CSS 클래스로 사용 (예: '예약금 입금' -> 's예약금입금')
     const sCls='s'+ev.payStatus.replace(/\s+/g,'');
-    rows.push(`<div class="grow${ev.hidden?' hidden-row':''}">
-      <div class="gcell chkcell"><input type="checkbox" class="rowchk" ${selectedIds.has(ev.id)?'checked':''} onclick="toggleSelect('${ev.id}',event)"></div>
-      <div class="gcell datecell">${cell(ev.id,'date',ev.date,'date')}</div>
-      <div class="gcell"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></div>
-      <div class="gcell">
+    rows.push(`<tr class="grow${ev.hidden?' hidden-row':''}">
+      <td class="gcell chkcell"><input type="checkbox" class="rowchk" ${selectedIds.has(ev.id)?'checked':''} onclick="toggleSelect('${ev.id}',event)"></td>
+      <td class="gcell datecell">${cell(ev.id,'date',ev.date,'date')}</td>
+      <td class="gcell"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></td>
+      <td class="gcell">
         <div class="titlecell">
           <span class="titletext" title="${esc(ev.title)}">${cell(ev.id,'title',ev.title,'text')}</span>
           <button class="rawbtn" onclick="openRaw('${ev.id}',event)">원문</button>
         </div>
-      </div>
-      <div class="gcell statuscell">
+      </td>
+      <td class="gcell statuscell">
         <span class="bdg ${sCls}">${cell(ev.id,'payStatus',ev.payStatus,'select')}</span>
-      </div>
-      <div class="gcell"><div class="date2">${cell(ev.id,'reservationDate',ev.reservationDate,'date')}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></div>
-      <div class="gcell"><div class="date2">${cell(ev.id,'balanceDate',ev.balanceDate,'date')}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></div>
-      <div class="gcell r moneycell">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</div>
-      <div class="gcell r moneycell">${cell(ev.id,'dep',ev.dep,'money','dep')}</div>
-      <div class="gcell paycell">
+      </td>
+      <td class="gcell"><div class="date2">${cell(ev.id,'reservationDate',ev.reservationDate,'date')}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
+      <td class="gcell"><div class="date2">${cell(ev.id,'balanceDate',ev.balanceDate,'date')}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
+      <td class="gcell r moneycell">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
+      <td class="gcell r moneycell">${cell(ev.id,'dep',ev.dep,'money','dep')}</td>
+      <td class="gcell paycell">
         <span class="bdg m${methodText.split('+')[0]}">${cell(ev.id,'methodsText',methodText,'text')}</span>
-      </div>
-      <div class="gcell notecell"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'area')}</span></div>
-      <div class="gcell" style="width:40px;text-align:center">${ev.hidden?`<button class="restbtn" onclick="restoreRow('${ev.id}',event)" title="복원">↩</button>`:`<button class="delbtn" onclick="hideRow('${ev.id}',event)" title="숨기기">✕</button>`}</div>
-    </div>`);
+      </td>
+      <td class="gcell notecell"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'area')}</span></td>
+      <td class="gcell" style="text-align:center">${ev.hidden?`<button class="restbtn" onclick="restoreRow('${ev.id}',event)" title="복원">↩</button>`:`<button class="delbtn" onclick="hideRow('${ev.id}',event)" title="숨기기">✕</button>`}</td>
+    </tr>`);
   }
   document.getElementById('tb').innerHTML=rows.join('');
   const allChk=document.getElementById('allchk');
