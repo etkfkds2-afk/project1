@@ -5,115 +5,164 @@
 <meta name="robots" content="noindex,nofollow">
 <title>올댓마인드 입금관리</title>
 <style>
-:root{color-scheme:light}
+:root{
+  color-scheme:light;
+  --bg:#f6f7f9;
+  --panel:#fff;
+  --panel-soft:#fafbfc;
+  --text:#17202a;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --line-strong:#d1d5db;
+  --blue:#2563eb;
+  --green:#059669;
+  --amber:#d97706;
+  --red:#dc2626;
+  --shadow:0 10px 24px rgba(15,23,42,.07);
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo',sans-serif;background:#f4f7fa;color:#2c3e50;font-size:14px;line-height:1.5}
-.hdr{background:linear-gradient(135deg,#1a3a5f,#2c537d);color:#fff;padding:16px 24px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
-.hdr h1{font-size:20px;font-weight:700;letter-spacing:-0.5px}
-.hdr .sub{font-size:12px;opacity:0.8;margin-bottom:4px;font-weight:500}
-.toolbar{background:#fff;padding:12px 24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 2px rgba(0,0,0,0.05);position:sticky;top:0;z-index:10;border-bottom:1px solid #e1e8ed}
-select,.search{height:34px;border:1px solid #ced4da;border-radius:8px;padding:0 12px;font-size:13px;background:#fff;outline:none;transition:border-color 0.2s}
-select{cursor:pointer;padding-right:24px}
-select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152,219,0.1)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+.hdr{background:var(--panel);color:var(--text);padding:22px 28px 18px;border-bottom:1px solid var(--line)}
+.hdr h1{font-size:24px;font-weight:800;letter-spacing:0}
+.hdr .sub{font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:700}
+.toolbar{background:rgba(255,255,255,.96);padding:14px 28px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}
+select,.search{height:38px;border:1px solid var(--line-strong);border-radius:6px;padding:0 12px;font-size:13px;background:#fff;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+select{cursor:pointer;min-width:112px;padding-right:24px}
+select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .search{width:240px}
-.sp{flex:1}
-.btn{height:34px;padding:0 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s}
-.btn:hover{filter:brightness(0.95);transform:translateY(-1px)}
-.btn:active{transform:translateY(0)}
-.btn:disabled{opacity:0.5;cursor:default;transform:none}
-.btn-reload{background:#f1f3f5;color:#495057;border:1px solid #dee2e6}
-.btn-export{background:#27ae60;color:#fff}
-.cards{display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;padding:20px 24px}
-.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.04);border-left:4px solid #dee2e6;transition:transform 0.2s}
-.card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
-.card.bl{border-left-color:#3498db}.card.gr{border-left-color:#2ecc71}.card.or{border-left-color:#e67e22}
-.card .lbl{font-size:11px;color:#7f8c8d;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:600}
-.card .val{font-size:20px;font-weight:800;color:#2c3e50}
-.card.bl .val{color:#2980b9}.card.gr .val{color:#27ae60}.card.or .val{color:#d35400}
-.tw{padding:0 24px 40px;overflow-x:auto}
-.paygrid{width:100%;background:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.05);border-collapse:collapse;border:1px solid #e1e8ed;table-layout:fixed}
-.ghead{background:#f8f9fa}
+.sp{flex:1 1 24px}
+.btn{height:38px;padding:0 14px;border:1px solid transparent;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn:hover{box-shadow:0 3px 10px rgba(15,23,42,.08)}
+.btn:active{box-shadow:none}
+.btn:disabled{opacity:.45;cursor:default;box-shadow:none}
+.btn-reload,.btn-hidden{background:#fff;color:#374151;border-color:var(--line-strong)}
+.btn-reload:hover,.btn-hidden:hover{background:#f9fafb}
+.btn-export{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-danger{background:#fff;color:var(--red);border-color:#fecaca}
+.btn-danger:hover{background:#fef2f2}
+.btn-hidden.active{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
+.cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;padding:18px 28px}
+.card{background:var(--panel);border-radius:8px;padding:14px 16px;border:1px solid var(--line);box-shadow:0 4px 14px rgba(15,23,42,.04);transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
+.card.bl{border-top:3px solid var(--blue)}.card.gr{border-top:3px solid var(--green)}.card.or{border-top:3px solid var(--amber)}
+.card .lbl{font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700}
+.card .val{font-size:22px;font-weight:850;color:var(--text);font-variant-numeric:tabular-nums}
+.card.bl .val{color:var(--blue)}.card.gr .val{color:var(--green)}.card.or .val{color:#ea580c}
+.tw{padding:0 28px 44px;overflow-x:auto}
+.paygrid{width:100%;min-width:1220px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
+.ghead{background:var(--panel-soft)}
 .grow{background:#fff}
-.grow:hover{background:#f8faff}
-.gcell{padding:10px 12px;vertical-align:middle;border-bottom:1px solid #f1f3f5;border-right:1px solid #f1f3f5;white-space:nowrap;overflow:hidden;font-size:14px;color:#2c3e50}
+.grow:hover{background:#fbfdff}
+.gcell{padding:12px 12px;vertical-align:middle;border-bottom:1px solid #eef0f3;border-right:1px solid #eef0f3;white-space:nowrap;overflow:hidden;font-size:13px;color:var(--text)}
 .gcell:last-child{border-right:none}
-.ghead .gcell{font-size:12px;font-weight:700;color:#64748b;text-align:center;background:#f8f9fa;border-bottom:2px solid #e1e8ed;height:44px;position:sticky;top:0;z-index:10}
+.ghead .gcell{font-size:12px;font-weight:800;color:#4b5563;text-align:center;background:var(--panel-soft);border-bottom:1px solid var(--line-strong);height:44px}
 .gcell.r{text-align:right}
 .hchip{display:inline-block;padding:2px 0}
-.gridmsg{padding:60px;text-align:center;color:#94a3b8;font-size:15px}
-.bdg{display:inline-flex;align-items:center;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
-.s완납{background:#e6fffa;color:#047857;border:1px solid #b2f5ea}
-.s예약금입금{background:#fffaf0;color:#9c4221;border:1px solid #feebc8}
-.s취소{background:#fff5f5;color:#c53030;border:1px solid #feb2b2}
-.s기타{background:#f7fafc;color:#4a5568;border:1px solid #edf2f7}
-.m카드{background:#ebf8ff;color:#2b6cb0}.m세금계산서{background:#faf5ff;color:#553c9a}
-.m현금{background:#f0fff4;color:#276749}.m기타{background:#f7fafc;color:#4a5568}
-.brm{color:#3182ce;font-weight:700}.brs{color:#805ad5;font-weight:700}
-.amt{font-weight:700;font-variant-numeric:tabular-nums;color:#1a3a5f}
-.dep{font-weight:700;font-variant-numeric:tabular-nums;color:#c05621}
+.gridmsg{padding:64px;text-align:center;color:#8b95a1;font-size:14px}
+.bdg{display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.s완납{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.s예약금입금{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
+.s취소{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.s기타{background:#f3f4f6;color:#4b5563;border:1px solid #e5e7eb}
+.m카드{background:#eff6ff;color:#1d4ed8}.m세금계산서{background:#f5f3ff;color:#6d28d9}
+.m현금{background:#ecfdf5;color:#047857}.m기타{background:#f3f4f6;color:#4b5563}
+.brm{color:#2563eb;font-weight:800}.brs{color:#7c3aed;font-weight:800}
+.amt{font-weight:850;font-variant-numeric:tabular-nums;color:#111827}
+.dep{font-weight:850;font-variant-numeric:tabular-nums;color:#c2410c}
 .moneycell,.datecell,.statuscell,.paycell{white-space:nowrap}
-.date2{font-size:13px;line-height:1.4}
-.date2 .sub{display:block;color:#94a3b8;font-size:11px;margin-top:2px}
-.oktxt{color:#059669;font-weight:700}.waittxt{color:#d97706;font-weight:700}.badtxt{color:#dc2626;font-weight:700}
+.date2{font-size:13px;line-height:1.45}
+.date2 .sub{display:block;color:#8b95a1;font-size:12px;margin-top:3px}
+.oktxt{color:var(--green);font-weight:700}.waittxt{color:var(--amber);font-weight:700}.badtxt{color:var(--red);font-weight:700}
 .statuscell{text-align:center}
-.dash{color:#cbd5e0}
-.note{font-size:12px;color:#64748b;line-height:1.5;display:block;word-break:break-word;overflow-wrap:anywhere}
+.dash{color:#b8c0cc}
+.note{font-size:12px;color:#55606e;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word;overflow:hidden}
 .gcell.notecell{white-space:normal;overflow:hidden}
-.editcell{display:inline-flex;align-items:center;padding:4px 8px;border-radius:6px;cursor:text;white-space:nowrap;transition:all 0.15s;min-height:30px}
-.areacell{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.5;align-items:flex-start;width:100%}
-.editcell:hover{background:#f1f5f9;box-shadow:inset 0 0 0 1px #cbd5e0}
-.editinp{width:100%;min-width:60px;height:30px;border:2px solid #3498db;border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
-.editarea{width:100%;min-height:44px;border:2px solid #3498db;border-radius:6px;padding:6px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.4;outline:none}
+.editcell{display:inline-flex;align-items:center;max-width:100%;padding:4px 7px;border-radius:5px;cursor:text;white-space:nowrap;transition:background .15s,box-shadow .15s;min-height:28px}
+.areacell{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;align-items:flex-start;width:100%}
+.editcell:hover{background:#f3f6fb;box-shadow:inset 0 0 0 1px #cbd5e1}
+.editinp{width:100%;min-width:64px;height:32px;border:2px solid var(--blue);border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
+.editarea{width:100%;min-height:68px;border:2px solid var(--blue);border-radius:6px;padding:7px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.45;outline:none}
 .editnum{text-align:right}
-.titlecell{display:flex;align-items:center;gap:10px;white-space:nowrap}
-.titletext{display:inline-block;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
-.rawbtn{flex-shrink:0;border:1px solid #e2e8f0;background:#fff;color:#64748b;border-radius:6px;height:26px;padding:0 10px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s}
-.rawbtn:hover{background:#f8fafc;color:#1a3a5f;border-color:#cbd5e0}
-.rawbtn{border:1px solid #e2e8f0;background:#fff;color:#64748b;border-radius:6px;height:24px;padding:0 8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s}
-.rawbtn:hover{background:#f8fafc;color:#1a3a5f;border-color:#cbd5e0}
-.mini{border:1px solid #e2e8f0;background:#fff;color:#64748b;border-radius:6px;height:26px;padding:0 10px;font-size:12px;font-weight:600;cursor:pointer}
-.btn-hidden{background:#f1f3f5;color:#495057;border:1px solid #dee2e6}
-.btn-hidden.active{background:#fff5f5;color:#c53030;border-color:#feb2b2}
-.delbtn{border:none;background:none;color:#e2e8f0;cursor:pointer;font-size:15px;padding:4px 8px;border-radius:4px;line-height:1;transition:all 0.15s}
-.grow:hover .delbtn{color:#fc8181}
-.delbtn:hover{background:#fff5f5;color:#e53e3e}
-.restbtn{border:none;background:#f0fff4;color:#38a169;cursor:pointer;font-size:11px;padding:3px 7px;border-radius:4px;font-weight:700;transition:all 0.15s}
-.restbtn:hover{background:#c6f6d5}
-.hidden-row{opacity:0.45}
+.titlecell{display:flex;align-items:center;gap:8px;white-space:nowrap;min-width:0}
+.titletext{display:inline-block;white-space:nowrap;max-width:128px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+.rawbtn,.mini{border:1px solid var(--line-strong);background:#fff;color:#4b5563;border-radius:6px;height:26px;padding:0 9px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.rawbtn:hover,.mini:hover{background:#f9fafb;color:#111827;border-color:#9ca3af}
+.delbtn{border:1px solid transparent;background:transparent;color:#cbd5e1;cursor:pointer;font-size:12px;padding:4px 7px;border-radius:5px;line-height:1.2;font-weight:800;transition:all .15s}
+.grow:hover .delbtn{color:#ef4444}
+.delbtn:hover{background:#fef2f2;border-color:#fecaca;color:#dc2626}
+.restbtn{border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:5px;font-weight:800;transition:all .15s}
+.restbtn:hover{background:#dcfce7}
+.actioncell{text-align:center}
+.hidden-row{opacity:.48}
 .chkcell{width:36px;text-align:center;padding:8px 4px}
-.rowchk{width:16px;height:16px;cursor:pointer;accent-color:#3498db}
-.btn-danger{background:#e53e3e;color:#fff}
-.btn-danger:disabled{opacity:0.4;transform:none;cursor:default}
-.modal{position:fixed;inset:0;background:rgba(15,23,42,0.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:100;backdrop-filter:blur(4px)}
+.rowchk{width:16px;height:16px;cursor:pointer;accent-color:var(--blue)}
+.modal{position:fixed;inset:0;background:rgba(17,24,39,.58);display:none;align-items:center;justify-content:center;padding:24px;z-index:100;backdrop-filter:blur(4px)}
 .modal.show{display:flex}
-.modal-card{width:min(760px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25)}
-.modal-hd{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #f1f3f5}
-.modal-hd h2{font-size:18px;color:#1e293b;flex:1;font-weight:700}
+.modal-card{width:min(760px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:8px;box-shadow:0 25px 60px rgba(0,0,0,.28)}
+.modal-hd{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.modal-hd h2{font-size:18px;color:var(--text);flex:1;font-weight:800}
 .modal-bd{padding:20px;line-height:1.6}
 .rawmeta{display:grid;grid-template-columns:100px 1fr;gap:10px 16px;margin-bottom:20px;font-size:13px}
-.rawmeta b{color:#64748b}
-.rawdesc{white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;color:#334155;font-size:13px;line-height:1.6}
-.loader{text-align:center;padding:55px;color:#bbb}
-.spin{width:28px;height:28px;border:3px solid #e0e0e0;border-top-color:#2d5986;border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 10px}
+.rawmeta b{color:var(--muted)}
+.rawdesc{white-space:pre-wrap;background:#f9fafb;border:1px solid var(--line);border-radius:8px;padding:16px;color:#374151;font-size:13px;line-height:1.6}
+.loader{text-align:center;padding:55px;color:#9ca3af}
+.spin{width:28px;height:28px;border:3px solid #e5e7eb;border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 10px}
 @keyframes sp{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:50px;color:#bbb}
+.empty{text-align:center;padding:50px;color:#9ca3af}
 .locked .app{display:none}
-.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#eef1f5}
-.auth-box{width:100%;max-width:360px;background:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:24px}
-.auth-box h1{font-size:18px;margin-bottom:6px;color:#1e3a5f}
-.auth-box p{font-size:12px;color:#777;margin-bottom:16px;line-height:1.5}
-.auth-box input{width:100%;height:38px;border:1px solid #d5d5d5;border-radius:6px;padding:0 10px;font-size:13px;outline:none}
-.auth-box input:focus{border-color:#2d5986}
-.auth-box button{width:100%;height:36px;margin-top:10px;border:0;border-radius:6px;background:#1e3a5f;color:#fff;font-weight:700;cursor:pointer}
-.auth-err{min-height:17px;margin-top:8px;color:#c0392b;font-size:12px}
-.setup{max-width:560px;margin:0 auto;text-align:left;color:#555;line-height:1.5}
-.setup h2{font-size:16px;color:#1e3a5f;margin-bottom:6px}
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.auth-box{width:100%;max-width:380px;background:#fff;border-radius:8px;box-shadow:var(--shadow);border:1px solid var(--line);padding:26px}
+.auth-box h1{font-size:20px;margin-bottom:6px;color:var(--text)}
+.auth-box p{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.auth-box input{width:100%;height:40px;border:1px solid var(--line-strong);border-radius:6px;padding:0 10px;font-size:14px;outline:none}
+.auth-box input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.auth-box button{width:100%;height:40px;margin-top:10px;border:0;border-radius:6px;background:var(--text);color:#fff;font-weight:800;cursor:pointer}
+.auth-err{min-height:17px;margin-top:8px;color:var(--red);font-size:12px}
+.setup{max-width:560px;margin:0 auto;text-align:left;color:#4b5563;line-height:1.5}
+.setup h2{font-size:16px;color:var(--text);margin-bottom:6px}
 .setup p{font-size:12px;margin-bottom:10px}
-.setup input{width:100%;height:34px;border:1px solid #d5d5d5;border-radius:6px;padding:0 10px;font-size:12px;outline:none}
-.setup input:focus{border-color:#2d5986}
-.setup .row{display:flex;gap:6px;margin-top:8px}
-.setup .row button{height:34px;border:0;border-radius:6px;background:#1e3a5f;color:#fff;font-weight:700;padding:0 12px;cursor:pointer;white-space:nowrap}
-.setup .muted{font-size:11px;color:#888}
+.setup input{width:100%;height:36px;border:1px solid var(--line-strong);border-radius:6px;padding:0 10px;font-size:12px;outline:none}
+.setup input:focus{border-color:var(--blue)}
+.setup .row{display:flex;gap:8px;margin-top:8px}
+.setup .row button{height:36px;border:0;border-radius:6px;background:var(--text);color:#fff;font-weight:800;padding:0 12px;cursor:pointer;white-space:nowrap}
+.setup .muted{font-size:11px;color:var(--muted)}
+@media (max-width:1100px){
+  .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  body{font-size:13px;background:#f3f4f6}
+  .hdr{padding:18px 20px 14px}
+  .hdr h1{font-size:22px}
+  .toolbar{position:static;padding:12px 20px;gap:8px}
+  .toolbar select{flex:1 1 calc(50% - 4px);min-width:0}
+  .toolbar .search{width:100%;flex:1 1 100%}
+  .sp{display:none}
+  .btn{flex:1 1 calc(50% - 4px);height:40px;padding:0 10px}
+  .btn-export{flex-basis:100%}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px 20px}
+  .card{padding:12px;border-radius:8px}
+  .card .lbl{font-size:11px;margin-bottom:5px}
+  .card .val{font-size:20px}
+  .tw{padding:0 20px 32px;overflow:visible}
+  .paygrid{display:block;min-width:0;width:100%;border:0;background:transparent;box-shadow:none}
+  .paygrid colgroup,.paygrid thead{display:none}
+  .paygrid tbody{display:grid;gap:12px}
+  .paygrid .grow{display:block;border:1px solid var(--line);border-radius:8px;background:#fff;box-shadow:0 6px 18px rgba(15,23,42,.06);overflow:hidden}
+  .paygrid .gcell{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:center;width:100%;min-height:42px;padding:10px 12px;border-right:0;border-bottom:1px solid #eef0f3;white-space:normal;overflow:visible;text-align:left}
+  .paygrid .gcell::before{content:attr(data-label);font-size:11px;color:var(--muted);font-weight:800}
+  .paygrid .gcell.chkcell{display:flex;justify-content:space-between;gap:10px;background:#fafafa}
+  .paygrid .gcell.chkcell::before{content:"선택"}
+  .paygrid .gcell.actioncell{display:flex;justify-content:flex-end;background:#fafafa;border-bottom:0}
+  .paygrid .gcell.actioncell::before{display:none}
+  .paygrid .gcell.r{text-align:left}
+  .titlecell{min-width:0;white-space:normal}
+  .titletext{max-width:none;white-space:normal}
+  .editcell{white-space:normal;min-width:0}
+  .moneycell .editcell,.datecell .editcell,.statuscell .editcell,.paycell .editcell{white-space:nowrap}
+  .note{-webkit-line-clamp:3}
+  .rawmeta{grid-template-columns:78px 1fr}
+  .modal{padding:14px}
+}
 </style>
 </head>
 <body class="locked">
@@ -129,7 +178,7 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
 <div id="app" class="app">
 <div class="hdr">
   <div class="sub">올댓마인드 • 입금 관리 시스템</div>
-  <h1>💳 입금 현황</h1>
+  <h1>입금 현황</h1>
 </div>
 <div class="toolbar">
   <select id="sy" onchange="render()">
@@ -156,9 +205,9 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
   <div class="sp"></div>
   <button id="delbtn" class="btn btn-danger" onclick="deleteSelected()" disabled>삭제 (0)</button>
   <button class="btn btn-danger" onclick="deleteAll()" style="opacity:0.85">전체 삭제</button>
-  <button id="thbtn" class="btn btn-hidden" onclick="toggleHidden()">🗑 숨긴 항목</button>
-  <button id="rb" class="btn btn-reload" onclick="loadAll()">🔄 새로고침</button>
-  <button class="btn btn-export" onclick="doExport()">📊 CSV 내보내기</button>
+  <button id="thbtn" class="btn btn-hidden" onclick="toggleHidden()">숨긴 항목</button>
+  <button id="rb" class="btn btn-reload" onclick="loadAll()">새로고침</button>
+  <button class="btn btn-export" onclick="doExport()">CSV 내보내기</button>
 </div>
 <div class="cards">
   <div class="card bl"><div class="lbl">전체 건수</div><div class="val" id="ct">-</div></div>
@@ -175,14 +224,14 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
     <col style="width:96px">
     <col style="width:72px">
     <col style="width:176px">
-    <col style="width:76px">
+    <col style="width:98px">
     <col style="width:108px">
     <col style="width:108px">
     <col style="width:108px">
     <col style="width:90px">
-    <col style="width:84px">
+    <col style="width:110px">
     <col>
-    <col style="width:40px">
+    <col style="width:54px">
   </colgroup>
   <thead class="ghead">
     <tr>
@@ -539,7 +588,7 @@ async function fetchEvs(calId,year){
 
 async function loadAll(){
   const btn=document.getElementById('rb');
-  btn.disabled=true;btn.textContent='⏳ 로딩 중...';selectedIds.clear();
+  btn.disabled=true;btn.textContent='로딩 중...';selectedIds.clear();
   document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
   const year=document.getElementById('sy').value;
   try{
@@ -554,7 +603,7 @@ async function loadAll(){
   }catch(e){
     if(!hasCowork())showGoogleSetup(`오류: ${e.message}`);
     else document.getElementById('tb').innerHTML=`<tr><td colspan="12" class="gridmsg" style="color:#c00">오류: ${e.message}</td></tr>`;
-  }finally{btn.disabled=false;btn.textContent='🔄 새로고침'}
+  }finally{btn.disabled=false;btn.textContent='새로고침'}
 }
 
 function getFiltered(){
@@ -625,27 +674,27 @@ function render(){
     const methodText=ev.methods.join('+')||'기타';
     const sCls='s'+ev.payStatus.replace(/\s+/g,'');
     rows.push(`<tr class="grow${ev.hidden?' hidden-row':''}">
-      <td class="gcell chkcell"><input type="checkbox" class="rowchk" ${selectedIds.has(ev.id)?'checked':''} onclick="toggleSelect('${ev.id}',event)"></td>
-      <td class="gcell datecell">${cell(ev.id,'date',ev.date,'date')}</td>
-      <td class="gcell"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></td>
-      <td class="gcell">
+      <td class="gcell chkcell" data-label="선택"><input type="checkbox" class="rowchk" ${selectedIds.has(ev.id)?'checked':''} onclick="toggleSelect('${ev.id}',event)"></td>
+      <td class="gcell datecell" data-label="대관일">${cell(ev.id,'date',ev.date,'date')}</td>
+      <td class="gcell" data-label="지점"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></td>
+      <td class="gcell" data-label="행사명">
         <div class="titlecell">
           <span class="titletext" title="${esc(ev.title)}">${cell(ev.id,'title',ev.title,'text')}</span>
           <button class="rawbtn" onclick="openRaw('${ev.id}',event)">원문</button>
         </div>
       </td>
-      <td class="gcell statuscell">
+      <td class="gcell statuscell" data-label="수납상태">
         <span class="bdg ${sCls}">${cell(ev.id,'payStatus',ev.payStatus,'select')}</span>
       </td>
-      <td class="gcell"><div class="date2">${cell(ev.id,'reservationDate',ev.reservationDate,'date')}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
-      <td class="gcell"><div class="date2">${cell(ev.id,'balanceDate',ev.balanceDate,'date')}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
-      <td class="gcell r moneycell">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
-      <td class="gcell r moneycell">${cell(ev.id,'dep',ev.dep,'money','dep')}</td>
-      <td class="gcell paycell">
+      <td class="gcell" data-label="예약금 입금"><div class="date2">${cell(ev.id,'reservationDate',ev.reservationDate,'date')}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
+      <td class="gcell" data-label="잔금 입금"><div class="date2">${cell(ev.id,'balanceDate',ev.balanceDate,'date')}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
+      <td class="gcell r moneycell" data-label="보증금 제외 수납">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
+      <td class="gcell r moneycell" data-label="청소보증금">${cell(ev.id,'dep',ev.dep,'money','dep')}</td>
+      <td class="gcell paycell" data-label="결제방법">
         <span class="bdg m${methodText.split('+')[0]}">${cell(ev.id,'methodsText',methodText,'text')}</span>
       </td>
-      <td class="gcell notecell"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'area')}</span></td>
-      <td class="gcell" style="text-align:center">${ev.hidden?`<button class="restbtn" onclick="restoreRow('${ev.id}',event)" title="복원">↩</button>`:`<button class="delbtn" onclick="hideRow('${ev.id}',event)" title="숨기기">✕</button>`}</td>
+      <td class="gcell notecell" data-label="메모"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'area')}</span></td>
+      <td class="gcell actioncell">${ev.hidden?`<button class="restbtn" onclick="restoreRow('${ev.id}',event)" title="복원">복원</button>`:`<button class="delbtn" onclick="hideRow('${ev.id}',event)" title="숨기기">숨김</button>`}</td>
     </tr>`);
   }
   document.getElementById('tb').innerHTML=rows.join('');
@@ -704,7 +753,7 @@ function toggleHidden(){
   showHidden=!showHidden;
   const btn=document.getElementById('thbtn');
   btn.classList.toggle('active',showHidden);
-  btn.textContent=showHidden?'🗑 숨김 숨기기':'🗑 숨긴 항목';
+  btn.textContent=showHidden?'숨김 숨기기':'숨긴 항목';
   render();
 }
 
