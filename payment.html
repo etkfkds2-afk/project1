@@ -83,8 +83,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .editinp{width:100%;min-width:64px;height:32px;border:2px solid var(--blue);border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
 .editarea{width:100%;min-height:68px;border:2px solid var(--blue);border-radius:6px;padding:7px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.45;outline:none}
 .editnum{text-align:right}
-.titlecell{display:flex;align-items:center;gap:8px;white-space:normal;min-width:0}
-.titletext{display:inline-block;white-space:normal;max-width:none;overflow:visible;text-overflow:clip;vertical-align:middle;line-height:1.45}
+.titlecell{display:flex;align-items:flex-start;gap:8px;white-space:normal;min-width:0;width:100%}
+.titletext{display:inline-block;flex:1;min-width:0;white-space:normal;max-width:none;overflow:visible;text-overflow:clip;vertical-align:middle;line-height:1.45}
+.titletext .editcell{white-space:normal;align-items:flex-start}
 .rawbtn,.mini{border:1px solid var(--line-strong);background:#fff;color:#4b5563;border-radius:6px;height:26px;padding:0 9px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .rawbtn:hover,.mini:hover{background:#f9fafb;color:#111827;border-color:#9ca3af}
 .delbtn{border:1px solid transparent;background:transparent;color:#cbd5e1;cursor:pointer;font-size:12px;padding:4px 7px;border-radius:5px;line-height:1.2;font-weight:800;transition:all .15s}
@@ -223,14 +224,14 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <col style="width:36px">
     <col style="width:90px">
     <col style="width:70px">
-    <col style="width:460px">
+    <col style="width:310px">
     <col style="width:94px">
     <col style="width:100px">
     <col style="width:100px">
     <col style="width:100px">
     <col style="width:86px">
     <col style="width:100px">
-    <col style="width:130px">
+    <col style="width:280px">
     <col style="width:54px">
   </colgroup>
   <thead class="ghead">
@@ -368,6 +369,12 @@ function parseDesc(raw,year=''){
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   const txns=[];let dep=0;const memos=[];let pendingDep=0;
   for(const line of lines){
+    const memoMatch=line.match(/^\*+\s*(.+)$/)||line.match(/^공지\s*[:：]\s*(.+)$/);
+    if(memoMatch){
+      const m=memoMatch[1].trim();
+      if(m)memos.push(m);
+      continue;
+    }
     const dm=line.match(/^(\d{4,8})\s*/);
     if(dm){
       const ds=dm[1];
@@ -409,11 +416,6 @@ function parseDesc(raw,year=''){
     }
     const depMatch=(line.match(/[（(]청소보증금\s*([0-9,]+)원\s*포함[）)]/)||line.match(/청소보증금\s*([0-9,]+)원\s*포함/)||line.match(/보증금\s*([0-9,]+)원\s*포함/))?.[1];
     if(depMatch)pendingDep=pa(depMatch);
-    if(/청소보증금/.test(line)&&/안받았음|생략|면제/.test(line))memos.push('청소보증금 미수취');
-    if(/^\*|취소|환불|환급|할인|이슈|재결제/.test(line)){
-      const m=line.replace(/^\*+/,'').trim();
-      if(m&&m.length<100)memos.push(m);
-    }
   }
   const totalIn=txns.filter(t=>!t.isRef).reduce((s,t)=>s+t.amount,0);
   const mv={};
