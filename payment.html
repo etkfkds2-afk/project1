@@ -29,18 +29,10 @@ select:focus,.search:focus{border-color:#2d5986}
 .card .val{font-size:18px;font-weight:700;color:#222}
 .card.bl .val{color:#1e3a5f}.card.gr .val{color:#1a7340}.card.or .val{color:#c75000}
 .tw{padding:0 20px 24px;overflow-x:auto}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-table{table-layout:auto;min-width:1320px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);table-layout:fixed;min-width:1220px}
 thead tr{background:#f8f9fc}
 th{padding:8px 11px;text-align:left;font-size:11px;font-weight:700;color:#777;white-space:nowrap;border-bottom:2px solid #eee}
 th.r{text-align:right}
-th.brcol{min-width:72px}
-th.moneycol{min-width:118px}
-th.paycol{min-width:118px}
-th.datecol{min-width:108px}
-th.statuscol{min-width:96px}
-th.titlecol{min-width:260px}
-th.notecol{min-width:180px}
 td{padding:8px 11px;border-top:1px solid #f2f2f2;vertical-align:middle}
 td.r{text-align:right}
 .er:hover td{background:#f6f8ff}
@@ -52,24 +44,24 @@ td.r{text-align:right}
 .brm{color:#1d4ed8;font-weight:600;font-size:12px}.brs{color:#7c3aed;font-weight:600;font-size:12px}
 .amt{font-weight:700;font-variant-numeric:tabular-nums;color:#1e3a5f}
 .dep{font-weight:700;font-variant-numeric:tabular-nums;color:#c75000}
-.moneycell{min-width:118px;white-space:nowrap}
-.datecell{min-width:108px;white-space:nowrap}
+.moneycell,.datecell,.statuscell,.paycell{white-space:nowrap}
 .date2{font-size:12px;line-height:1.35;white-space:nowrap}
 .date2 .sub{display:block;color:#999;font-size:11px}
 .oktxt{color:#15803d;font-weight:700}.waittxt{color:#b35000;font-weight:700}.badtxt{color:#991b1b;font-weight:700}
 .statuscell{min-width:96px;white-space:nowrap}
 .statuscell .editcell{width:100%;justify-content:center}
 .dash{color:#ccc}
-.note{font-size:11px;color:#aaa;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.editcell{display:inline-flex;align-items:center;min-width:42px;min-height:26px;padding:2px 5px;border-radius:4px;cursor:text;white-space:nowrap}
+.note{font-size:11px;color:#777;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;max-height:30px}
+.editcell{display:inline-flex;align-items:center;width:100%;min-height:26px;padding:2px 5px;border-radius:4px;cursor:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.areacell{white-space:normal;line-height:1.35;align-items:flex-start;max-height:36px}
 .editcell:hover{background:#fff7d6;box-shadow:inset 0 0 0 1px #f0d37a}
-.editinp{width:100%;min-width:100px;height:26px;border:1px solid #2d5986;border-radius:5px;padding:0 6px;font:inherit;background:#fff}
-.editnum{min-width:108px;text-align:right}
-.paycell{min-width:112px}
+.editinp{width:100%;min-width:0;height:26px;border:1px solid #2d5986;border-radius:5px;padding:0 6px;font:inherit;background:#fff}
+.editarea{width:100%;height:36px;border:1px solid #2d5986;border-radius:5px;padding:3px 6px;font:inherit;background:#fff;resize:none;line-height:1.25}
+.editnum{text-align:right}
 .paycell .editcell{width:100%;justify-content:center}
-.titlecell{display:flex;align-items:center;gap:6px;min-width:220px;max-width:320px}
+.titlecell{display:flex;align-items:center;gap:6px;width:100%}
 .titletext{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.notecell{min-width:180px;max-width:220px}
+.notecell{width:100%;height:36px;overflow:hidden}
 .rawbtn,.mini{border:1px solid #d5d5d5;background:#fff;color:#555;border-radius:5px;height:24px;padding:0 7px;font-size:11px;cursor:pointer;white-space:nowrap}
 .rawbtn:hover,.mini:hover{background:#eef2fc;border-color:#b9c6e6}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:24px;z-index:100}
@@ -155,8 +147,19 @@ td.r{text-align:right}
 </div>
 <div class="tw">
 <table>
+  <colgroup>
+    <col style="width:108px">
+    <col style="width:78px">
+    <col style="width:260px">
+    <col style="width:96px">
+    <col style="width:116px">
+    <col style="width:116px">
+    <col style="width:128px">
+    <col style="width:124px">
+    <col style="width:118px">
+    <col style="width:140px">
+  </colgroup>
   <thead><tr>
-    <th style="width:18px"></th>
     <th class="datecol">대관일</th><th class="brcol">지점</th><th class="titlecol">행사명</th><th class="statuscol">수납상태</th>
     <th class="datecol">예약금 입금</th><th class="datecol">잔금 입금</th>
     <th class="r moneycol">보증금 제외 수납</th><th class="r moneycol">청소보증금</th><th class="paycol">결제방법</th><th>메모</th>
@@ -501,7 +504,7 @@ function getFiltered(){
 function evById(id){return allData.find(e=>e.id===id)}
 function cell(id,key,val,type='text',cls=''){
   const shown=(type==='money')?fa(Number(val)||0):(val||'');
-  return`<span class="editcell ${cls}" data-val="${esc(val||'')}" onclick="editCell(event,'${id}','${key}','${type}')">${shown?esc(shown):'<span class="dash">-</span>'}</span>`;
+  return`<span class="editcell ${type==='area'?'areacell':''} ${cls}" data-val="${esc(val||'')}" onclick="editCell(event,'${id}','${key}','${type}')">${shown?esc(shown):'<span class="dash">-</span>'}</span>`;
 }
 function editCell(e,id,key,type='text'){
   e.stopPropagation();
@@ -514,6 +517,10 @@ function editCell(e,id,key,type='text'){
     const opts=key==='branch'?['문래점','신논현점']:['완납','예약금','미입금','취소'];
     opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;input.appendChild(o)});
     input.className='editinp';
+  }else if(type==='area'){
+    input=document.createElement('textarea');
+    input.value=cur;
+    input.className='editarea';
   }else{
     input=document.createElement('input');
     input.type=type==='date'?'date':'text';
@@ -531,7 +538,7 @@ function editCell(e,id,key,type='text'){
   };
   input.addEventListener('blur',done,{once:true});
   input.addEventListener('keydown',ev=>{
-    if(ev.key==='Enter')input.blur();
+    if(ev.key==='Enter'&&!ev.shiftKey)input.blur();
     if(ev.key==='Escape')render();
   });
 }
@@ -566,7 +573,7 @@ function render(){
       <td class="r moneycell">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
       <td class="r moneycell">${cell(ev.id,'dep',ev.dep,'money','dep')}</td>
       <td class="paycell">${cell(ev.id,'methodsText',methodText,'text','bdg m'+methodText.split('+')[0])}</td>
-      <td class="notecell"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'text')}</span></td>
+      <td class="notecell"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'area')}</span></td>
     </tr>`);
   }
   document.getElementById('tb').innerHTML=rows.join('');
