@@ -12,8 +12,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .hdr h1{font-size:17px;font-weight:700}
 .hdr .sub{font-size:11px;opacity:.7;margin-bottom:3px}
 .toolbar{background:#fff;padding:9px 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.08);position:sticky;top:0;z-index:10}
-select{height:31px;border:1px solid #d5d5d5;border-radius:6px;padding:0 9px;font-size:12px;background:#fff;cursor:pointer;outline:none}
-select:focus{border-color:#2d5986}
+select,.search{height:31px;border:1px solid #d5d5d5;border-radius:6px;padding:0 9px;font-size:12px;background:#fff;outline:none}
+select{cursor:pointer}
+select:focus,.search:focus{border-color:#2d5986}
+.search{width:220px}
 .sp{flex:1}
 .btn{height:31px;padding:0 13px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
 .btn:hover{filter:brightness(.92)}
@@ -31,9 +33,11 @@ table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;ove
 thead tr{background:#f8f9fc}
 th{padding:8px 11px;text-align:left;font-size:11px;font-weight:700;color:#777;white-space:nowrap;border-bottom:2px solid #eee}
 th.r{text-align:right}
+th.brcol{min-width:72px}
+th.moneycol{min-width:118px}
 td{padding:8px 11px;border-top:1px solid #f2f2f2;vertical-align:middle}
 td.r{text-align:right}
-.er{cursor:pointer}.er:hover td{background:#f6f8ff}.er.open td{background:#eef2fc}
+.er:hover td{background:#f6f8ff}.er.open td{background:#eef2fc}
 .dr td{padding:0;background:#f6f8ff}
 .di{padding:10px 20px 13px 38px;border-top:1px dashed #c8d3ef}
 .tt{width:100%;border-collapse:collapse;font-size:12px}
@@ -48,6 +52,7 @@ td.r{text-align:right}
 .brm{color:#1d4ed8;font-weight:600;font-size:12px}.brs{color:#7c3aed;font-weight:600;font-size:12px}
 .amt{font-weight:700;font-variant-numeric:tabular-nums;color:#1e3a5f}
 .dep{font-weight:700;font-variant-numeric:tabular-nums;color:#c75000}
+.moneycell{min-width:118px;white-space:nowrap}
 .date2{font-size:12px;line-height:1.35;white-space:nowrap}
 .date2 .sub{display:block;color:#999;font-size:11px}
 .oktxt{color:#15803d;font-weight:700}.waittxt{color:#b35000;font-weight:700}.badtxt{color:#991b1b;font-weight:700}
@@ -55,6 +60,23 @@ td.r{text-align:right}
 .note{font-size:11px;color:#aaa;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .arr{font-size:9px;color:#bbb;transition:transform .2s;display:inline-block}
 .open .arr{transform:rotate(90deg)}
+.editcell{display:inline-block;min-width:28px;min-height:20px;padding:2px 3px;border-radius:4px;cursor:text}
+.editcell:hover{background:#fff7d6;box-shadow:inset 0 0 0 1px #f0d37a}
+.editinp{width:100%;min-width:72px;height:26px;border:1px solid #2d5986;border-radius:5px;padding:0 6px;font:inherit;background:#fff}
+.editnum{min-width:86px;text-align:right}
+.titlecell{display:flex;align-items:center;gap:6px;min-width:220px;max-width:320px}
+.titletext{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rawbtn,.mini{border:1px solid #d5d5d5;background:#fff;color:#555;border-radius:5px;height:24px;padding:0 7px;font-size:11px;cursor:pointer;white-space:nowrap}
+.rawbtn:hover,.mini:hover{background:#eef2fc;border-color:#b9c6e6}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:24px;z-index:100}
+.modal.show{display:flex}
+.modal-card{width:min(760px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.modal-hd{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #eee}
+.modal-hd h2{font-size:16px;color:#1e3a5f;flex:1}
+.modal-bd{padding:16px;line-height:1.55}
+.rawmeta{display:grid;grid-template-columns:88px 1fr;gap:8px 12px;margin-bottom:14px;font-size:12px}
+.rawmeta b{color:#777}
+.rawdesc{white-space:pre-wrap;background:#f8f9fc;border:1px solid #e7eaf1;border-radius:8px;padding:12px;color:#333;font-size:12px}
 .eb{margin-top:9px}
 .eb label{font-size:11px;color:#888;display:block;margin-bottom:3px}
 .eb textarea{width:100%;border:1px solid #c8d3ef;border-radius:6px;padding:5px 8px;font-size:12px;resize:vertical;min-height:40px;font-family:inherit;outline:none}
@@ -120,6 +142,7 @@ td.r{text-align:right}
     <option value="">전체 상태</option>
     <option value="완납">완납</option><option value="예약금">예약금</option><option value="미입금">미입금</option><option value="취소">취소</option>
   </select>
+  <input id="sq" class="search" placeholder="검색" oninput="render()">
   <div class="sp"></div>
   <button id="rb" class="btn btn-reload" onclick="loadAll()">🔄 새로고침</button>
   <button class="btn btn-export" onclick="doExport()">📊 CSV 내보내기</button>
@@ -136,13 +159,25 @@ td.r{text-align:right}
 <table>
   <thead><tr>
     <th style="width:18px"></th>
-    <th>대관일</th><th>지점</th><th>행사명</th><th>수납상태</th>
+    <th>대관일</th><th class="brcol">지점</th><th>행사명</th><th>수납상태</th>
     <th>예약금 입금</th><th>잔금 입금</th>
-    <th class="r">보증금 제외 수납</th><th class="r">청소보증금</th><th>결제방법</th><th>메모</th>
+    <th class="r moneycol">보증금 제외 수납</th><th class="r moneycol">청소보증금</th><th>결제방법</th><th>메모</th>
   </tr></thead>
   <tbody id="tb"><tr><td colspan="11" class="loader"><div class="spin"></div>데이터 로딩 중...</td></tr></tbody>
 </table>
 </div>
+</div>
+<div id="rawModal" class="modal" onclick="closeRaw(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-hd">
+      <h2>캘린더 원문</h2>
+      <button class="mini" onclick="closeRaw()">닫기</button>
+    </div>
+    <div class="modal-bd">
+      <div id="rawMeta" class="rawmeta"></div>
+      <div id="rawDesc" class="rawdesc"></div>
+    </div>
+  </div>
 </div>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -164,6 +199,30 @@ let refreshTimer=null;
 let googleReady=null, tokenClient=null;
 const open=new Set();
 try{ov=JSON.parse(localStorage.getItem('atm_ov')||'{}')}catch(e){}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function saveOv(){try{localStorage.setItem('atm_ov',JSON.stringify(ov))}catch(e){}}
+function cleanNum(v){return pa(String(v||'').replace(/[^\d,]/g,''))}
+function setOv(id,key,val){
+  if(!ov[id])ov[id]={};
+  ov[id][key]=val;
+  saveOv();
+  const ev=allData.find(e=>e.id===id);
+  if(ev){
+    if(key==='methodsText')ev.methods=String(val||'').split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
+    else ev[key]=val;
+  }
+}
+function applyOverrides(row,o){
+  ['date','branch','title','payStatus','reservationDate','balanceDate','notes'].forEach(k=>{
+    if(o[k]!==undefined)row[k]=o[k];
+  });
+  ['reservationAmount','balanceAmount','netIn','dep'].forEach(k=>{
+    if(o[k]!==undefined)row[k]=Number(o[k])||0;
+  });
+  if(o.methodsText!==undefined)row.methods=String(o.methodsText).split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
+  return row;
+}
 
 async function sha256(text){
   const data=new TextEncoder().encode(text);
@@ -266,6 +325,8 @@ function parseDesc(raw){
 function parseEv(ev,branch){
   const title=ev.summary||'';
   const date=(ev.start?.date||ev.start?.dateTime||'').slice(0,10);
+  const rawStart=ev.start?.dateTime||ev.start?.date||'';
+  const rawEnd=ev.end?.dateTime||ev.end?.date||'';
   let status='기타';
   if(/^\[취소\]/.test(title)||(/취소/.test(title)&&!/예약금/.test(title)))status='취소';
   else if(/완납/.test(title))status='완납';
@@ -274,12 +335,13 @@ function parseEv(ev,branch){
   const o=ov[ev.id]||{};
   const baseStatus=o.status||status;
   const payStatus=baseStatus==='취소'?'취소':(pd.balance||baseStatus==='완납')?'완납':pd.reservation?'예약금':'미입금';
-  return{id:ev.id,date,branch,title,status:baseStatus,
+  const row={id:ev.id,date,branch,title,status:baseStatus,
     payStatus,totalIn:pd.totalIn,netIn:pd.netIn,dep:pd.dep,methods:pd.methods,txns:pd.txns,
     reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||0,
     balanceDate:pd.balance?.date||'',balanceAmount:pd.balance?.net||0,
     notes:o.notes!==undefined?o.notes:pd.memos.slice(0,3).join(' / '),
-    rawDesc:ev.description||''};
+    rawTitle:title,rawDesc:ev.description||'',rawStart,rawEnd,rawBranch:branch};
+  return applyOverrides(row,o);
 }
 
 function isRel(ev){
@@ -432,7 +494,49 @@ async function loadAll(){
 
 function getFiltered(){
   const mo=document.getElementById('sm').value,br=document.getElementById('sb').value,st=document.getElementById('ss').value;
-  return allData.filter(e=>(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st));
+  const q=(document.getElementById('sq')?.value||'').trim().toLowerCase();
+  return allData.filter(e=>{
+    const hay=[e.date,e.branch,e.title,e.payStatus,e.reservationDate,e.balanceDate,e.netIn,e.dep,e.methods.join(' '),e.notes,e.rawTitle,e.rawDesc].join(' ').toLowerCase();
+    return(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
+  });
+}
+
+function evById(id){return allData.find(e=>e.id===id)}
+function cell(id,key,val,type='text',cls=''){
+  const shown=(type==='money')?fa(Number(val)||0):(val||'');
+  return`<span class="editcell ${cls}" data-val="${esc(val||'')}" onclick="editCell(event,'${id}','${key}','${type}')">${shown?esc(shown):'<span class="dash">-</span>'}</span>`;
+}
+function editCell(e,id,key,type='text'){
+  e.stopPropagation();
+  const host=e.currentTarget;
+  const ev=evById(id);if(!ev)return;
+  const cur=key==='methodsText'?ev.methods.join('+'):(ev[key]??'');
+  let input;
+  if(type==='select'){
+    input=document.createElement('select');
+    const opts=key==='branch'?['문래점','신논현점']:['완납','예약금','미입금','취소'];
+    opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;input.appendChild(o)});
+  }else{
+    input=document.createElement('input');
+    input.type=type==='date'?'date':'text';
+    input.value=type==='money'?(Number(cur)||''):cur;
+    input.className='editinp '+(type==='money'?'editnum':'');
+  }
+  input.className=input.className||'editinp';
+  host.innerHTML='';
+  host.appendChild(input);
+  input.focus();
+  input.select?.();
+  const done=()=>{
+    const val=type==='money'?cleanNum(input.value):input.value.trim();
+    setOv(id,key,val);
+    render();
+  };
+  input.addEventListener('blur',done,{once:true});
+  input.addEventListener('keydown',ev=>{
+    if(ev.key==='Enter')input.blur();
+    if(ev.key==='Escape')render();
+  });
 }
 
 function render(){
@@ -450,20 +554,24 @@ function render(){
     const isO=open.has(ev.id);
     const bc=ev.branch==='문래점'?'brm':'brs';
     const ms=ev.methods.map(m=>`<span class="bdg m${m}">${m}</span>`).join(' ');
-    const dh=ev.dep>0?`<span class="dep">${fa(ev.dep)}</span>`:'<span class="dash">-</span>';
-    const ah=ev.netIn>0?`<span class="amt">${fa(ev.netIn)}</span>`:'<span class="dash">-</span>';
-    const rh=ev.reservationDate?`<div class="date2">${ev.reservationDate}<span class="sub">${fa(ev.reservationAmount)}</span></div>`:'<span class="dash">-</span>';
-    const bh=ev.balanceDate?`<div class="date2">${ev.balanceDate}<span class="sub">${fa(ev.balanceAmount)}</span></div>`:'<span class="dash">-</span>';
-    const nh=ev.notes?`<span class="note" title="${ev.notes.replace(/"/g,'&quot;')}">${ev.notes}</span>`:'';
     const sc=ev.payStatus==='완납'?'oktxt':ev.payStatus==='취소'?'badtxt':'waittxt';
-    rows.push(`<tr class="er${isO?' open':''}" onclick="tog('${ev.id}')">
-      <td style="text-align:center"><span class="arr">▶</span></td>
-      <td style="white-space:nowrap">${ev.date}</td>
-      <td><span class="${bc}">${ev.branch}</span></td>
-      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ev.title.replace(/"/g,'&quot;')}">${ev.title}</td>
-      <td><span class="${sc}">${ev.payStatus}</span></td>
-      <td>${rh}</td><td>${bh}</td>
-      <td class="r">${ah}</td><td class="r">${dh}</td><td>${ms}</td><td>${nh}</td>
+    rows.push(`<tr class="er${isO?' open':''}">
+      <td style="text-align:center"><button class="mini" onclick="tog('${ev.id}',event)"><span class="arr">▶</span></button></td>
+      <td style="white-space:nowrap">${cell(ev.id,'date',ev.date,'date')}</td>
+      <td style="min-width:72px"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></td>
+      <td>
+        <div class="titlecell">
+          <span class="titletext" title="${esc(ev.title)}">${cell(ev.id,'title',ev.title,'text')}</span>
+          <button class="rawbtn" onclick="openRaw('${ev.id}',event)">원문</button>
+        </div>
+      </td>
+      <td><span class="${sc}">${cell(ev.id,'payStatus',ev.payStatus,'select')}</span></td>
+      <td><div class="date2">${cell(ev.id,'reservationDate',ev.reservationDate,'date')}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
+      <td><div class="date2">${cell(ev.id,'balanceDate',ev.balanceDate,'date')}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
+      <td class="r moneycell">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
+      <td class="r moneycell">${cell(ev.id,'dep',ev.dep,'money','dep')}</td>
+      <td>${ms}<div>${cell(ev.id,'methodsText',ev.methods.join('+'),'text')}</div></td>
+      <td><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'text')}</span></td>
     </tr>`);
     if(isO)rows.push(buildDet(ev));
   }
@@ -494,16 +602,35 @@ function buildDet(ev){
   </div></td></tr>`;
 }
 
-function tog(id){open.has(id)?open.delete(id):open.add(id);render()}
+function tog(id,e){e?.stopPropagation();open.has(id)?open.delete(id):open.add(id);render()}
 
 function saveN(id,e){
   e.stopPropagation();
   const val=document.getElementById('n'+id).value;
   if(!ov[id])ov[id]={};ov[id].notes=val;
-  try{localStorage.setItem('atm_ov',JSON.stringify(ov))}catch(e){}
+  saveOv();
   const ev=allData.find(e=>e.id===id);if(ev)ev.notes=val;
   const btn=e.target;btn.textContent='✓ 저장됨';btn.classList.add('ok');
   setTimeout(()=>{btn.textContent='저장';btn.classList.remove('ok')},2000);
+}
+
+function openRaw(id,e){
+  e?.stopPropagation();
+  const ev=evById(id);if(!ev)return;
+  document.getElementById('rawMeta').innerHTML=`
+    <b>원본 제목</b><div>${esc(ev.rawTitle||'-')}</div>
+    <b>표시 제목</b><div>${esc(ev.title||'-')}</div>
+    <b>지점</b><div>${esc(ev.rawBranch||ev.branch||'-')}</div>
+    <b>시작</b><div>${esc(ev.rawStart||'-')}</div>
+    <b>종료</b><div>${esc(ev.rawEnd||'-')}</div>
+  `;
+  document.getElementById('rawDesc').textContent=sh(ev.rawDesc||'원문 설명 없음').trim()||'원문 설명 없음';
+  document.getElementById('rawModal').classList.add('show');
+}
+
+function closeRaw(e){
+  if(e&&e.target.id!=='rawModal')return;
+  document.getElementById('rawModal').classList.remove('show');
 }
 
 function doExport(){
