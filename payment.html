@@ -30,20 +30,19 @@ select:focus,.search:focus{border-color:#2d5986}
 .card.bl .val{color:#1e3a5f}.card.gr .val{color:#1a7340}.card.or .val{color:#c75000}
 .tw{padding:0 20px 24px;overflow-x:auto}
 table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+table{table-layout:auto;min-width:1320px}
 thead tr{background:#f8f9fc}
 th{padding:8px 11px;text-align:left;font-size:11px;font-weight:700;color:#777;white-space:nowrap;border-bottom:2px solid #eee}
 th.r{text-align:right}
 th.brcol{min-width:72px}
 th.moneycol{min-width:118px}
+th.paycol{min-width:118px}
+th.datecol{min-width:108px}
+th.titlecol{min-width:260px}
+th.notecol{min-width:180px}
 td{padding:8px 11px;border-top:1px solid #f2f2f2;vertical-align:middle}
 td.r{text-align:right}
-.er:hover td{background:#f6f8ff}.er.open td{background:#eef2fc}
-.dr td{padding:0;background:#f6f8ff}
-.di{padding:10px 20px 13px 38px;border-top:1px dashed #c8d3ef}
-.tt{width:100%;border-collapse:collapse;font-size:12px}
-.tt th{background:#e8ecf5;padding:5px 8px;text-align:left;font-weight:600;color:#555}
-.tt td{padding:5px 8px;border-top:1px solid #eee}
-.tt .rf td{color:#c0392b}.tt .rf td:nth-child(4){text-decoration:line-through}
+.er:hover td{background:#f6f8ff}
 .bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap}
 .s완납{background:#dcf5e7;color:#1a6640}.s예약금{background:#fff0d6;color:#b35000}
 .s취소{background:#fce8ec;color:#991b1b}.s기타{background:#f0f0f0;color:#888}
@@ -53,19 +52,21 @@ td.r{text-align:right}
 .amt{font-weight:700;font-variant-numeric:tabular-nums;color:#1e3a5f}
 .dep{font-weight:700;font-variant-numeric:tabular-nums;color:#c75000}
 .moneycell{min-width:118px;white-space:nowrap}
+.datecell{min-width:108px;white-space:nowrap}
 .date2{font-size:12px;line-height:1.35;white-space:nowrap}
 .date2 .sub{display:block;color:#999;font-size:11px}
 .oktxt{color:#15803d;font-weight:700}.waittxt{color:#b35000;font-weight:700}.badtxt{color:#991b1b;font-weight:700}
 .dash{color:#ccc}
 .note{font-size:11px;color:#aaa;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.arr{font-size:9px;color:#bbb;transition:transform .2s;display:inline-block}
-.open .arr{transform:rotate(90deg)}
-.editcell{display:inline-block;min-width:28px;min-height:20px;padding:2px 3px;border-radius:4px;cursor:text}
+.editcell{display:inline-flex;align-items:center;min-width:42px;min-height:26px;padding:2px 5px;border-radius:4px;cursor:text;white-space:nowrap}
 .editcell:hover{background:#fff7d6;box-shadow:inset 0 0 0 1px #f0d37a}
-.editinp{width:100%;min-width:72px;height:26px;border:1px solid #2d5986;border-radius:5px;padding:0 6px;font:inherit;background:#fff}
-.editnum{min-width:86px;text-align:right}
+.editinp{width:100%;min-width:100px;height:26px;border:1px solid #2d5986;border-radius:5px;padding:0 6px;font:inherit;background:#fff}
+.editnum{min-width:108px;text-align:right}
+.paycell{min-width:112px}
+.paycell .editcell{width:100%;justify-content:center}
 .titlecell{display:flex;align-items:center;gap:6px;min-width:220px;max-width:320px}
 .titletext{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notecell{min-width:180px;max-width:220px}
 .rawbtn,.mini{border:1px solid #d5d5d5;background:#fff;color:#555;border-radius:5px;height:24px;padding:0 7px;font-size:11px;cursor:pointer;white-space:nowrap}
 .rawbtn:hover,.mini:hover{background:#eef2fc;border-color:#b9c6e6}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:24px;z-index:100}
@@ -77,12 +78,6 @@ td.r{text-align:right}
 .rawmeta{display:grid;grid-template-columns:88px 1fr;gap:8px 12px;margin-bottom:14px;font-size:12px}
 .rawmeta b{color:#777}
 .rawdesc{white-space:pre-wrap;background:#f8f9fc;border:1px solid #e7eaf1;border-radius:8px;padding:12px;color:#333;font-size:12px}
-.eb{margin-top:9px}
-.eb label{font-size:11px;color:#888;display:block;margin-bottom:3px}
-.eb textarea{width:100%;border:1px solid #c8d3ef;border-radius:6px;padding:5px 8px;font-size:12px;resize:vertical;min-height:40px;font-family:inherit;outline:none}
-.eb textarea:focus{border-color:#2d5986}
-.sv{margin-top:5px;height:25px;padding:0 11px;background:#1e3a5f;color:#fff;border:none;border-radius:5px;font-size:11px;cursor:pointer;font-weight:600}
-.sv.ok{background:#1a7340}
 .loader{text-align:center;padding:55px;color:#bbb}
 .spin{width:28px;height:28px;border:3px solid #e0e0e0;border-top-color:#2d5986;border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 10px}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -159,11 +154,11 @@ td.r{text-align:right}
 <table>
   <thead><tr>
     <th style="width:18px"></th>
-    <th>대관일</th><th class="brcol">지점</th><th>행사명</th><th>수납상태</th>
-    <th>예약금 입금</th><th>잔금 입금</th>
-    <th class="r moneycol">보증금 제외 수납</th><th class="r moneycol">청소보증금</th><th>결제방법</th><th>메모</th>
+    <th class="datecol">대관일</th><th class="brcol">지점</th><th class="titlecol">행사명</th><th>수납상태</th>
+    <th class="datecol">예약금 입금</th><th class="datecol">잔금 입금</th>
+    <th class="r moneycol">보증금 제외 수납</th><th class="r moneycol">청소보증금</th><th class="paycol">결제방법</th><th>메모</th>
   </tr></thead>
-  <tbody id="tb"><tr><td colspan="11" class="loader"><div class="spin"></div>데이터 로딩 중...</td></tr></tbody>
+  <tbody id="tb"><tr><td colspan="10" class="loader"><div class="spin"></div>데이터 로딩 중...</td></tr></tbody>
 </table>
 </div>
 </div>
@@ -234,7 +229,6 @@ function showApp(){
   document.body.classList.remove('locked');
   document.getElementById('authScreen').style.display='none';
   loadAll();
-  if(!refreshTimer)refreshTimer=setInterval(loadAll,60000);
 }
 
 async function unlockApp(e){
@@ -394,7 +388,7 @@ async function ensureGoogleToken(prompt=''){
 
 function showGoogleSetup(msg=''){
   const origin=location.origin;
-  document.getElementById('tb').innerHTML=`<tr><td colspan="11" class="empty">
+  document.getElementById('tb').innerHTML=`<tr><td colspan="10" class="empty">
     <div class="setup">
       <h2>Google Calendar 연결</h2>
       <p>${msg||'방금 새로 만든 OAuth 2.0 웹 클라이언트 ID를 입력하세요.'}</p>
@@ -475,7 +469,7 @@ async function fetchEvs(calId,year){
 async function loadAll(){
   const btn=document.getElementById('rb');
   btn.disabled=true;btn.textContent='⏳ 로딩 중...';
-  document.getElementById('tb').innerHTML='<tr><td colspan="11" class="loader"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
+  document.getElementById('tb').innerHTML='<tr><td colspan="10" class="loader"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
   const year=document.getElementById('sy').value;
   try{
     if(!hasCowork()&&!getGoogleClientId()){showGoogleSetup();return}
@@ -488,7 +482,7 @@ async function loadAll(){
     render();
   }catch(e){
     if(!hasCowork())showGoogleSetup(`오류: ${e.message}`);
-    else document.getElementById('tb').innerHTML=`<tr><td colspan="11" style="color:#c00;padding:20px">오류: ${e.message}</td></tr>`;
+    else document.getElementById('tb').innerHTML=`<tr><td colspan="10" style="color:#c00;padding:20px">오류: ${e.message}</td></tr>`;
   }finally{btn.disabled=false;btn.textContent='🔄 새로고침'}
 }
 
@@ -516,13 +510,13 @@ function editCell(e,id,key,type='text'){
     input=document.createElement('select');
     const opts=key==='branch'?['문래점','신논현점']:['완납','예약금','미입금','취소'];
     opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;input.appendChild(o)});
+    input.className='editinp';
   }else{
     input=document.createElement('input');
     input.type=type==='date'?'date':'text';
     input.value=type==='money'?(Number(cur)||''):cur;
     input.className='editinp '+(type==='money'?'editnum':'');
   }
-  input.className=input.className||'editinp';
   host.innerHTML='';
   host.appendChild(input);
   input.focus();
@@ -548,16 +542,14 @@ function render(){
   document.getElementById('c1').textContent=완납.length+'건';
   document.getElementById('c2').textContent=data.filter(e=>e.payStatus==='예약금').length+'건';
   document.getElementById('c3').textContent=data.filter(e=>e.payStatus==='취소').length+'건';
-  if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="11" class="empty">해당 데이터 없음</td></tr>';return}
+  if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="10" class="empty">해당 데이터 없음</td></tr>';return}
   const rows=[];
   for(const ev of data){
-    const isO=open.has(ev.id);
     const bc=ev.branch==='문래점'?'brm':'brs';
-    const ms=ev.methods.map(m=>`<span class="bdg m${m}">${m}</span>`).join(' ');
+    const methodText=ev.methods.join('+')||'기타';
     const sc=ev.payStatus==='완납'?'oktxt':ev.payStatus==='취소'?'badtxt':'waittxt';
-    rows.push(`<tr class="er${isO?' open':''}">
-      <td style="text-align:center"><button class="mini" onclick="tog('${ev.id}',event)"><span class="arr">▶</span></button></td>
-      <td style="white-space:nowrap">${cell(ev.id,'date',ev.date,'date')}</td>
+    rows.push(`<tr class="er">
+      <td class="datecell">${cell(ev.id,'date',ev.date,'date')}</td>
       <td style="min-width:72px"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></td>
       <td>
         <div class="titlecell">
@@ -570,48 +562,11 @@ function render(){
       <td><div class="date2">${cell(ev.id,'balanceDate',ev.balanceDate,'date')}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
       <td class="r moneycell">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
       <td class="r moneycell">${cell(ev.id,'dep',ev.dep,'money','dep')}</td>
-      <td>${ms}<div>${cell(ev.id,'methodsText',ev.methods.join('+'),'text')}</div></td>
-      <td><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'text')}</span></td>
+      <td class="paycell">${cell(ev.id,'methodsText',methodText,'text','bdg m'+methodText.split('+')[0])}</td>
+      <td class="notecell"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'text')}</span></td>
     </tr>`);
-    if(isO)rows.push(buildDet(ev));
   }
   document.getElementById('tb').innerHTML=rows.join('');
-}
-
-function buildDet(ev){
-  const tr=ev.txns.length?ev.txns.map(t=>{
-    const n=t.isDep?'청소보증금':t.diAmt?`청소보증금 ${fa(t.diAmt)} 포함, 대관수납 ${fa(t.amount-t.diAmt)}`:(t.kind||'');
-    return`<tr class="${t.isRef?'rf':''}">
-      <td>${t.date}</td><td>${t.name||'-'}</td>
-      <td><span class="bdg m${t.method}">${t.method}</span></td>
-      <td style="text-align:right;font-weight:600">${fa(t.amount)}</td>
-      <td style="font-size:11px;color:${t.isRef?'#c0392b':'#888'}">${t.isRef?'🔴 환불/취소':n}</td>
-    </tr>`;
-  }).join(''):'<tr><td colspan="5" style="text-align:center;color:#ccc;padding:8px">결제 내역 없음</td></tr>';
-  const cur=(ov[ev.id]?.notes!==undefined?ov[ev.id].notes:ev.notes)||'';
-  return`<tr class="dr"><td colspan="11"><div class="di">
-    <table class="tt">
-      <thead><tr><th>날짜</th><th>이름</th><th>방법</th><th style="text-align:right">금액</th><th>비고</th></tr></thead>
-      <tbody>${tr}</tbody>
-    </table>
-    <div class="eb">
-      <label>메모 (직접 수정 가능)</label>
-      <textarea id="n${ev.id}" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()">${cur}</textarea>
-      <button class="sv" onclick="saveN('${ev.id}',event)">저장</button>
-    </div>
-  </div></td></tr>`;
-}
-
-function tog(id,e){e?.stopPropagation();open.has(id)?open.delete(id):open.add(id);render()}
-
-function saveN(id,e){
-  e.stopPropagation();
-  const val=document.getElementById('n'+id).value;
-  if(!ov[id])ov[id]={};ov[id].notes=val;
-  saveOv();
-  const ev=allData.find(e=>e.id===id);if(ev)ev.notes=val;
-  const btn=e.target;btn.textContent='✓ 저장됨';btn.classList.add('ok');
-  setTimeout(()=>{btn.textContent='저장';btn.classList.remove('ok')},2000);
 }
 
 function openRaw(id,e){
