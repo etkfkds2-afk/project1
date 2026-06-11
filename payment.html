@@ -295,10 +295,11 @@ function parseDesc(raw){
       const isRef=/→\s*환불|환불완료|환불해줘야|환급/.test(line);
       // Inline deposit: (청소보증금 N원 포함)
       const di=(line.match(/[（(]청소보증금\s*([0-9,]+)원\s*포함[）)]/)||
-                line.match(/청소보증금\s*([0-9,]+)원\s*포함/))?.[1];
+                line.match(/청소보증금\s*([0-9,]+)원\s*포함/)||
+                line.match(/보증금\s*([0-9,]+)원\s*포함/))?.[1];
       const diAmt=di?pa(di):0;
       // Standalone deposit line
-      const isl=/[（(]보증금[）)]/.test(line)||(/청소보증금/.test(line)&&!di&&amts.length===1);
+      const isl=/[（(]보증금[）)]/.test(line)||(/청소보증금/.test(line)&&!diAmt&&amts.length===1);
       const name=line.slice(dm[0].length).match(/^([가-힣A-Za-z()_\s\w]+?)(?:\s+(?:개인|법인|신신|카드|국민|\d))/)?.[1]?.trim()||'';
       let prevEnd=dm[0].length;
       const mixedCorpCash=/법인계좌|법인|세금계산서|계산서/.test(line)&&/개인계좌|개인|현금/.test(line)&&amts.length>1;
