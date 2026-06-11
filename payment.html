@@ -72,6 +72,14 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
 .rawbtn{border:1px solid #e2e8f0;background:#fff;color:#64748b;border-radius:6px;height:24px;padding:0 8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s}
 .rawbtn:hover{background:#f8fafc;color:#1a3a5f;border-color:#cbd5e0}
 .mini{border:1px solid #e2e8f0;background:#fff;color:#64748b;border-radius:6px;height:26px;padding:0 10px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-hidden{background:#f1f3f5;color:#495057;border:1px solid #dee2e6}
+.btn-hidden.active{background:#fff5f5;color:#c53030;border-color:#feb2b2}
+.delbtn{border:none;background:none;color:#e2e8f0;cursor:pointer;font-size:15px;padding:4px 8px;border-radius:4px;line-height:1;transition:all 0.15s}
+.grow:hover .delbtn{color:#fc8181}
+.delbtn:hover{background:#fff5f5;color:#e53e3e}
+.restbtn{border:none;background:#f0fff4;color:#38a169;cursor:pointer;font-size:11px;padding:3px 7px;border-radius:4px;font-weight:700;transition:all 0.15s}
+.restbtn:hover{background:#c6f6d5}
+.hidden-row{opacity:0.45}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,0.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:100;backdrop-filter:blur(4px)}
 .modal.show{display:flex}
 .modal-card{width:min(760px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25)}
@@ -142,6 +150,7 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
   </select>
   <input id="sq" class="search" placeholder="검색" oninput="render()">
   <div class="sp"></div>
+  <button id="thbtn" class="btn btn-hidden" onclick="toggleHidden()">🗑 숨긴 항목</button>
   <button id="rb" class="btn btn-reload" onclick="loadAll()">🔄 새로고침</button>
   <button class="btn btn-export" onclick="doExport()">📊 CSV 내보내기</button>
 </div>
@@ -166,6 +175,7 @@ select:focus,.search:focus{border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152
     <div class="gcell r"><span class="hchip">청소보증금</span></div>
     <div class="gcell"><span class="hchip">결제방법</span></div>
     <div class="gcell"><span class="hchip">메모</span></div>
+    <div class="gcell" style="width:40px"></div>
   </div>
   <div id="tb"><div class="gridmsg"><div class="spin"></div>데이터 로딩 중...</div></div>
 </div>
@@ -200,6 +210,7 @@ const CALS=[
 const TOOL='mcp__7562d3df-f0a0-4481-87e0-f6c4660717b3__list_events';
 let allData=[], ov={};
 let refreshTimer=null;
+let showHidden=false;
 let googleReady=null, tokenClient=null;
 const open=new Set();
 try{ov=JSON.parse(localStorage.getItem('atm_ov')||'{}')}catch(e){}
@@ -226,6 +237,7 @@ function applyOverrides(row,o){
     if(o[k]!==undefined)row[k]=Number(o[k])||0;
   });
   if(o.methodsText!==undefined)row.methods=String(o.methodsText).split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
+  if(o.hidden!==undefined)row.hidden=!!o.hidden;
   return row;
 }
 
@@ -512,6 +524,7 @@ function getFiltered(){
   const mo=document.getElementById('sm').value,br=document.getElementById('sb').value,st=document.getElementById('ss').value;
   const q=(document.getElementById('sq')?.value||'').trim().toLowerCase();
   return allData.filter(e=>{
+    if(!showHidden&&e.hidden)return false;
     const hay=[e.date,e.branch,e.title,e.payStatus,e.reservationDate,e.balanceDate,e.netIn,e.dep,e.methods.join(' '),e.notes,e.rawTitle,e.rawDesc].join(' ').toLowerCase();
     return(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
   });
@@ -575,7 +588,7 @@ function render(){
     const methodText=ev.methods.join('+')||'기타';
     // 상태값에서 공백 제거하여 CSS 클래스로 사용 (예: '예약금 입금' -> 's예약금입금')
     const sCls='s'+ev.payStatus.replace(/\s+/g,'');
-    rows.push(`<div class="grow">
+    rows.push(`<div class="grow${ev.hidden?' hidden-row':''}">
       <div class="gcell datecell">${cell(ev.id,'date',ev.date,'date')}</div>
       <div class="gcell"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></div>
       <div class="gcell">
@@ -595,9 +608,28 @@ function render(){
         <span class="bdg m${methodText.split('+')[0]}">${cell(ev.id,'methodsText',methodText,'text')}</span>
       </div>
       <div class="gcell notecell"><span class="note" title="${esc(ev.notes)}">${cell(ev.id,'notes',ev.notes,'area')}</span></div>
+      <div class="gcell" style="width:40px;text-align:center">${ev.hidden?`<button class="restbtn" onclick="restoreRow('${ev.id}',event)" title="복원">↩</button>`:`<button class="delbtn" onclick="hideRow('${ev.id}',event)" title="숨기기">✕</button>`}</div>
     </div>`);
   }
   document.getElementById('tb').innerHTML=rows.join('');
+}
+
+function hideRow(id,e){
+  e?.stopPropagation();
+  setOv(id,'hidden',true);
+  render();
+}
+function restoreRow(id,e){
+  e?.stopPropagation();
+  setOv(id,'hidden',false);
+  render();
+}
+function toggleHidden(){
+  showHidden=!showHidden;
+  const btn=document.getElementById('thbtn');
+  btn.classList.toggle('active',showHidden);
+  btn.textContent=showHidden?'🗑 숨김 숨기기':'🗑 숨긴 항목';
+  render();
 }
 
 function openRaw(id,e){
