@@ -43,11 +43,14 @@ td.r{text-align:right}
 .bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap}
 .s완납{background:#dcf5e7;color:#1a6640}.s예약금{background:#fff0d6;color:#b35000}
 .s취소{background:#fce8ec;color:#991b1b}.s기타{background:#f0f0f0;color:#888}
-.m카드{background:#dbeafe;color:#1d4ed8}.m법인{background:#ede9fe;color:#5b21b6}
-.m개인{background:#dcfce7;color:#15803d}.m기타{background:#f3f4f6;color:#9ca3af}
+.m카드{background:#dbeafe;color:#1d4ed8}.m세금계산서{background:#ede9fe;color:#5b21b6}
+.m현금{background:#dcfce7;color:#15803d}.m기타{background:#f3f4f6;color:#9ca3af}
 .brm{color:#1d4ed8;font-weight:600;font-size:12px}.brs{color:#7c3aed;font-weight:600;font-size:12px}
 .amt{font-weight:700;font-variant-numeric:tabular-nums;color:#1e3a5f}
 .dep{font-weight:700;font-variant-numeric:tabular-nums;color:#c75000}
+.date2{font-size:12px;line-height:1.35;white-space:nowrap}
+.date2 .sub{display:block;color:#999;font-size:11px}
+.oktxt{color:#15803d;font-weight:700}.waittxt{color:#b35000;font-weight:700}.badtxt{color:#991b1b;font-weight:700}
 .dash{color:#ccc}
 .note{font-size:11px;color:#aaa;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .arr{font-size:9px;color:#bbb;transition:transform .2s;display:inline-block}
@@ -115,7 +118,7 @@ td.r{text-align:right}
   </select>
   <select id="ss" onchange="render()">
     <option value="">전체 상태</option>
-    <option value="완납">완납</option><option value="예약금">예약금</option><option value="취소">취소</option>
+    <option value="완납">완납</option><option value="예약금">예약금</option><option value="미입금">미입금</option><option value="취소">취소</option>
   </select>
   <div class="sp"></div>
   <button id="rb" class="btn btn-reload" onclick="loadAll()">🔄 새로고침</button>
@@ -123,7 +126,7 @@ td.r{text-align:right}
 </div>
 <div class="cards">
   <div class="card bl"><div class="lbl">전체 건수</div><div class="val" id="ct">-</div></div>
-  <div class="card gr"><div class="lbl">완납 입금 합계</div><div class="val" id="ca">-</div></div>
+  <div class="card gr"><div class="lbl">완납 대관수납</div><div class="val" id="ca">-</div></div>
   <div class="card or"><div class="lbl">청소보증금 보유</div><div class="val" id="cd">-</div></div>
   <div class="card bl"><div class="lbl">완납</div><div class="val" id="c1">-</div></div>
   <div class="card"><div class="lbl">예약금</div><div class="val" id="c2">-</div></div>
@@ -133,10 +136,11 @@ td.r{text-align:right}
 <table>
   <thead><tr>
     <th style="width:18px"></th>
-    <th>행사일</th><th>지점</th><th>행사명</th><th>상태</th>
-    <th class="r">입금 총액</th><th class="r">청소보증금</th><th>결제방법</th><th>메모</th>
+    <th>대관일</th><th>지점</th><th>행사명</th><th>수납상태</th>
+    <th>예약금 입금</th><th>잔금 입금</th>
+    <th class="r">보증금 제외 수납</th><th class="r">청소보증금</th><th>결제방법</th><th>메모</th>
   </tr></thead>
-  <tbody id="tb"><tr><td colspan="9" class="loader"><div class="spin"></div>데이터 로딩 중...</td></tr></tbody>
+  <tbody id="tb"><tr><td colspan="11" class="loader"><div class="spin"></div>데이터 로딩 중...</td></tr></tbody>
 </table>
 </div>
 </div>
@@ -199,9 +203,14 @@ function pa(s){return parseInt((s||'').replace(/,/g,''))||0}
 function fa(n){return n?n.toLocaleString('ko-KR')+'원':'-'}
 function gm(l){
   if(/신신페이|카드결제|카드\s*결제|국민카드|삼성카드|현대카드|전화승인/.test(l))return'카드';
-  if(/법인계좌|법인/.test(l))return'법인';
-  if(/개인계좌|개인/.test(l))return'개인';
+  if(/법인계좌|법인|세금계산서|계산서/.test(l))return'세금계산서';
+  if(/개인계좌|개인|현금/.test(l))return'현금';
   return'기타';
+}
+function pk(line){
+  if(/예약금/.test(line))return'예약금';
+  if(/잔금|완납|나머지|차액/.test(line))return'잔금';
+  return'';
 }
 
 function parseDesc(raw){
@@ -219,6 +228,7 @@ function parseDesc(raw){
       const amts=[...line.matchAll(/([0-9,]+)원/g)];
       if(!amts.length)continue;
       const method=gm(line);
+      const kind=pk(line);
       const isRef=/→\s*환불|환불완료|환불해줘야|환급/.test(line);
       // Inline deposit: (청소보증금 N원 포함)
       const di=(line.match(/[（(]청소보증금\s*([0-9,]+)원\s*포함[）)]/)||
@@ -229,7 +239,7 @@ function parseDesc(raw){
       const name=line.slice(dm[0].length).match(/^([가-힣A-Za-z()_\s\w]+?)(?:\s+(?:개인|법인|신신|카드|국민|\d))/)?.[1]?.trim()||'';
       amts.forEach((m,i)=>{
         const amt=pa(m[1]);if(!amt)return;
-        txns.push({date,name,method,amount:amt,isRef,isDep:i===0&&isl,diAmt:i===0?diAmt:0});
+        txns.push({date,name,method,kind,amount:amt,isRef,isDep:i===0&&isl,diAmt:i===0?diAmt:0});
       });
       if(isl&&amts[0])dep+=pa(amts[0][1]);
       else if(diAmt)dep+=diAmt;
@@ -243,9 +253,14 @@ function parseDesc(raw){
   }
   const totalIn=txns.filter(t=>!t.isRef).reduce((s,t)=>s+t.amount,0);
   const mv={};
-  txns.filter(t=>!t.isRef&&!t.isDep).forEach(t=>mv[t.method]=(mv[t.method]||0)+t.amount);
+  txns.filter(t=>!t.isRef&&!t.isDep).forEach(t=>mv[t.method]=(mv[t.method]||0)+(t.amount-(t.diAmt||0)));
   const methods=Object.entries(mv).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
-  return{txns,totalIn,dep,methods:methods.length?methods:['기타'],memos};
+  const pays=txns.filter(t=>!t.isRef&&!t.isDep).map(t=>({...t,net:t.amount-(t.diAmt||0)}));
+  const explicitRes=pays.find(t=>t.kind==='예약금');
+  const explicitBal=pays.find(t=>t.kind==='잔금');
+  const reservation=explicitRes||pays[0]||null;
+  const balance=explicitBal||pays.find(t=>reservation&&t!==reservation)||null;
+  return{txns,totalIn,dep,netIn:Math.max(0,totalIn-dep),methods:methods.length?methods:['기타'],memos,reservation,balance};
 }
 
 function parseEv(ev,branch){
@@ -257,8 +272,12 @@ function parseEv(ev,branch){
   else if(/예약금/.test(title))status='예약금';
   const pd=parseDesc(ev.description);
   const o=ov[ev.id]||{};
-  return{id:ev.id,date,branch,title,status:o.status||status,
-    totalIn:pd.totalIn,dep:pd.dep,methods:pd.methods,txns:pd.txns,
+  const baseStatus=o.status||status;
+  const payStatus=baseStatus==='취소'?'취소':(pd.balance||baseStatus==='완납')?'완납':pd.reservation?'예약금':'미입금';
+  return{id:ev.id,date,branch,title,status:baseStatus,
+    payStatus,totalIn:pd.totalIn,netIn:pd.netIn,dep:pd.dep,methods:pd.methods,txns:pd.txns,
+    reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||0,
+    balanceDate:pd.balance?.date||'',balanceAmount:pd.balance?.net||0,
     notes:o.notes!==undefined?o.notes:pd.memos.slice(0,3).join(' / '),
     rawDesc:ev.description||''};
 }
@@ -313,7 +332,7 @@ async function ensureGoogleToken(prompt=''){
 
 function showGoogleSetup(msg=''){
   const origin=location.origin;
-  document.getElementById('tb').innerHTML=`<tr><td colspan="9" class="empty">
+  document.getElementById('tb').innerHTML=`<tr><td colspan="11" class="empty">
     <div class="setup">
       <h2>Google Calendar 연결</h2>
       <p>${msg||'방금 새로 만든 OAuth 2.0 웹 클라이언트 ID를 입력하세요.'}</p>
@@ -394,7 +413,7 @@ async function fetchEvs(calId,year){
 async function loadAll(){
   const btn=document.getElementById('rb');
   btn.disabled=true;btn.textContent='⏳ 로딩 중...';
-  document.getElementById('tb').innerHTML='<tr><td colspan="9" class="loader"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
+  document.getElementById('tb').innerHTML='<tr><td colspan="11" class="loader"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
   const year=document.getElementById('sy').value;
   try{
     if(!hasCowork()&&!getGoogleClientId()){showGoogleSetup();return}
@@ -407,39 +426,43 @@ async function loadAll(){
     render();
   }catch(e){
     if(!hasCowork())showGoogleSetup(`오류: ${e.message}`);
-    else document.getElementById('tb').innerHTML=`<tr><td colspan="9" style="color:#c00;padding:20px">오류: ${e.message}</td></tr>`;
+    else document.getElementById('tb').innerHTML=`<tr><td colspan="11" style="color:#c00;padding:20px">오류: ${e.message}</td></tr>`;
   }finally{btn.disabled=false;btn.textContent='🔄 새로고침'}
 }
 
 function getFiltered(){
   const mo=document.getElementById('sm').value,br=document.getElementById('sb').value,st=document.getElementById('ss').value;
-  return allData.filter(e=>(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.status===st));
+  return allData.filter(e=>(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st));
 }
 
 function render(){
   const data=getFiltered();
-  const 완납=data.filter(e=>e.status==='완납');
+  const 완납=data.filter(e=>e.payStatus==='완납');
   document.getElementById('ct').textContent=data.length+'건';
-  document.getElementById('ca').textContent=fa(완납.reduce((s,e)=>s+e.totalIn,0));
+  document.getElementById('ca').textContent=fa(완납.reduce((s,e)=>s+e.netIn,0));
   document.getElementById('cd').textContent=fa(data.reduce((s,e)=>s+e.dep,0));
   document.getElementById('c1').textContent=완납.length+'건';
-  document.getElementById('c2').textContent=data.filter(e=>e.status==='예약금').length+'건';
-  document.getElementById('c3').textContent=data.filter(e=>e.status==='취소').length+'건';
-  if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="9" class="empty">해당 데이터 없음</td></tr>';return}
+  document.getElementById('c2').textContent=data.filter(e=>e.payStatus==='예약금').length+'건';
+  document.getElementById('c3').textContent=data.filter(e=>e.payStatus==='취소').length+'건';
+  if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="11" class="empty">해당 데이터 없음</td></tr>';return}
   const rows=[];
   for(const ev of data){
     const isO=open.has(ev.id);
     const bc=ev.branch==='문래점'?'brm':'brs';
     const ms=ev.methods.map(m=>`<span class="bdg m${m}">${m}</span>`).join(' ');
     const dh=ev.dep>0?`<span class="dep">${fa(ev.dep)}</span>`:'<span class="dash">-</span>';
-    const ah=ev.totalIn>0?`<span class="amt">${fa(ev.totalIn)}</span>`:'<span class="dash">-</span>';
+    const ah=ev.netIn>0?`<span class="amt">${fa(ev.netIn)}</span>`:'<span class="dash">-</span>';
+    const rh=ev.reservationDate?`<div class="date2">${ev.reservationDate}<span class="sub">${fa(ev.reservationAmount)}</span></div>`:'<span class="dash">-</span>';
+    const bh=ev.balanceDate?`<div class="date2">${ev.balanceDate}<span class="sub">${fa(ev.balanceAmount)}</span></div>`:'<span class="dash">-</span>';
     const nh=ev.notes?`<span class="note" title="${ev.notes.replace(/"/g,'&quot;')}">${ev.notes}</span>`:'';
+    const sc=ev.payStatus==='완납'?'oktxt':ev.payStatus==='취소'?'badtxt':'waittxt';
     rows.push(`<tr class="er${isO?' open':''}" onclick="tog('${ev.id}')">
       <td style="text-align:center"><span class="arr">▶</span></td>
       <td style="white-space:nowrap">${ev.date}</td>
       <td><span class="${bc}">${ev.branch}</span></td>
       <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ev.title.replace(/"/g,'&quot;')}">${ev.title}</td>
-      <td><span class="bdg s${ev.status}">${ev.status}</span></td>
+      <td><span class="${sc}">${ev.payStatus}</span></td>
+      <td>${rh}</td><td>${bh}</td>
       <td class="r">${ah}</td><td class="r">${dh}</td><td>${ms}</td><td>${nh}</td>
     </tr>`);
     if(isO)rows.push(buildDet(ev));
@@ -449,7 +472,7 @@ function render(){
 
 function buildDet(ev){
   const tr=ev.txns.length?ev.txns.map(t=>{
-    const n=t.isDep?'🟡 청소보증금':t.diAmt?`(청소보증금 ${fa(t.diAmt)} 포함)`:'';
+    const n=t.isDep?'청소보증금':t.diAmt?`청소보증금 ${fa(t.diAmt)} 포함, 대관수납 ${fa(t.amount-t.diAmt)}`:(t.kind||'');
     return`<tr class="${t.isRef?'rf':''}">
       <td>${t.date}</td><td>${t.name||'-'}</td>
       <td><span class="bdg m${t.method}">${t.method}</span></td>
@@ -458,7 +481,7 @@ function buildDet(ev){
     </tr>`;
   }).join(''):'<tr><td colspan="5" style="text-align:center;color:#ccc;padding:8px">결제 내역 없음</td></tr>';
   const cur=(ov[ev.id]?.notes!==undefined?ov[ev.id].notes:ev.notes)||'';
-  return`<tr class="dr"><td colspan="9"><div class="di">
+  return`<tr class="dr"><td colspan="11"><div class="di">
     <table class="tt">
       <thead><tr><th>날짜</th><th>이름</th><th>방법</th><th style="text-align:right">금액</th><th>비고</th></tr></thead>
       <tbody>${tr}</tbody>
@@ -485,10 +508,11 @@ function saveN(id,e){
 
 function doExport(){
   const data=getFiltered();
-  const H=['행사일','지점','행사명','상태','입금총액','청소보증금','결제방법','메모'];
+  const H=['대관일','지점','행사명','수납상태','예약금입금일','예약금액','잔금입금일','잔금액','보증금제외수납','청소보증금','결제방법','메모'];
   const rows=data.map(e=>[
-    e.date,e.branch,`"${e.title.replace(/"/g,'""')}"`,e.status,
-    e.totalIn||0,e.dep||0,e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
+    e.date,e.branch,`"${e.title.replace(/"/g,'""')}"`,e.payStatus,
+    e.reservationDate,e.reservationAmount||0,e.balanceDate,e.balanceAmount||0,
+    e.netIn||0,e.dep||0,e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
   ]);
   const csv='﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
