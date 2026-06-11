@@ -279,7 +279,7 @@ function pk(line){
 function parseDesc(raw){
   const text=sh(raw||'');
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
-  const txns=[];let dep=0;const memos=[];
+  const txns=[];let dep=0;const memos=[];let pendingDep=0;
   for(const line of lines){
     const dm=line.match(/^(\d{6,8})\s*/);
     if(dm){
@@ -297,7 +297,7 @@ function parseDesc(raw){
       const di=(line.match(/[（(]청소보증금\s*([0-9,]+)원\s*포함[）)]/)||
                 line.match(/청소보증금\s*([0-9,]+)원\s*포함/)||
                 line.match(/보증금\s*([0-9,]+)원\s*포함/))?.[1];
-      const diAmt=di?pa(di):0;
+      const diAmt=di?pa(di):pendingDep;pendingDep=0;
       // Standalone deposit line
       const isl=/[（(]보증금[）)]/.test(line)||(/청소보증금/.test(line)&&!diAmt&&amts.length===1);
       const name=line.slice(dm[0].length).match(/^([가-힣A-Za-z()_\s\w]+?)(?:\s+(?:개인|법인|신신|카드|국민|\d))/)?.[1]?.trim()||'';
@@ -316,6 +316,8 @@ function parseDesc(raw){
       else if(mixedCorpCash)dep+=txns.filter(t=>t.date===date&&t.isDep&&t.method==='현금').reduce((s,t)=>s+t.amount,0);
       continue;
     }
+    const depMatch=(line.match(/[（(]청소보증금\s*([0-9,]+)원\s*포함[）)]/)||line.match(/청소보증금\s*([0-9,]+)원\s*포함/)||line.match(/보증금\s*([0-9,]+)원\s*포함/))?.[1];
+    if(depMatch)pendingDep=pa(depMatch);
     if(/청소보증금/.test(line)&&/안받았음|생략|면제/.test(line))memos.push('청소보증금 미수취');
     if(/^\*|취소|환불|환급|할인|이슈|재결제/.test(line)){
       const m=line.replace(/^\*+/,'').trim();
