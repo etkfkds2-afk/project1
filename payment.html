@@ -799,11 +799,11 @@ function closeRaw(e){
 
 function doExport(){
   const data=getFiltered();
-  const H=['대관일','지점','행사명','수납상태','예약금입금일','예약금액','잔금입금일','잔금액','보증금제외수납','청소보증금','결제방법','메모'];
+  const H=['대관일','지점','행사명','수납상태','예약금입금일','예약금액','잔금입금일','잔금액','총입금액','청소보증금','보증금제외수납','결제방법','메모'];
   const rows=data.map(e=>[
     e.date,e.branch,`"${e.title.replace(/"/g,'""')}"`,e.payStatus,
     e.reservationDate,e.reservationAmount||0,e.balanceDate,e.balanceAmount||0,
-    e.netIn||0,e.dep||0,e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
+    e.totalIn||0,e.dep||0,e.netIn||0,e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
   ]);
   const csv='﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
