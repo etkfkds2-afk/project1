@@ -93,7 +93,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .notecell .areacell{display:block}
 .editcell:hover{background:#f3f6fb;box-shadow:inset 0 0 0 1px #cbd5e1}
 .editinp{width:100%;min-width:64px;height:32px;border:2px solid var(--blue);border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
-.editarea{width:100%;min-height:88px;border:2px solid var(--blue);border-radius:6px;padding:7px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.45;outline:none;white-space:pre-wrap}
+.editarea{width:100%;min-height:34px;max-height:180px;border:2px solid var(--blue);border-radius:6px;padding:7px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.45;outline:none;white-space:pre-wrap;overflow-y:auto}
 .editnum{text-align:right}
 .titlecell{display:flex;align-items:flex-start;gap:8px;white-space:normal;min-width:0;width:100%}
 .titletext{display:inline-block;flex:1;min-width:0;white-space:normal;max-width:none;overflow:visible;text-overflow:clip;vertical-align:middle;line-height:1.45}
@@ -248,8 +248,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 </div>
 <div id="view-table">
 <div class="cards">
-  <div class="card bl"><div class="lbl">전체 건수</div><div class="val" id="ct">-</div></div>
   <div class="card gr"><div class="lbl">실수입(보증금 제외)</div><div class="val" id="ca">-</div></div>
+  <div class="card bl"><div class="lbl">전체 건수</div><div class="val" id="ct">-</div></div>
   <div class="card bl"><div class="lbl">완납</div><div class="val" id="c1">-</div></div>
   <div class="card"><div class="lbl">예약금</div><div class="val" id="c2">-</div></div>
   <div class="card pu"><div class="lbl">잔금 입금 예정</div><div class="val" id="cb">-</div></div>
@@ -816,7 +816,19 @@ function editCell(e,id,key,type='text'){
   host.innerHTML='';
   host.appendChild(input);
   input.focus();
-  input.select?.();
+  if(type==='area'){
+    const resizeArea=()=>{
+      input.style.height='auto';
+      input.style.height=Math.min(input.scrollHeight,180)+'px';
+    };
+    input.addEventListener('mousedown',ev=>ev.stopPropagation());
+    input.addEventListener('click',ev=>ev.stopPropagation());
+    input.addEventListener('input',resizeArea);
+    resizeArea();
+    input.setSelectionRange(input.value.length,input.value.length);
+  }else{
+    input.select?.();
+  }
   let _saved=false;
   const done=()=>{
     if(_saved)return;
