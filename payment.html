@@ -41,7 +41,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .btn-danger{background:#fff;color:var(--red);border-color:#fecaca}
 .btn-danger:hover{background:#fef2f2}
 .btn-hidden.active{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
-.cards{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;padding:18px 28px}
+.cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:18px 28px}
 .card{background:var(--panel);border-radius:8px;padding:14px 16px;border:1px solid var(--line);box-shadow:0 4px 14px rgba(15,23,42,.04);transition:border-color .15s,box-shadow .15s}
 .card:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
 .card.bl{border-top:3px solid var(--blue)}.card.gr{border-top:3px solid var(--green)}.card.or{border-top:3px solid var(--amber)}
@@ -49,13 +49,13 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .card .val{font-size:22px;font-weight:850;color:var(--text);font-variant-numeric:tabular-nums}
 .card.bl .val{color:var(--blue)}.card.gr .val{color:var(--green)}.card.or .val{color:#ea580c}
 .tw{padding:0 28px 44px;overflow-x:auto}
-.paygrid{width:100%;min-width:1510px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
+.paygrid{width:100%;min-width:1410px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
 .ghead{background:var(--panel-soft)}
 .grow{background:#fff}
 .grow:hover{background:#fbfdff}
 .gcell{padding:12px 12px;vertical-align:middle;border-bottom:1px solid #eef0f3;border-right:1px solid #eef0f3;white-space:nowrap;overflow:hidden;font-size:13px;color:var(--text)}
 .gcell:last-child{border-right:none}
-.ghead .gcell{font-size:12px;font-weight:800;color:#4b5563;text-align:center;background:var(--panel-soft);border-bottom:1px solid var(--line-strong);height:44px}
+.ghead .gcell,.ghead .gcell.r{font-size:12px;font-weight:800;color:#4b5563;text-align:center;background:var(--panel-soft);border-bottom:1px solid var(--line-strong);height:44px}
 .gcell.r{text-align:right}
 .hchip{display:inline-block;padding:2px 0}
 .gridmsg{padding:64px;text-align:center;color:#8b95a1;font-size:14px}
@@ -233,9 +233,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <div id="view-table">
 <div class="cards">
   <div class="card bl"><div class="lbl">전체 건수</div><div class="val" id="ct">-</div></div>
-  <div class="card gr"><div class="lbl">총입금액</div><div class="val" id="ci">-</div></div>
-  <div class="card or"><div class="lbl">청소보증금</div><div class="val" id="cd">-</div></div>
-  <div class="card gr"><div class="lbl">총수입(보증금제외)</div><div class="val" id="ca">-</div></div>
+  <div class="card gr"><div class="lbl">실수입(보증금 제외)</div><div class="val" id="ca">-</div></div>
   <div class="card bl"><div class="lbl">완납</div><div class="val" id="c1">-</div></div>
   <div class="card"><div class="lbl">예약금</div><div class="val" id="c2">-</div></div>
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
@@ -250,9 +248,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <col style="width:94px">
     <col style="width:100px">
     <col style="width:100px">
-    <col style="width:100px">
     <col style="width:86px">
-    <col style="width:100px">
+    <col style="width:128px">
     <col style="width:100px">
     <col style="width:280px">
     <col style="width:54px">
@@ -266,16 +263,15 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
       <th class="gcell"><span class="hchip">수납상태</span></th>
       <th class="gcell"><span class="hchip">예약금 입금</span></th>
       <th class="gcell"><span class="hchip">잔금 입금</span></th>
-      <th class="gcell r"><span class="hchip">총입금액</span></th>
       <th class="gcell r"><span class="hchip">청소보증금</span></th>
-      <th class="gcell r"><span class="hchip">보증금제외수납</span></th>
+      <th class="gcell r"><span class="hchip">실수입(보증금 제외)</span></th>
       <th class="gcell"><span class="hchip">결제방법</span></th>
       <th class="gcell"><span class="hchip">메모</span></th>
       <th class="gcell"></th>
     </tr>
   </thead>
   <tbody id="tb">
-    <tr><td colspan="13" class="gridmsg"><div class="spin"></div>데이터 로딩 중...</td></tr>
+    <tr><td colspan="12" class="gridmsg"><div class="spin"></div>데이터 로딩 중...</td></tr>
   </tbody>
 </table>
 </div>
@@ -375,9 +371,9 @@ function setOv(id,key,val){
     // 예약금/잔금 → 총입금액 연쇄
     if(key==='reservationAmount'||key==='balanceAmount'){
       ev.totalIn=(ev.reservationAmount||0)+(ev.balanceAmount||0);
-      delete ov[id].netIn; // 수동 보증금제외수납 오버라이드 해제
+      delete ov[id].netIn; // 수동 총수입 오버라이드 해제
     }
-    // 총입금액/청소보증금 → 보증금제외수납 연쇄 (보증금제외수납 직접 편집 제외)
+    // 총입금액/청소보증금 → 총수입 연쇄 (총수입 직접 편집 제외)
     if(key!=='netIn')
       ev.netIn=Math.max(0,(ev.totalIn||0)-(ev.dep||0));
   }
@@ -395,7 +391,7 @@ function applyOverrides(row,o){
   // 예약금/잔금 오버라이드 → 총입금액 재계산 (직접 총입금액 오버라이드보다 우선)
   if(o.reservationAmount!==undefined||o.balanceAmount!==undefined)
     row.totalIn=(row.reservationAmount||0)+(row.balanceAmount||0);
-  // 보증금제외수납 직접 오버라이드 없으면 자동 계산
+  // 총수입 직접 오버라이드 없으면 자동 계산
   if(o.netIn===undefined)
     row.netIn=Math.max(0,(row.totalIn||0)-(row.dep||0));
   return row;
@@ -598,7 +594,7 @@ async function ensureGoogleToken(prompt=''){
 
 function showGoogleSetup(msg=''){
   const origin=location.origin;
-  document.getElementById('tb').innerHTML=`<tr><td colspan="13" class="gridmsg">
+  document.getElementById('tb').innerHTML=`<tr><td colspan="12" class="gridmsg">
     <div class="setup">
       <h2>Google Calendar 연결</h2>
       <p>${msg||'방금 새로 만든 OAuth 2.0 웹 클라이언트 ID를 입력하세요.'}</p>
@@ -686,7 +682,7 @@ async function fetchEvs(calId,year){
 async function loadAll(){
   const btn=document.getElementById('rb');
   btn.disabled=true;btn.textContent='로딩 중...';selectedIds.clear();
-  document.getElementById('tb').innerHTML='<tr><td colspan="13" class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
+  document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
   const year=document.getElementById('sy').value;
   try{
     await loadRemoteOv();
@@ -700,7 +696,7 @@ async function loadAll(){
     render();
   }catch(e){
     if(!hasCowork())showGoogleSetup(`오류: ${e.message}`);
-    else document.getElementById('tb').innerHTML=`<tr><td colspan="13" class="gridmsg" style="color:#c00">오류: ${e.message}</td></tr>`;
+    else document.getElementById('tb').innerHTML=`<tr><td colspan="12" class="gridmsg" style="color:#c00">오류: ${e.message}</td></tr>`;
   }finally{btn.disabled=false;btn.textContent='새로고침'}
 }
 
@@ -764,13 +760,11 @@ function render(){
   const data=getFiltered();
   const 완납=data.filter(e=>e.payStatus==='완납');
   document.getElementById('ct').textContent=data.length+'건';
-  document.getElementById('ci').textContent=fa(data.reduce((s,e)=>s+e.totalIn,0));
   document.getElementById('ca').textContent=fa(완납.reduce((s,e)=>s+e.netIn,0));
-  document.getElementById('cd').textContent=fa(data.reduce((s,e)=>s+e.dep,0));
   document.getElementById('c1').textContent=완납.length+'건';
   document.getElementById('c2').textContent=data.filter(e=>e.payStatus==='예약금 입금').length+'건';
   document.getElementById('c3').textContent=data.filter(e=>e.payStatus==='취소').length+'건';
-  if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="13" class="gridmsg">해당 조건의 데이터가 없습니다.</td></tr>';return}
+  if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg">해당 조건의 데이터가 없습니다.</td></tr>';return}
   const rows=[];
   for(const ev of data){
     const bc=ev.branch==='문래점'?'brm':'brs';
@@ -789,11 +783,10 @@ function render(){
       <td class="gcell statuscell" data-label="수납상태">
         <span class="bdg ${sCls}">${cell(ev.id,'payStatus',ev.payStatus,'select')}</span>
       </td>
-      <td class="gcell" data-label="예약금 입금"><div class="date2">${cell(ev.id,'reservationDate',ev.reservationDate,'date')}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
+      <td class="gcell" data-label="예약금 입금"><div class="date2">${payDateCell(ev.id,'reservationDate',ev.reservationDate,ev.reservationAmount)}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
       <td class="gcell" data-label="잔금 입금"><div class="date2">${payDateCell(ev.id,'balanceDate',ev.balanceDate,ev.balanceAmount)}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
-      <td class="gcell r moneycell" data-label="총입금액">${cell(ev.id,'totalIn',ev.totalIn,'money','amt')}</td>
       <td class="gcell r moneycell" data-label="청소보증금">${cell(ev.id,'dep',ev.dep,'money','dep')}</td>
-      <td class="gcell r moneycell" data-label="보증금제외수납">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
+      <td class="gcell r moneycell" data-label="실수입(보증금 제외)">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
       <td class="gcell paycell" data-label="결제방법">
         <span class="bdg m${methodText.split('+')[0]}">${cell(ev.id,'methodsText',methodText,'text')}</span>
       </td>
@@ -882,7 +875,7 @@ function closeRaw(e){
 
 function doExport(){
   const data=getFiltered();
-  const H=['대관일','지점','행사명','수납상태','예약금입금일','예약금액','잔금입금일','잔금액','총입금액','청소보증금','보증금제외수납','결제방법','메모'];
+  const H=['대관일','지점','행사명','수납상태','예약금입금','예약금액','잔금입금','잔금액','총입금액','청소보증금','실수입(보증금 제외)','결제방법','메모'];
   const rows=data.map(e=>[
     e.date,e.branch,`"${e.title.replace(/"/g,'""')}"`,e.payStatus,
     e.reservationDate,e.reservationAmount||0,e.balanceDate,e.balanceAmount||0,
