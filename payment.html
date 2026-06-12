@@ -538,14 +538,6 @@ function parseDesc(raw,year=''){
       continue;
     }
   }
-  if(!dep&&plannedDeposit){
-    const target=txns.find(t=>!t.isRef&&!t.isDep&&plannedBalance&&t.amount===plannedBalance)||
-      txns.filter(t=>!t.isRef&&!t.isDep).sort((a,b)=>b.amount-a.amount)[0];
-    if(target){
-      target.diAmt=(target.diAmt||0)+plannedDeposit;
-      dep=plannedDeposit;
-    }
-  }
   const totalIn=txns.filter(t=>!t.isRef).reduce((s,t)=>s+t.amount,0);
   const mv={};
   txns.filter(t=>!t.isRef&&!t.isDep).forEach(t=>mv[t.method]=(mv[t.method]||0)+(t.amount-(t.diAmt||0)));
@@ -559,7 +551,7 @@ function parseDesc(raw,year=''){
   const balanceNetTotal=balPays.reduce((s,t)=>s+t.net,0);
   const balanceGrossTotal=balPays.reduce((s,t)=>s+t.amount,0);
   const balanceDiAmtTotal=balPays.reduce((s,t)=>s+(t.diAmt||0),0);
-  return{txns,totalIn,dep,netIn:Math.max(0,totalIn-dep),methods:methods.length?methods:['기타'],memos,reservation,balance,balanceNetTotal,balanceGrossTotal,balanceDiAmtTotal,plannedReservation,plannedBalance};
+  return{txns,totalIn,dep,netIn:Math.max(0,totalIn-dep),methods:methods.length?methods:['기타'],memos,reservation,balance,balanceNetTotal,balanceGrossTotal,balanceDiAmtTotal,plannedReservation,plannedBalance,plannedDeposit};
 }
 
 function parseEv(ev,branch){
@@ -577,14 +569,14 @@ function parseEv(ev,branch){
   const payStatus=baseStatus==='취소'?'취소':(pd.balance||baseStatus==='완납')?'완납':pd.reservation?'예약금 입금':'미입금';
   const methods=o.methodsText!==undefined?o.methodsText.split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean):pd.methods;
   const isCorp=methods.some(m=>m==='카드'||m==='세금계산서');
-  const depText=o.depText!==undefined?o.depText:(pd.dep?String(pd.dep):'');
-  const dep=pa(depText);
+  const dep=o.dep!==undefined?Number(o.dep)||0:pd.dep;
+  const depText=o.depText!==undefined?o.depText:(dep?fa(dep):(pd.plannedDeposit?fa(pd.plannedDeposit):''));
   const totalIn=o.totalIn!==undefined?Number(o.totalIn):pd.totalIn;
-  const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):pd.balanceGrossTotal;
+  const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||pd.plannedBalance||0);
   const netIn=o.netIn!==undefined?Number(o.netIn):(isCorp?totalIn:Math.max(0,totalIn-dep));
   const row={id:ev.id,date,branch,title,status:baseStatus,
     payStatus,totalIn,netIn,dep,depText,methods,txns:pd.txns,
-    reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||0,
+    reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||pd.plannedReservation||0,
     balanceDate:pd.balance?.date||'',balanceAmount,balanceDiAmt:pd.balanceDiAmtTotal,
     notes:o.notes!==undefined?o.notes:pd.memos.slice(0,3).join(' / '),
     rawTitle:title,rawDesc:ev.description||'',rawStart,rawEnd,rawBranch:branch};
