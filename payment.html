@@ -245,7 +245,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div class="card gr"><div class="lbl">실수입(보증금 제외)</div><div class="val" id="ca">-</div></div>
   <div class="card bl"><div class="lbl">완납</div><div class="val" id="c1">-</div></div>
   <div class="card"><div class="lbl">예약금</div><div class="val" id="c2">-</div></div>
-  <div class="card pu"><div class="lbl">잔금 수납</div><div class="val" id="cb">-</div></div>
+  <div class="card pu"><div class="lbl">잔금 입금 예정</div><div class="val" id="cb">-</div></div>
   <div class="card rd"><div class="lbl">미입금</div><div class="val" id="c4">-</div></div>
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
   <div class="card or"><div class="lbl">환불</div><div class="val" id="c5">-</div></div>
@@ -820,14 +820,17 @@ function render(){
   const 예약금=data.filter(e=>e.payStatus==='예약금 입금');
   const 취소=data.filter(e=>e.payStatus==='취소');
   const 환불=data.filter(e=>e.payStatus==='환불');
-  const 미입금=data.filter(e=>e.payStatus!=='취소'&&e.totalIn===0);
+  const 미입금=data.filter(e=>e.payStatus==='미입금');
   const sumNet=rows=>rows.reduce((s,e)=>s+e.netIn,0);
   const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+e.netIn,0))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
   document.getElementById('ca').textContent=fa(sumNet(완납)+sumNet(예약금)+sumNet(취소)-sumNet(환불));
   document.getElementById('c1').innerHTML=statHtml(완납);
   document.getElementById('c2').innerHTML=statHtml(예약금);
-  document.getElementById('cb').innerHTML=`<span class="count">${data.filter(e=>e.payStatus!=='취소'&&e.balanceAmount>0).length}건</span><span class="money">${fa(data.filter(e=>e.payStatus!=='취소').reduce((s,e)=>s+getNetBalance(e),0))}</span>`;
+
+  const 잔금예정데이터=data.filter(e=>e.payStatus==='예약금 입금'||e.payStatus==='미입금');
+  document.getElementById('cb').innerHTML=`<span class="count">${잔금예정데이터.length}건</span><span class="money">${fa(잔금예정데이터.reduce((s,e)=>s+getNetBalance(e),0))}</span>`;
+  
   document.getElementById('c4').innerHTML=`<span class="count">${미입금.length}건</span><span class="money">미수납</span>`;
   document.getElementById('c3').innerHTML=statHtml(취소);
   document.getElementById('c5').innerHTML=statHtml(환불);
