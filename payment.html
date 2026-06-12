@@ -41,15 +41,17 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .btn-danger{background:#fff;color:var(--red);border-color:#fecaca}
 .btn-danger:hover{background:#fef2f2}
 .btn-hidden.active{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
-.cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;padding:18px 28px}
-.card{background:var(--panel);border-radius:8px;padding:14px 16px;border:1px solid var(--line);box-shadow:0 4px 14px rgba(15,23,42,.04);transition:border-color .15s,box-shadow .15s}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:18px 28px}
+.card{background:var(--panel);border-radius:8px;padding:12px 14px;border:1px solid var(--line);box-shadow:0 4px 14px rgba(15,23,42,.04);transition:border-color .15s,box-shadow .15s}
 .card:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
 .card.bl{border-top:3px solid var(--blue)}.card.gr{border-top:3px solid var(--green)}.card.or{border-top:3px solid var(--amber)}
+.card.pu{border-top:3px solid var(--blue)}.card.rd{border-top:3px solid var(--red)}
 .card .lbl{font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700}
-.card .val{font-size:22px;font-weight:850;color:var(--text);font-variant-numeric:tabular-nums}
-.card .val .count{display:block;font-size:20px;line-height:1.15}
-.card .val .money{display:block;font-size:17px;line-height:1.25;margin-top:3px;white-space:nowrap}
+.card .val{font-size:21px;font-weight:850;color:var(--text);font-variant-numeric:tabular-nums}
+.card .val .count{display:block;font-size:18px;line-height:1.15}
+.card .val .money{display:block;font-size:16px;line-height:1.25;margin-top:3px;white-space:nowrap}
 .card.bl .val{color:var(--blue)}.card.gr .val{color:var(--green)}.card.or .val{color:#ea580c}
+.card.pu .val{color:#6d28d9}.card.rd .val{color:#b91c1c}
 .tw{padding:0 28px 44px;overflow-x:auto}
 .paygrid{width:100%;min-width:1450px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
 .ghead{background:var(--panel-soft)}
@@ -243,8 +245,10 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div class="card gr"><div class="lbl">실수입(보증금 제외)</div><div class="val" id="ca">-</div></div>
   <div class="card bl"><div class="lbl">완납</div><div class="val" id="c1">-</div></div>
   <div class="card"><div class="lbl">예약금</div><div class="val" id="c2">-</div></div>
+  <div class="card pu"><div class="lbl">잔금 수납</div><div class="val" id="cb">-</div></div>
+  <div class="card rd"><div class="lbl">미입금</div><div class="val" id="c4">-</div></div>
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
-  <div class="card or"><div class="lbl">환불</div><div class="val" id="c4">-</div></div>
+  <div class="card or"><div class="lbl">환불</div><div class="val" id="c5">-</div></div>
 </div>
 <div class="tw">
 <table class="paygrid">
@@ -374,21 +378,29 @@ function setOv(id,key,val){
   ov[id][key]=val;
   const ev=allData.find(e=>e.id===id);
   if(ev){
-    if(key==='methodsText')ev.methods=String(val||'').split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
-    else ev[key]=key==='payStatus'?normStatus(val):val;
+    if(key==='methodsText'){
+      ev.methods=String(val||'').split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
+    }else if(key==='depText'){
+      ev.depText=val;
+      ev.dep=pa(val);
+    }else{
+      ev[key]=key==='payStatus'?normStatus(val):val;
+    }
     // 예약금/잔금 → 총입금액 연쇄
     if(key==='reservationAmount'||key==='balanceAmount'){
       ev.totalIn=(ev.reservationAmount||0)+(ev.balanceAmount||0);
       delete ov[id].netIn; // 수동 총수입 오버라이드 해제
     }
-    // 총입금액/청소보증금 → 총수입 연쇄 (총수입 직접 편집 제외)
-    if(key!=='netIn')
-      ev.netIn=Math.max(0,(ev.totalIn||0)-(ev.dep||0));
+    // 총입금액/청소보증금/결제방법 → 총수입 연쇄 (총수입 직접 편집 제외)
+    if(key!=='netIn'){
+      const isCorp=ev.methods.some(m=>m==='카드'||m==='세금계산서');
+      ev.netIn=isCorp?ev.totalIn:Math.max(0,ev.totalIn-ev.dep);
+    }
   }
   saveOv();
 }
 function applyOverrides(row,o){
-  ['date','branch','title','payStatus','reservationDate','balanceDate','notes'].forEach(k=>{
+  ['date','branch','title','payStatus','reservationDate','balanceDate','notes','depText'].forEach(k=>{
     if(o[k]!==undefined)row[k]=k==='payStatus'?normStatus(o[k]):o[k];
   });
   ['reservationAmount','balanceAmount','dep','totalIn','netIn'].forEach(k=>{
@@ -396,12 +408,19 @@ function applyOverrides(row,o){
   });
   if(o.methodsText!==undefined)row.methods=String(o.methodsText).split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
   if(o.hidden!==undefined)row.hidden=!!o.hidden;
-  // 예약금/잔금 오버라이드 → 총입금액 재계산 (직접 총입금액 오버라이드보다 우선)
+
+  // depText -> dep sync
+  if(o.depText!==undefined) row.dep=pa(o.depText);
+
+  // 예약금/잔금 오버라이드 → 총입금액 재계산
   if(o.reservationAmount!==undefined||o.balanceAmount!==undefined)
     row.totalIn=(row.reservationAmount||0)+(row.balanceAmount||0);
-  // 총수입 직접 오버라이드 없으면 자동 계산
-  if(o.netIn===undefined)
-    row.netIn=Math.max(0,(row.totalIn||0)-(row.dep||0));
+
+  // 실수입 로직 (개인 vs 법인)
+  const isCorp=row.methods.some(m=>m==='카드'||m==='세금계산서');
+  if(o.netIn===undefined){
+    row.netIn=isCorp?row.totalIn:Math.max(0,row.totalIn-row.dep);
+  }
   return row;
 }
 
@@ -538,7 +557,9 @@ function parseDesc(raw,year=''){
   const balPays=pays.filter(t=>t!==reservation);
   const balance=explicitBal||balPays[0]||null;
   const balanceNetTotal=balPays.reduce((s,t)=>s+t.net,0);
-  return{txns,totalIn,dep,netIn:Math.max(0,totalIn-dep),methods:methods.length?methods:['기타'],memos,reservation,balance,balanceNetTotal,plannedReservation,plannedBalance};
+  const balanceGrossTotal=balPays.reduce((s,t)=>s+t.amount,0);
+  const balanceDiAmtTotal=balPays.reduce((s,t)=>s+(t.diAmt||0),0);
+  return{txns,totalIn,dep,netIn:Math.max(0,totalIn-dep),methods:methods.length?methods:['기타'],memos,reservation,balance,balanceNetTotal,balanceGrossTotal,balanceDiAmtTotal,plannedReservation,plannedBalance};
 }
 
 function parseEv(ev,branch){
@@ -554,10 +575,17 @@ function parseEv(ev,branch){
   const o=ov[ev.id]||{};
   const baseStatus=o.status||status;
   const payStatus=baseStatus==='취소'?'취소':(pd.balance||baseStatus==='완납')?'완납':pd.reservation?'예약금 입금':'미입금';
+  const methods=o.methodsText!==undefined?o.methodsText.split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean):pd.methods;
+  const isCorp=methods.some(m=>m==='카드'||m==='세금계산서');
+  const depText=o.depText!==undefined?o.depText:(pd.dep?String(pd.dep):'');
+  const dep=pa(depText);
+  const totalIn=o.totalIn!==undefined?Number(o.totalIn):pd.totalIn;
+  const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):pd.balanceGrossTotal;
+  const netIn=o.netIn!==undefined?Number(o.netIn):(isCorp?totalIn:Math.max(0,totalIn-dep));
   const row={id:ev.id,date,branch,title,status:baseStatus,
-    payStatus,totalIn:pd.totalIn,netIn:pd.netIn,dep:pd.dep,methods:pd.methods,txns:pd.txns,
+    payStatus,totalIn,netIn,dep,depText,methods,txns:pd.txns,
     reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||0,
-    balanceDate:pd.balance?.date||'',balanceAmount:pd.balanceNetTotal||(!pd.balance&&pd.plannedBalance?pd.plannedBalance:0),
+    balanceDate:pd.balance?.date||'',balanceAmount,balanceDiAmt:pd.balanceDiAmtTotal,
     notes:o.notes!==undefined?o.notes:pd.memos.slice(0,3).join(' / '),
     rawTitle:title,rawDesc:ev.description||'',rawStart,rawEnd,rawBranch:branch};
   return applyOverrides(row,o);
@@ -781,20 +809,28 @@ function editCell(e,id,key,type='text'){
   });
 }
 
+function getNetBalance(ev){
+  const isCorp=ev.methods.some(m=>m==='카드'||m==='세금계산서');
+  if(isCorp)return ev.balanceAmount;
+  return Math.max(0,ev.balanceAmount-(ev.balanceDiAmt||0));
+}
 function render(){
   const data=getFiltered();
   const 완납=data.filter(e=>e.payStatus==='완납');
   const 예약금=data.filter(e=>e.payStatus==='예약금 입금');
   const 취소=data.filter(e=>e.payStatus==='취소');
   const 환불=data.filter(e=>e.payStatus==='환불');
+  const 미입금=data.filter(e=>e.payStatus!=='취소'&&e.totalIn===0);
   const sumNet=rows=>rows.reduce((s,e)=>s+e.netIn,0);
   const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+e.netIn,0))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
   document.getElementById('ca').textContent=fa(sumNet(완납)+sumNet(예약금)+sumNet(취소)-sumNet(환불));
   document.getElementById('c1').innerHTML=statHtml(완납);
   document.getElementById('c2').innerHTML=statHtml(예약금);
+  document.getElementById('cb').innerHTML=`<span class="count">${data.filter(e=>e.payStatus!=='취소'&&e.balanceAmount>0).length}건</span><span class="money">${fa(data.filter(e=>e.payStatus!=='취소').reduce((s,e)=>s+getNetBalance(e),0))}</span>`;
+  document.getElementById('c4').innerHTML=`<span class="count">${미입금.length}건</span><span class="money">미수납</span>`;
   document.getElementById('c3').innerHTML=statHtml(취소);
-  document.getElementById('c4').innerHTML=statHtml(환불);
+  document.getElementById('c5').innerHTML=statHtml(환불);
   if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg">해당 조건의 데이터가 없습니다.</td></tr>';return}
   const rows=[];
   for(const ev of data){
@@ -816,7 +852,7 @@ function render(){
       </td>
       <td class="gcell" data-label="예약금 입금"><div class="date2">${payDateCell(ev.id,'reservationDate',ev.reservationDate,ev.reservationAmount)}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
       <td class="gcell" data-label="잔금 입금"><div class="date2">${payDateCell(ev.id,'balanceDate',ev.balanceDate,ev.balanceAmount)}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
-      <td class="gcell r moneycell" data-label="청소보증금">${cell(ev.id,'dep',ev.dep,'money','dep')}</td>
+      <td class="gcell r moneycell" data-label="청소보증금">${cell(ev.id,'depText',ev.depText,'text','dep')}</td>
       <td class="gcell r moneycell" data-label="실수입(보증금 제외)">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
       <td class="gcell paycell" data-label="결제방법">
         <span class="bdg m${methodText.split('+')[0]}">${cell(ev.id,'methodsText',methodText,'text')}</span>
@@ -906,11 +942,11 @@ function closeRaw(e){
 
 function doExport(){
   const data=getFiltered();
-  const H=['대관일','지점','행사명','수납상태','예약금입금','예약금액','잔금입금','잔금액','총입금액','청소보증금','실수입(보증금 제외)','결제방법','메모'];
+  const H=['대관일','지점','행사명','수납상태','예약금입금','예약금액','잔금입금','잔금액','총입금액','청소보증금','실수입(보증금 제외)','잔금수납액','결제방법','메모'];
   const rows=data.map(e=>[
     e.date,e.branch,`"${e.title.replace(/"/g,'""')}"`,e.payStatus,
     e.reservationDate,e.reservationAmount||0,e.balanceDate,e.balanceAmount||0,
-    e.totalIn||0,e.dep||0,e.netIn||0,e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
+    e.totalIn||0,`"${(e.depText||e.dep||0)}"`,e.netIn||0,getNetBalance(e),e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
   ]);
   const csv='﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
