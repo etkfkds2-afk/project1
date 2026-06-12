@@ -221,7 +221,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <button class="vtab active" id="tab-table" onclick="switchView('table')">테이블</button>
     <button class="vtab" id="tab-chart" onclick="switchView('chart')">분석</button>
   </div>
-  <select id="sy" onchange="render()">
+  <select id="sy" onchange="loadAll()">
     <option value="2026">2026년</option>
     <option value="2025">2025년</option>
   </select>
@@ -866,6 +866,11 @@ function periodNetIn(ev){
   const depositInPeriod=inSelectedPayPeriod(ev.balanceDate)?(Number(ev.dep)||0):0;
   return Math.max(0,gross-depositInPeriod);
 }
+function payMonthIndex(date,year){
+  if(!date||date==='입금 예정'||date==='미입금'||date.slice(0,4)!==year)return -1;
+  const mo=parseInt(date.slice(5,7),10)-1;
+  return mo>=0&&mo<12?mo:-1;
+}
 function render(){
   const data=getFiltered();
   const 완납=data.filter(e=>e.payStatus==='완납');
@@ -886,7 +891,11 @@ function render(){
   document.getElementById('c4').innerHTML=`<span class="count">${미입금.length}건</span><span class="money">미수납</span>`;
   document.getElementById('c3').innerHTML=statHtml(취소);
   document.getElementById('c5').innerHTML=statHtml(환불);
-  if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg">해당 조건의 데이터가 없습니다.</td></tr>';return}
+  if(!data.length){
+    document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg">해당 조건의 데이터가 없습니다.</td></tr>';
+    if(currentView==='chart')renderChart();
+    return;
+  }
   const rows=[];
   for(const ev of data){
     const bc=ev.branch==='문래점'?'brm':'brs';
@@ -923,6 +932,7 @@ function render(){
     allChk.indeterminate=!allChk.checked&&data.some(e=>selectedIds.has(e.id));
   }
   updateSelectionUI();
+  if(currentView==='chart')renderChart();
 }
 
 function toggleSelect(id,e){
@@ -1030,19 +1040,16 @@ function renderChart(){
   const COLORS={문래점:'#2563eb',신논현점:'#d97706'};
   const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
-  // 지점별 월별 합계 (취소·숨김 제외, 예약금입금일/잔금입금일 기준 각각 집계)
+  // 지점별 월별 실수입 합계 (카드 금액과 같은 입금일/보증금/환불 기준)
   const totals={};
   BRANCHES.forEach(b=>{totals[b]=Array(12).fill(0);});
-  allData.filter(e=>!e.hidden&&e.payStatus!=='취소').forEach(e=>{
+  getFiltered().forEach(e=>{
     const b=e.branch;if(!totals[b])return;
-    if(e.reservationDate&&e.reservationAmount>0){
-      const yr=e.reservationDate.slice(0,4),mo=parseInt(e.reservationDate.slice(5,7))-1;
-      if(yr===year&&mo>=0&&mo<12)totals[b][mo]+=e.reservationAmount;
-    }
-    if(e.balanceDate&&e.balanceAmount>0){
-      const yr=e.balanceDate.slice(0,4),mo=parseInt(e.balanceDate.slice(5,7))-1;
-      if(yr===year&&mo>=0&&mo<12)totals[b][mo]+=e.balanceAmount;
-    }
+    const sign=e.payStatus==='환불'?-1:1;
+    const rmo=payMonthIndex(e.reservationDate,year);
+    const bmo=payMonthIndex(e.balanceDate,year);
+    if(rmo>=0)totals[b][rmo]+=sign*(Number(e.reservationAmount)||0);
+    if(bmo>=0)totals[b][bmo]+=sign*Math.max(0,(Number(e.balanceAmount)||0)-(Number(e.dep)||0));
   });
 
   // 연간 합계 카드
@@ -1054,7 +1061,7 @@ function renderChart(){
   });
   sumHtml.unshift(`<div class="chart-sum-card"><div class="cs-lbl">전체 합계</div><div class="cs-val">${fa(totalAll)}</div><div class="cs-sub">${year}년 연간</div></div>`);
   sumEl.innerHTML=sumHtml.join('');
-  document.getElementById('chart-title').textContent=`${year}년 월별 수익 현황 (예약금+잔금 입금일 기준)`;
+  document.getElementById('chart-title').textContent=`${year}년 월별 수익 현황(입금일 기준)`;
 
   const ctx=document.getElementById('revenueChart').getContext('2d');
   if(revenueChartInst)revenueChartInst.destroy();
