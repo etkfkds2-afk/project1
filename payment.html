@@ -525,8 +525,8 @@ function parseDesc(raw,year=''){
       const lineForAmts=diAmt?txnLine.replace(/[（(]청소보증금\s*[0-9,]+원\s*포함[）)]/,'').replace(/청소보증금\s*[0-9,]+원\s*포함/,'').replace(/보증금\s*[0-9,]+원\s*포함/,''):txnLine;
       const amts=[...lineForAmts.matchAll(/([0-9,]+)원/g)];
       if(!amts.length)continue;
-      // Standalone deposit line
-      const isl=/[（(]보증금[）)]/.test(txnLine)||(/청소보증금/.test(txnLine)&&!diAmt&&amts.length===1);
+      // Standalone deposit line (exclude cases where 청소보증금 is a memo note with Korean particle)
+      const isl=/[（(]보증금[）)]/.test(txnLine)||(/청소보증금/.test(txnLine)&&!/청소보증금\s*[은는이가을를]/.test(txnLine)&&!diAmt&&amts.length===1);
       const name=txnLine.slice(dm[0].length).match(/^([가-힣A-Za-z()_\s\w]+?)(?:\s+(?:개인|법인|신신|카드|국민|\d))/)?.[1]?.trim()||'';
       let prevEnd=dm[0].length;
       const mixedCorpCash=/법인계좌|법인|세금계산서|계산서/.test(txnLine)&&/개인계좌|개인|현금/.test(txnLine)&&amts.length>1;
@@ -581,14 +581,14 @@ function parseEv(ev,branch){
   const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||pd.plannedBalance||0);
   const _isCash=methods.includes('현금');
   const _balanceDateReal=o.balanceDate!==undefined&&o.balanceDate!==''&&o.balanceDate!=='입금 예정';
-  const _actualReservation=o.reservationAmount!==undefined?Number(o.reservationAmount):(pd.reservation?.net||0);
+  const _actualReservation=o.reservationAmount!==undefined?Number(o.reservationAmount):(pd.reservation?.amount||0);
   const _actualBalance=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||(_balanceDateReal?pd.plannedBalance:0)||0);
   const _gross=_actualReservation+_actualBalance;
   const netIn=o.netIn!==undefined?Number(o.netIn):Math.max(0,_isCash?_gross-dep:_gross);
   const row={id:ev.id,date,branch,title,status:baseStatus,
     payStatus,totalIn,netIn,dep,depText,methods,txns:pd.txns,
     _actualReservation,_actualBalance,
-    reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||pd.plannedReservation||0,
+    reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.amount||pd.plannedReservation||0,
     balanceDate:pd.balance?.date||'',balanceAmount,balanceDiAmt:pd.balanceDiAmtTotal,
     notes:o.notes!==undefined?o.notes:pd.memos.slice(0,3).join(' / '),
     rawTitle:title,rawDesc:ev.description||'',rawStart,rawEnd,rawBranch:branch};
