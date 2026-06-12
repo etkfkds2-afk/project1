@@ -574,8 +574,9 @@ function parseEv(ev,branch){
   const baseStatus=o.status||status;
   const payStatus=baseStatus==='취소'?'취소':(pd.balance||baseStatus==='완납')?'완납':pd.reservation?'예약금 입금':'미입금';
   const methods=o.methodsText!==undefined?o.methodsText.split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean):pd.methods;
-  const dep=o.dep!==undefined?Number(o.dep)||0:(pd.dep||pd.plannedDeposit||0);
-  const depText=o.depText!==undefined?o.depText:(dep?fa(dep):(pd.plannedDeposit?fa(pd.plannedDeposit):''));
+  const _depFromTxn=pd.dep||(pd.plannedDeposit&&pd.balanceGrossTotal>0?pd.plannedDeposit:0);
+  const dep=o.dep!==undefined?Number(o.dep)||0:_depFromTxn;
+  const depText=o.depText!==undefined?o.depText:(dep?fa(dep):'');
   const totalIn=o.totalIn!==undefined?Number(o.totalIn):pd.totalIn;
   const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||pd.plannedBalance||0);
   const _isCash=methods.includes('현금');
