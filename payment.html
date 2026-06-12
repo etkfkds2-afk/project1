@@ -810,9 +810,7 @@ function editCell(e,id,key,type='text'){
 }
 
 function getNetBalance(ev){
-  const isCorp=ev.methods.some(m=>m==='카드'||m==='세금계산서');
-  if(isCorp)return ev.balanceAmount;
-  return Math.max(0,ev.balanceAmount-(ev.balanceDiAmt||0));
+  return ev.balanceAmount || 0;
 }
 function render(){
   const data=getFiltered();
