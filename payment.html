@@ -393,8 +393,7 @@ function setOv(id,key,val){
     }
     // 총입금액/청소보증금/결제방법 → 총수입 연쇄 (총수입 직접 편집 제외)
     if(key!=='netIn'){
-      const isCorp=ev.methods.some(m=>m==='카드'||m==='세금계산서');
-      ev.netIn=isCorp?ev.totalIn:Math.max(0,ev.totalIn-ev.dep);
+      ev.netIn=Math.max(0,(ev.reservationAmount||0)+(ev.balanceAmount||0));
     }
   }
   saveOv();
@@ -416,10 +415,8 @@ function applyOverrides(row,o){
   if(o.reservationAmount!==undefined||o.balanceAmount!==undefined)
     row.totalIn=(row.reservationAmount||0)+(row.balanceAmount||0);
 
-  // 실수입 로직 (개인 vs 법인)
-  const isCorp=row.methods.some(m=>m==='카드'||m==='세금계산서');
   if(o.netIn===undefined){
-    row.netIn=isCorp?row.totalIn:Math.max(0,row.totalIn-row.dep);
+    row.netIn=Math.max(0,(row.reservationAmount||0)+(row.balanceAmount||0));
   }
   return row;
 }
@@ -568,12 +565,11 @@ function parseEv(ev,branch){
   const baseStatus=o.status||status;
   const payStatus=baseStatus==='취소'?'취소':(pd.balance||baseStatus==='완납')?'완납':pd.reservation?'예약금 입금':'미입금';
   const methods=o.methodsText!==undefined?o.methodsText.split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean):pd.methods;
-  const isCorp=methods.some(m=>m==='카드'||m==='세금계산서');
   const dep=o.dep!==undefined?Number(o.dep)||0:pd.dep;
   const depText=o.depText!==undefined?o.depText:(dep?fa(dep):(pd.plannedDeposit?fa(pd.plannedDeposit):''));
   const totalIn=o.totalIn!==undefined?Number(o.totalIn):pd.totalIn;
   const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||pd.plannedBalance||0);
-  const netIn=o.netIn!==undefined?Number(o.netIn):(isCorp?totalIn:Math.max(0,totalIn-dep));
+  const netIn=o.netIn!==undefined?Number(o.netIn):Math.max(0,(pd.reservation?.net||pd.plannedReservation||0)+balanceAmount);
   const row={id:ev.id,date,branch,title,status:baseStatus,
     payStatus,totalIn,netIn,dep,depText,methods,txns:pd.txns,
     reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||pd.plannedReservation||0,
