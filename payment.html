@@ -116,6 +116,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .auth-box h1{font-size:20px;margin-bottom:6px;color:var(--text)}
 .auth-box p{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5}
 .auth-box input{width:100%;height:40px;border:1px solid var(--line-strong);border-radius:6px;padding:0 10px;font-size:14px;outline:none}
+.auth-box input+input{margin-top:8px}
 .auth-box input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .auth-box button{width:100%;height:40px;margin-top:10px;border:0;border-radius:6px;background:var(--text);color:#fff;font-weight:800;cursor:pointer}
 .auth-err{min-height:17px;margin-top:8px;color:var(--red);font-size:12px}
@@ -184,8 +185,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <div id="authScreen" class="auth">
   <form class="auth-box" onsubmit="unlockApp(event)">
     <h1>올댓마인드 입금관리</h1>
-    <p>입장 비밀번호를 입력하세요. Google 클라이언트 ID는 다음 화면에서 입력합니다.</p>
-    <input id="accessPass" type="password" autocomplete="current-password" autofocus>
+    <p>입장 아이디와 비밀번호를 입력하세요. Google 클라이언트 ID는 다음 화면에서 입력합니다.</p>
+    <input id="accessUser" type="text" autocomplete="username" placeholder="아이디" autofocus>
+    <input id="accessPass" type="password" autocomplete="current-password" placeholder="비밀번호">
     <button type="submit">입장</button>
     <div id="authErr" class="auth-err"></div>
   </form>
@@ -303,7 +305,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
 <script>
-const ACCESS_HASH='9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0';
+const ACCESS_USER='admin0221';
+const ACCESS_HASH='6ed178d23d6ca5f22708b85244b2b368f9e837bfabfa3a43617408f3a3ef5fd6';
 const ACCESS_KEY='atm_payment_access_ok';
 const GOOGLE_CLIENT_KEY='atm_google_client_id_v2';
 const OV_KEY='payment_overrides';
@@ -412,16 +415,17 @@ function showApp(){
 
 async function unlockApp(e){
   e.preventDefault();
+  const user=document.getElementById('accessUser');
   const input=document.getElementById('accessPass');
   const err=document.getElementById('authErr');
   err.textContent='';
-  if(await sha256(input.value)===ACCESS_HASH){
+  if(user.value.trim()===ACCESS_USER&&await sha256(input.value)===ACCESS_HASH){
     sessionStorage.setItem(ACCESS_KEY,'1');
     showApp();
   }else{
-    err.textContent='비밀번호가 맞지 않습니다.';
+    err.textContent='아이디 또는 비밀번호가 맞지 않습니다.';
     input.value='';
-    input.focus();
+    user.focus();
   }
 }
 
