@@ -751,7 +751,10 @@ function cell(id,key,val,type='text',cls=''){
   return`<span class="editcell ${type==='area'?'areacell':''} ${cls}" data-val="${esc(val||'')}" onclick="editCell(event,'${id}','${key}','${type}')">${shown?esc(shown):'<span class="dash">-</span>'}</span>`;
 }
 function payDateCell(id,key,dateVal,amountVal){
-  if(!dateVal&&Number(amountVal)>0)return`<span class="editcell waittxt" data-val="" onclick="editCell(event,'${id}','${key}','text')">미입금</span>`;
+  if(!dateVal&&Number(amountVal)>0){
+    const label=key==='balanceDate'?'입금 예정':'미입금';
+    return`<span class="editcell waittxt" data-val="" onclick="editCell(event,'${id}','${key}','text')">${label}</span>`;
+  }
   return cell(id,key,dateVal,'text');
 }
 function statusSelect(ev,sCls){
@@ -764,7 +767,7 @@ function editCell(e,id,key,type='text'){
   const ev=evById(id);if(!ev)return;
   let cur=key==='methodsText'?ev.methods.join('+'):(ev[key]??'');
   if(!cur&&key==='reservationDate'&&Number(ev.reservationAmount)>0)cur='미입금';
-  if(!cur&&key==='balanceDate'&&Number(ev.balanceAmount)>0)cur='미입금';
+  if(!cur&&key==='balanceDate'&&Number(ev.balanceAmount)>0)cur='입금 예정';
   let input;
   if(type==='select'){
     input=document.createElement('select');
