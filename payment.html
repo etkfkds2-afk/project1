@@ -75,7 +75,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .amt{font-weight:850;font-variant-numeric:tabular-nums;color:#111827}
 .dep{font-weight:850;font-variant-numeric:tabular-nums;color:#c2410c}
 .moneycell,.datecell,.statuscell,.paycell{white-space:nowrap}
-.paycell .bdg{white-space:normal;word-break:break-word;max-width:110px;text-align:center}
+.paycell{white-space:normal;text-align:center;overflow:visible}
+.paycell .bdg{width:100%;max-width:112px;min-height:30px;padding:5px 8px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-align:center;line-height:1.25}
+.paycell .editcell{white-space:normal;justify-content:center;text-align:center;overflow-wrap:anywhere}
 .date2{font-size:13px;line-height:1.45}
 .date2 .sub{display:block;color:#8b95a1;font-size:12px;margin-top:3px}
 .oktxt{color:var(--green);font-weight:700}.waittxt{color:var(--amber);font-weight:700}.badtxt{color:var(--red);font-weight:700}
@@ -84,12 +86,14 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .statusselect:focus{box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .dash{color:#b8c0cc}
 .note{font-size:12px;color:#55606e;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word;overflow:hidden}
+.note.editing{display:block;-webkit-line-clamp:unset;overflow:visible}
 .gcell.notecell{white-space:normal;overflow:hidden}
 .editcell{display:inline-flex;align-items:center;max-width:100%;padding:4px 7px;border-radius:5px;cursor:text;white-space:nowrap;transition:background .15s,box-shadow .15s;min-height:28px}
 .areacell{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;align-items:flex-start;width:100%}
+.notecell .areacell{display:block}
 .editcell:hover{background:#f3f6fb;box-shadow:inset 0 0 0 1px #cbd5e1}
 .editinp{width:100%;min-width:64px;height:32px;border:2px solid var(--blue);border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
-.editarea{width:100%;min-height:68px;border:2px solid var(--blue);border-radius:6px;padding:7px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.45;outline:none}
+.editarea{width:100%;min-height:88px;border:2px solid var(--blue);border-radius:6px;padding:7px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.45;outline:none;white-space:pre-wrap}
 .editnum{text-align:right}
 .titlecell{display:flex;align-items:flex-start;gap:8px;white-space:normal;min-width:0;width:100%}
 .titletext{display:inline-block;flex:1;min-width:0;white-space:normal;max-width:none;overflow:visible;text-overflow:clip;vertical-align:middle;line-height:1.45}
@@ -170,7 +174,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   .titlecell{min-width:0;white-space:normal}
   .titletext{max-width:none;white-space:normal}
   .editcell{white-space:normal;min-width:0}
+  .notecell .areacell{white-space:pre-wrap}
   .moneycell .editcell,.datecell .editcell,.statuscell .editcell,.paycell .editcell{white-space:nowrap}
+  .paycell .editcell{white-space:normal;justify-content:center;text-align:center;overflow-wrap:anywhere}
   .note{-webkit-line-clamp:3}
   .rawmeta{grid-template-columns:78px 1fr}
   .modal{padding:14px}
@@ -800,6 +806,7 @@ function editCell(e,id,key,type='text'){
     input=document.createElement('textarea');
     input.value=cur;
     input.className='editarea';
+    host.closest('.note')?.classList.add('editing');
   }else{
     input=document.createElement('input');
     input.type=type==='date'?'date':'text';
@@ -820,7 +827,8 @@ function editCell(e,id,key,type='text'){
   };
   input.addEventListener('blur',done,{once:true});
   input.addEventListener('keydown',ev=>{
-    if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();done();}
+    if(ev.key==='Enter'&&type!=='area'&&!ev.shiftKey){ev.preventDefault();done();}
+    if(ev.key==='Enter'&&type==='area'&&(ev.ctrlKey||ev.metaKey)){ev.preventDefault();done();}
     if(ev.key==='Escape'){_saved=true;render();}
   });
 }
