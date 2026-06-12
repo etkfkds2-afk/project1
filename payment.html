@@ -389,10 +389,13 @@ function setOv(id,key,val){
     }
     // 예약금/잔금 → 총입금액 연쇄
     if(key==='reservationAmount'||key==='balanceAmount'){
-      ev.totalIn=(ev.reservationAmount||0)+(ev.balanceAmount||0);
-      delete ov[id].netIn; // 수동 총수입 오버라이드 해제
+      ev.totalIn=(Number(ev.reservationAmount)||0)+(Number(ev.balanceAmount)||0);
+      delete ov[id].netIn;
     }
-    // 총입금액/청소보증금/결제방법 → 총수입 연쇄 (총수입 직접 편집 제외)
+    // _actual* 동기: 수동 수정 시 실제 입금액도 갱신
+    if(key==='reservationAmount') ev._actualReservation=pa(val);
+    if(key==='balanceAmount') ev._actualBalance=pa(val);
+    // 총입금액/청소보증금/결제방법 → 실수입 연쇄
     if(key!=='netIn'){
       const _isCash=(ev.methods||[]).includes('현금');
       const _ra=key==='reservationAmount'?pa(val):(ev._actualReservation||0);
@@ -416,9 +419,11 @@ function applyOverrides(row,o){
   // depText -> dep sync
   if(o.depText!==undefined) row.dep=pa(o.depText);
 
-  // 예약금/잔금 오버라이드 → 총입금액 재계산
+  // 예약금/잔금 오버라이드 → 총입금액 재계산 + _actual* 동기
   if(o.reservationAmount!==undefined||o.balanceAmount!==undefined)
     row.totalIn=(row.reservationAmount||0)+(row.balanceAmount||0);
+  if(o.reservationAmount!==undefined) row._actualReservation=Number(o.reservationAmount)||0;
+  if(o.balanceAmount!==undefined) row._actualBalance=Number(o.balanceAmount)||0;
 
   if(o.netIn===undefined){
     const _isCash=(row.methods||[]).includes('현금');
@@ -805,15 +810,18 @@ function editCell(e,id,key,type='text'){
   host.appendChild(input);
   input.focus();
   input.select?.();
+  let _saved=false;
   const done=()=>{
+    if(_saved)return;
+    _saved=true;
     const val=type==='money'?cleanNum(input.value):input.value.trim();
     setOv(id,key,val);
     render();
   };
   input.addEventListener('blur',done,{once:true});
   input.addEventListener('keydown',ev=>{
-    if(ev.key==='Enter'&&!ev.shiftKey)input.blur();
-    if(ev.key==='Escape')render();
+    if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();done();}
+    if(ev.key==='Escape'){_saved=true;render();}
   });
 }
 
