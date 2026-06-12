@@ -75,6 +75,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .amt{font-weight:850;font-variant-numeric:tabular-nums;color:#111827}
 .dep{font-weight:850;font-variant-numeric:tabular-nums;color:#c2410c}
 .moneycell,.datecell,.statuscell,.paycell{white-space:nowrap}
+.paycell .bdg{white-space:normal;word-break:break-word;max-width:110px;text-align:center}
 .date2{font-size:13px;line-height:1.45}
 .date2 .sub{display:block;color:#8b95a1;font-size:12px;margin-top:3px}
 .oktxt{color:var(--green);font-weight:700}.waittxt{color:var(--amber);font-weight:700}.badtxt{color:var(--red);font-weight:700}
@@ -395,7 +396,7 @@ function setOv(id,key,val){
     if(key!=='netIn'){
       const _isCash=(ev.methods||[]).includes('현금');
       const _ra=key==='reservationAmount'?pa(val):(ev._actualReservation||0);
-      const _ba=key==='balanceAmount'?pa(val):(ev._actualBalance||0);
+      const _ba=key==='balanceAmount'?pa(val):(key==='balanceDate'&&val&&val!=='입금 예정'?ev.balanceAmount:(ev._actualBalance||0));
       const _dep=key==='depText'||key==='dep'?pa(val):(ev.dep||0);
       ev.netIn=Math.max(0,_isCash?(_ra+_ba)-_dep:(_ra+_ba));
     }
@@ -578,8 +579,9 @@ function parseEv(ev,branch){
   const totalIn=o.totalIn!==undefined?Number(o.totalIn):pd.totalIn;
   const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||pd.plannedBalance||0);
   const _isCash=methods.includes('현금');
+  const _balanceDateReal=o.balanceDate!==undefined&&o.balanceDate!==''&&o.balanceDate!=='입금 예정';
   const _actualReservation=o.reservationAmount!==undefined?Number(o.reservationAmount):(pd.reservation?.net||0);
-  const _actualBalance=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||0);
+  const _actualBalance=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||(_balanceDateReal?pd.plannedBalance:0)||0);
   const _gross=_actualReservation+_actualBalance;
   const netIn=o.netIn!==undefined?Number(o.netIn):Math.max(0,_isCash?_gross-dep:_gross);
   const row={id:ev.id,date,branch,title,status:baseStatus,
@@ -764,7 +766,8 @@ function cell(id,key,val,type='text',cls=''){
   return`<span class="editcell ${type==='area'?'areacell':''} ${cls}" data-val="${esc(val||'')}" onclick="editCell(event,'${id}','${key}','${type}')">${shown?esc(shown):'<span class="dash">-</span>'}</span>`;
 }
 function payDateCell(id,key,dateVal,amountVal){
-  if(!dateVal&&Number(amountVal)>0){
+  const isPending=!dateVal||(key==='balanceDate'&&dateVal==='입금 예정')||(key==='reservationDate'&&dateVal==='미입금');
+  if(isPending&&Number(amountVal)>0){
     const label=key==='balanceDate'?'입금 예정':'미입금';
     return`<span class="editcell waittxt" data-val="" onclick="editCell(event,'${id}','${key}','text')">${label}</span>`;
   }
