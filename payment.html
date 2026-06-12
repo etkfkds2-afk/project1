@@ -475,7 +475,7 @@ function sh(s){
     .replace(/<[biu][^>]*>(.*?)<\/[biu]>/gi,'$1').replace(/<[^>]+>/g,' ')
     .replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 }
-function pa(s){return parseInt((s||'').replace(/,/g,''))||0}
+function pa(s){return parseInt(String(s||'').replace(/,/g,''))||0}
 function fa(n){return n?n.toLocaleString('ko-KR')+'원':'-'}
 function gm(l){
   if(/신신페이|카드결제|카드\s*결제|국민카드|삼성카드|현대카드|전화승인/.test(l))return'카드';
@@ -839,8 +839,7 @@ function editCell(e,id,key,type='text'){
   };
   input.addEventListener('blur',done,{once:true});
   input.addEventListener('keydown',ev=>{
-    if(ev.key==='Enter'&&type!=='area'&&!ev.shiftKey){ev.preventDefault();done();}
-    if(ev.key==='Enter'&&type==='area'&&(ev.ctrlKey||ev.metaKey)){ev.preventDefault();done();}
+    if(ev.key==='Enter'&&!(type==='area'&&ev.shiftKey)){ev.preventDefault();done();}
     if(ev.key==='Escape'){_saved=true;render();}
   });
 }
