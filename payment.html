@@ -91,9 +91,11 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .editcell{display:inline-flex;align-items:center;max-width:100%;padding:4px 7px;border-radius:5px;cursor:text;white-space:nowrap;transition:background .15s,box-shadow .15s;min-height:28px}
 .areacell{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;align-items:flex-start;width:100%}
 .notecell .areacell{display:block}
+.editcell.editingcell{padding:0;min-height:0;background:transparent;box-shadow:none}
+.editcell.editingcell:hover{background:transparent;box-shadow:none}
 .editcell:hover{background:#f3f6fb;box-shadow:inset 0 0 0 1px #cbd5e1}
-.editinp{width:100%;min-width:64px;height:32px;border:2px solid var(--blue);border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
-.editarea{width:100%;min-height:34px;max-height:180px;border:2px solid var(--blue);border-radius:6px;padding:7px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.45;outline:none;white-space:pre-wrap;overflow-y:auto}
+.editinp{width:100%;min-width:64px;height:28px;border:2px solid var(--blue);border-radius:6px;padding:0 8px;font:inherit;background:#fff;outline:none}
+.editarea{width:100%;height:32px;max-height:180px;border:2px solid var(--blue);border-radius:6px;padding:4px 8px;font:inherit;background:#fff;resize:vertical;line-height:1.45;outline:none;white-space:pre-wrap;overflow-y:auto}
 .editnum{text-align:right}
 .titlecell{display:flex;align-items:flex-start;gap:8px;white-space:normal;min-width:0;width:100%}
 .titletext{display:inline-block;flex:1;min-width:0;white-space:normal;max-width:none;overflow:visible;text-overflow:clip;vertical-align:middle;line-height:1.45}
@@ -175,6 +177,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   .titletext{max-width:none;white-space:normal}
   .editcell{white-space:normal;min-width:0}
   .notecell .areacell{white-space:pre-wrap}
+  .notecell .editarea{height:23px;padding:1px 6px}
   .moneycell .editcell,.datecell .editcell,.statuscell .editcell,.paycell .editcell{white-space:nowrap}
   .paycell .editcell{white-space:normal;justify-content:center;text-align:center;overflow-wrap:anywhere}
   .note{-webkit-line-clamp:3}
@@ -249,7 +252,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <div id="view-table">
 <div class="cards">
   <div class="card gr"><div class="lbl">실수입(보증금 제외)</div><div class="val" id="ca">-</div></div>
-  <div class="card bl"><div class="lbl">전체 건수</div><div class="val" id="ct">-</div></div>
+  <div class="card bl"><div class="lbl">전체 대관 건수</div><div class="val" id="ct">-</div></div>
   <div class="card bl"><div class="lbl">완납</div><div class="val" id="c1">-</div></div>
   <div class="card"><div class="lbl">예약금</div><div class="val" id="c2">-</div></div>
   <div class="card pu"><div class="lbl">잔금 입금 예정</div><div class="val" id="cb">-</div></div>
@@ -805,6 +808,7 @@ function editCell(e,id,key,type='text'){
   }else if(type==='area'){
     input=document.createElement('textarea');
     input.value=cur;
+    input.rows=1;
     input.className='editarea';
     host.closest('.note')?.classList.add('editing');
   }else{
@@ -813,18 +817,21 @@ function editCell(e,id,key,type='text'){
     input.value=type==='money'?(Number(cur)||''):cur;
     input.className='editinp '+(type==='money'?'editnum':'');
   }
+  host.classList.add('editingcell');
   host.innerHTML='';
   host.appendChild(input);
   input.focus();
   if(type==='area'){
+    const baseHeight=input.getBoundingClientRect().height||32;
     const resizeArea=()=>{
-      input.style.height='auto';
-      input.style.height=Math.min(input.scrollHeight,180)+'px';
+      input.style.height=baseHeight+'px';
+      if(input.scrollHeight>input.clientHeight){
+        input.style.height=Math.min(input.scrollHeight,180)+'px';
+      }
     };
     input.addEventListener('mousedown',ev=>ev.stopPropagation());
     input.addEventListener('click',ev=>ev.stopPropagation());
     input.addEventListener('input',resizeArea);
-    resizeArea();
     input.setSelectionRange(input.value.length,input.value.length);
   }else{
     input.select?.();
@@ -847,6 +854,18 @@ function editCell(e,id,key,type='text'){
 function getNetBalance(ev){
   return ev.balanceAmount || 0;
 }
+function inSelectedPayPeriod(date){
+  if(!date||date==='입금 예정'||date==='미입금')return false;
+  const y=document.getElementById('sy').value;
+  return date.slice(0,4)===y;
+}
+function periodNetIn(ev){
+  let gross=0;
+  if(inSelectedPayPeriod(ev.reservationDate))gross+=Number(ev.reservationAmount)||0;
+  if(inSelectedPayPeriod(ev.balanceDate))gross+=Number(ev.balanceAmount)||0;
+  const depositInPeriod=inSelectedPayPeriod(ev.balanceDate)?(Number(ev.dep)||0):0;
+  return Math.max(0,gross-depositInPeriod);
+}
 function render(){
   const data=getFiltered();
   const 완납=data.filter(e=>e.payStatus==='완납');
@@ -854,8 +873,8 @@ function render(){
   const 취소=data.filter(e=>e.payStatus==='취소');
   const 환불=data.filter(e=>e.payStatus==='환불');
   const 미입금=data.filter(e=>e.payStatus==='미입금');
-  const sumNet=rows=>rows.reduce((s,e)=>s+e.netIn,0);
-  const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+e.netIn,0))}</span>`;
+  const sumNet=rows=>rows.reduce((s,e)=>s+periodNetIn(e),0);
+  const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+periodNetIn(e),0))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
   document.getElementById('ca').textContent=fa(sumNet(완납)+sumNet(예약금)+sumNet(취소)-sumNet(환불));
   document.getElementById('c1').innerHTML=statHtml(완납);
