@@ -41,15 +41,17 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .btn-danger{background:#fff;color:var(--red);border-color:#fecaca}
 .btn-danger:hover{background:#fef2f2}
 .btn-hidden.active{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
-.cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:18px 28px}
+.cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;padding:18px 28px}
 .card{background:var(--panel);border-radius:8px;padding:14px 16px;border:1px solid var(--line);box-shadow:0 4px 14px rgba(15,23,42,.04);transition:border-color .15s,box-shadow .15s}
 .card:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
 .card.bl{border-top:3px solid var(--blue)}.card.gr{border-top:3px solid var(--green)}.card.or{border-top:3px solid var(--amber)}
 .card .lbl{font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700}
 .card .val{font-size:22px;font-weight:850;color:var(--text);font-variant-numeric:tabular-nums}
+.card .val .count{display:block;font-size:20px;line-height:1.15}
+.card .val .money{display:block;font-size:17px;line-height:1.25;margin-top:3px;white-space:nowrap}
 .card.bl .val{color:var(--blue)}.card.gr .val{color:var(--green)}.card.or .val{color:#ea580c}
 .tw{padding:0 28px 44px;overflow-x:auto}
-.paygrid{width:100%;min-width:1410px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
+.paygrid{width:100%;min-width:1450px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
 .ghead{background:var(--panel-soft)}
 .grow{background:#fff}
 .grow:hover{background:#fbfdff}
@@ -63,6 +65,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .s완납{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
 .s예약금입금{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
 .s취소{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.s환불{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
 .s기타{background:#f3f4f6;color:#4b5563;border:1px solid #e5e7eb}
 .m카드{background:#eff6ff;color:#1d4ed8}.m세금계산서{background:#f5f3ff;color:#6d28d9}
 .m현금{background:#ecfdf5;color:#047857}.m기타{background:#f3f4f6;color:#4b5563}
@@ -73,8 +76,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .date2{font-size:13px;line-height:1.45}
 .date2 .sub{display:block;color:#8b95a1;font-size:12px;margin-top:3px}
 .oktxt{color:var(--green);font-weight:700}.waittxt{color:var(--amber);font-weight:700}.badtxt{color:var(--red);font-weight:700}
-.statuscell{text-align:center}
-.statusselect{width:100%;height:30px;border-radius:999px;border:1px solid transparent;padding:0 8px;font-size:12px;font-weight:800;text-align:center;outline:none;cursor:pointer}
+.statuscell{text-align:center;padding-left:6px;padding-right:6px;overflow:visible}
+.statusselect{display:block;width:102px;max-width:100%;height:30px;margin:0 auto;border-radius:999px;border:1px solid transparent;padding:0 6px;font-size:12px;font-weight:800;text-align:center;outline:none;cursor:pointer}
 .statusselect:focus{box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .dash{color:#b8c0cc}
 .note{font-size:12px;color:#55606e;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word;overflow:hidden}
@@ -147,6 +150,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   .card{padding:12px;border-radius:8px}
   .card .lbl{font-size:11px;margin-bottom:5px}
   .card .val{font-size:20px}
+  .card .val .count{font-size:18px}
+  .card .val .money{font-size:15px}
   .tw{padding:0 20px 32px;overflow:visible}
   .paygrid{display:block;min-width:0;width:100%;border:0;background:transparent;box-shadow:none}
   .paygrid colgroup,.paygrid thead{display:none}
@@ -222,7 +227,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   </select>
   <select id="ss" onchange="render()">
     <option value="">전체 상태</option>
-    <option value="완납">완납</option><option value="예약금 입금">예약금 입금</option><option value="미입금">미입금</option><option value="취소">취소</option>
+    <option value="완납">완납</option><option value="예약금 입금">예약금 입금</option><option value="미입금">미입금</option><option value="취소">취소</option><option value="환불">환불</option>
   </select>
   <input id="sq" class="search" placeholder="검색" oninput="render()">
   <div class="sp"></div>
@@ -239,6 +244,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div class="card bl"><div class="lbl">완납</div><div class="val" id="c1">-</div></div>
   <div class="card"><div class="lbl">예약금</div><div class="val" id="c2">-</div></div>
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
+  <div class="card or"><div class="lbl">환불</div><div class="val" id="c4">-</div></div>
 </div>
 <div class="tw">
 <table class="paygrid">
@@ -247,7 +253,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <col style="width:90px">
     <col style="width:70px">
     <col style="width:310px">
-    <col style="width:94px">
+    <col style="width:134px">
     <col style="width:100px">
     <col style="width:100px">
     <col style="width:86px">
@@ -733,18 +739,20 @@ function payDateCell(id,key,dateVal,amountVal){
   return cell(id,key,dateVal,'text');
 }
 function statusSelect(ev,sCls){
-  const opts=['완납','예약금 입금','미입금','취소'];
+  const opts=['완납','예약금 입금','미입금','취소','환불'];
   return`<select class="statusselect ${sCls}" onchange="setOv('${ev.id}','payStatus',this.value);render()" onclick="event.stopPropagation()">${opts.map(v=>`<option value="${v}" ${v===ev.payStatus?'selected':''}>${v}</option>`).join('')}</select>`;
 }
 function editCell(e,id,key,type='text'){
   e.stopPropagation();
   const host=e.currentTarget;
   const ev=evById(id);if(!ev)return;
-  const cur=key==='methodsText'?ev.methods.join('+'):(ev[key]??'');
+  let cur=key==='methodsText'?ev.methods.join('+'):(ev[key]??'');
+  if(!cur&&key==='reservationDate'&&Number(ev.reservationAmount)>0)cur='미입금';
+  if(!cur&&key==='balanceDate'&&Number(ev.balanceAmount)>0)cur='미입금';
   let input;
   if(type==='select'){
     input=document.createElement('select');
-    const opts=key==='branch'?['문래점','신논현점']:['완납','예약금 입금','미입금','취소'];
+    const opts=key==='branch'?['문래점','신논현점']:['완납','예약금 입금','미입금','취소','환불'];
     opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;input.appendChild(o)});
     input.className='editinp';
   }else if(type==='area'){
@@ -778,12 +786,15 @@ function render(){
   const 완납=data.filter(e=>e.payStatus==='완납');
   const 예약금=data.filter(e=>e.payStatus==='예약금 입금');
   const 취소=data.filter(e=>e.payStatus==='취소');
-  const statText=rows=>`${rows.length}건 / ${fa(rows.reduce((s,e)=>s+e.netIn,0))}`;
+  const 환불=data.filter(e=>e.payStatus==='환불');
+  const sumNet=rows=>rows.reduce((s,e)=>s+e.netIn,0);
+  const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+e.netIn,0))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
-  document.getElementById('ca').textContent=fa(data.reduce((s,e)=>s+e.netIn,0));
-  document.getElementById('c1').textContent=statText(완납);
-  document.getElementById('c2').textContent=statText(예약금);
-  document.getElementById('c3').textContent=statText(취소);
+  document.getElementById('ca').textContent=fa(sumNet(완납)+sumNet(예약금)+sumNet(취소)-sumNet(환불));
+  document.getElementById('c1').innerHTML=statHtml(완납);
+  document.getElementById('c2').innerHTML=statHtml(예약금);
+  document.getElementById('c3').innerHTML=statHtml(취소);
+  document.getElementById('c4').innerHTML=statHtml(환불);
   if(!data.length){document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg">해당 조건의 데이터가 없습니다.</td></tr>';return}
   const rows=[];
   for(const ev of data){
