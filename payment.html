@@ -393,7 +393,9 @@ function setOv(id,key,val){
     }
     // 총입금액/청소보증금/결제방법 → 총수입 연쇄 (총수입 직접 편집 제외)
     if(key!=='netIn'){
-      ev.netIn=Math.max(0,(ev.reservationAmount||0)+(ev.balanceAmount||0));
+      const _isCash=(ev.methods||[]).includes('현금');
+      const _gross=(ev.reservationAmount||0)+(ev.balanceAmount||0);
+      ev.netIn=Math.max(0,_isCash?_gross-(ev.dep||0):_gross);
     }
   }
   saveOv();
@@ -416,7 +418,9 @@ function applyOverrides(row,o){
     row.totalIn=(row.reservationAmount||0)+(row.balanceAmount||0);
 
   if(o.netIn===undefined){
-    row.netIn=Math.max(0,(row.reservationAmount||0)+(row.balanceAmount||0));
+    const _isCash=(row.methods||[]).includes('현금');
+    const _gross=(row.reservationAmount||0)+(row.balanceAmount||0);
+    row.netIn=Math.max(0,_isCash?_gross-(row.dep||0):_gross);
   }
   return row;
 }
@@ -569,7 +573,9 @@ function parseEv(ev,branch){
   const depText=o.depText!==undefined?o.depText:(dep?fa(dep):(pd.plannedDeposit?fa(pd.plannedDeposit):''));
   const totalIn=o.totalIn!==undefined?Number(o.totalIn):pd.totalIn;
   const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||pd.plannedBalance||0);
-  const netIn=o.netIn!==undefined?Number(o.netIn):Math.max(0,(pd.reservation?.net||pd.plannedReservation||0)+balanceAmount);
+  const _isCash=methods.includes('현금');
+  const _gross=(pd.reservation?.net||pd.plannedReservation||0)+balanceAmount;
+  const netIn=o.netIn!==undefined?Number(o.netIn):Math.max(0,_isCash?_gross-dep:_gross);
   const row={id:ev.id,date,branch,title,status:baseStatus,
     payStatus,totalIn,netIn,dep,depText,methods,txns:pd.txns,
     reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.net||pd.plannedReservation||0,
