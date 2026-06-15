@@ -290,7 +290,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <div id="view-table">
 <div class="cards">
   <div class="card gr"><div class="lbl">실입금 (입금날짜 기준)</div><div class="val" id="cri">-</div></div>
-  <div class="card gr"><div class="lbl">대관수익 (대관일 기준)</div><div class="val" id="ca">-</div></div>
   <div class="card bl"><div class="lbl">전체 대관 건수</div><div class="val" id="ct">-</div></div>
   <div class="card pu"><div class="lbl">잔금 입금 예정</div><div class="val" id="cb">-</div></div>
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
@@ -340,7 +339,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div class="an-section">
     <div class="an-sec-hdr">
       <div class="an-sec-title" id="an-chart-title">월별 수익 비교</div>
-      <div class="an-sec-sub">파랑 — 대관수익(대관일 기준) &nbsp;·&nbsp; 초록 — 실입금(입금날짜 기준)</div>
+      <div class="an-sec-sub">입금날짜 기준 월별 실제 수령액</div>
     </div>
     <div class="an-chart-body"><canvas id="revenueChart"></canvas></div>
   </div>
@@ -981,7 +980,6 @@ function render(){
   document.getElementById('ct').textContent=data.length+'건';
   const activeData=data.filter(e=>e.payStatus!=='환불');
   document.getElementById('cri').textContent=fa(activeData.reduce((s,e)=>s+effectiveNetIn(e),0));
-  document.getElementById('ca').textContent=fa(sumNet(activeData));
 
 
   const 잔금예정데이터=data.filter(e=>e.payStatus==='예약금 입금');
@@ -1211,8 +1209,8 @@ function renderChart(){
       })()}</div>
     </div>`;
 
-  // ── 듀얼 차트 ─────────────────────────────────────
-  document.getElementById('an-chart-title').textContent=`${year}년 월별 수익 비교`;
+  // ── 차트 ─────────────────────────────────────────
+  document.getElementById('an-chart-title').textContent=`${year}년 월별 실입금`;
   const ctx=document.getElementById('revenueChart').getContext('2d');
   if(revenueChartInst)revenueChartInst.destroy();
   revenueChartInst=new Chart(ctx,{
@@ -1220,8 +1218,7 @@ function renderChart(){
     data:{
       labels:LABELS,
       datasets:[
-        {label:'대관수익 (대관일 기준)',data:evByMo,backgroundColor:'#2563eb99',borderColor:'#2563eb',borderWidth:1.5,borderRadius:5},
-        {label:'실입금 (입금날짜 기준)',data:payByMo,backgroundColor:'#05966966',borderColor:'#059669',borderWidth:1.5,borderRadius:5}
+        {label:'실입금 (입금날짜 기준)',data:payByMo,backgroundColor:'#05966999',borderColor:'#059669',borderWidth:1.5,borderRadius:5}
       ]
     },
     options:{
