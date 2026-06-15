@@ -1156,7 +1156,7 @@ function renderChart(){
     if(!brMap[b])brMap[b]={ev:0,pay:0,out:0};
 
     const evMo=parseInt(e.date.slice(5,7),10)-1;
-    const net=effectiveNetIn(e);
+    const net=Number(e.netIn)||0;
     if(evMo>=0&&evMo<12){evByMo[evMo]+=net;brMap[b].ev+=net;}
 
     paymentParts(e,year).forEach(p=>{
