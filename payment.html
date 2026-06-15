@@ -979,8 +979,9 @@ function render(){
   const sumNet=rows=>rows.reduce((s,e)=>s+(Number(e.netIn)||0),0);
   const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(sumNet(rows))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
-  document.getElementById('cri').textContent=fa(data.reduce((s,e)=>s+effectiveNetIn(e),0));
-  document.getElementById('ca').textContent=fa(sumNet(data));
+  const activeData=data.filter(e=>e.payStatus!=='취소'&&e.payStatus!=='환불');
+  document.getElementById('cri').textContent=fa(activeData.reduce((s,e)=>s+effectiveNetIn(e),0));
+  document.getElementById('ca').textContent=fa(sumNet(activeData));
 
 
   const 잔금예정데이터=data.filter(e=>e.payStatus==='예약금 입금');
@@ -1149,6 +1150,7 @@ function renderChart(){
   chartRows.forEach(e=>{
     const b=normalizeBranch(e.branch);
     if(!brMap[b])brMap[b]={ev:0,pay:0,out:0};
+    if(e.payStatus==='취소'||e.payStatus==='환불')return;
 
     const evMo=parseInt(e.date.slice(5,7),10)-1;
     const net=Number(e.netIn)||0;
@@ -1161,7 +1163,6 @@ function renderChart(){
       if(pMo>=0&&pMo<12){payByMo[pMo]+=p.amount;brMap[b].pay+=p.amount;}
     });
 
-    // 미수 잔금: 예약금 입금 상태 → balanceAmount / 미입금 → netIn
     if(e.payStatus==='예약금 입금')brMap[b].out+=Number(e.balanceAmount)||0;
   });
 
