@@ -902,8 +902,10 @@ function periodNetIn(ev){
 }
 function effectiveNetIn(ev){
   const o=ov[ev.id]||{};
-  if(o.netIn!==undefined&&o.netIn!==null)return Number(o.netIn)||0;
-  return periodNetIn(ev);
+  const period=periodNetIn(ev);
+  // 수동 override는 해당 연도에 실제 입금이 있는 경우에만 적용
+  if(o.netIn!==undefined&&o.netIn!==null&&period!==0)return Number(o.netIn)||0;
+  return period;
 }
 function payMonthIndex(date,year){
   if(!isCountablePayDate(date,year))return -1;
