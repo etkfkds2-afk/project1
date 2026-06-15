@@ -901,11 +901,8 @@ function periodNetIn(ev){
   return paymentParts(ev,year).reduce((s,p)=>s+p.amount,0);
 }
 function effectiveNetIn(ev){
-  const o=ov[ev.id]||{};
-  const period=periodNetIn(ev);
-  // 수동 override는 해당 연도에 실제 입금이 있는 경우에만 적용
-  if(o.netIn!==undefined&&o.netIn!==null&&period!==0)return Number(o.netIn)||0;
-  return period;
+  // 카드/차트 합계용: 항상 입금날짜 기준 연도 필터 적용
+  return periodNetIn(ev);
 }
 function payMonthIndex(date,year){
   if(!isCountablePayDate(date,year))return -1;
@@ -958,7 +955,7 @@ function render(){
       <td class="gcell" data-label="예약금 입금"><div class="date2">${payDateCell(ev.id,'reservationDate',ev.reservationDate,ev.reservationAmount)}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
       <td class="gcell" data-label="잔금 입금"><div class="date2">${payDateCell(ev.id,'balanceDate',ev.balanceDate,ev.balanceAmount)}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
       <td class="gcell r moneycell" data-label="청소보증금">${cell(ev.id,'depText',ev.depText,'text','dep')}</td>
-      <td class="gcell r moneycell" data-label="실수입(보증금 제외)">${cell(ev.id,'netIn',effectiveNetIn(ev),'money','amt')}</td>
+      <td class="gcell r moneycell" data-label="실수입(보증금 제외)">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
       <td class="gcell paycell" data-label="결제방법">
         <span class="bdg m${methodText.split('+')[0]}">${cell(ev.id,'methodsText',methodText,'text')}</span>
       </td>
@@ -1052,7 +1049,7 @@ function doExport(){
   const rows=data.map(e=>[
     e.date,e.branch,`"${e.title.replace(/"/g,'""')}"`,e.payStatus,
     e.reservationDate,e.reservationAmount||0,e.balanceDate,e.balanceAmount||0,
-    e.totalIn||0,`"${(e.depText||e.dep||0)}"`,effectiveNetIn(e),getNetBalance(e),e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
+    e.totalIn||0,`"${(e.depText||e.dep||0)}"`,e.netIn,getNetBalance(e),e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
   ]);
   const csv='﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
