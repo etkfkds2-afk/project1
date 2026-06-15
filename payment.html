@@ -979,7 +979,7 @@ function render(){
   const sumNet=rows=>rows.reduce((s,e)=>s+(Number(e.netIn)||0),0);
   const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(sumNet(rows))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
-  const activeData=data.filter(e=>e.payStatus!=='취소'&&e.payStatus!=='환불');
+  const activeData=data.filter(e=>e.payStatus!=='환불');
   document.getElementById('cri').textContent=fa(activeData.reduce((s,e)=>s+effectiveNetIn(e),0));
   document.getElementById('ca').textContent=fa(sumNet(activeData));
 
@@ -1150,7 +1150,7 @@ function renderChart(){
   chartRows.forEach(e=>{
     const b=normalizeBranch(e.branch);
     if(!brMap[b])brMap[b]={ev:0,pay:0,out:0};
-    if(e.payStatus==='취소'||e.payStatus==='환불')return;
+    if(e.payStatus==='환불')return;
 
     const evMo=parseInt(e.date.slice(5,7),10)-1;
     const net=Number(e.netIn)||0;
