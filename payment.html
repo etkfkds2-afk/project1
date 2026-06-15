@@ -372,6 +372,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3/dist/chartjs-plugin-annotation.min.js"></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
 <script>
 const ACCESS_USER='admin0221';
@@ -1237,13 +1238,12 @@ function renderChart(){
   if(revenueChartInst)revenueChartInst.destroy();
   const selectedBr=document.getElementById('sb').value;
   const brChartColors={'문래점':['#2563eb55','#2563eb'],'신논현점':['#7c3aed55','#7c3aed']};
-  const rentLine={type:'line',label:'월세 손익분기 (700만)',data:Array(12).fill(7000000),borderColor:'#ef4444bb',borderWidth:2,borderDash:[7,5],pointRadius:0,fill:false,order:0};
   const chartDatasets=selectedBr
-    ?[{label:`실입금 (${selectedBr})`,data:payByMo,backgroundColor:'#05966999',borderColor:'#059669',borderWidth:1.5,borderRadius:5},rentLine]
-    :[...Object.entries(brPayByMo).map(([br,data])=>{
+    ?[{label:`실입금 (${selectedBr})`,data:payByMo,backgroundColor:'#05966999',borderColor:'#059669',borderWidth:1.5,borderRadius:5}]
+    :Object.entries(brPayByMo).map(([br,data])=>{
         const [bg,border]=brChartColors[br]||['#05966999','#059669'];
         return{label:br,data,backgroundColor:bg,borderColor:border,borderWidth:1.5,borderRadius:5};
-      }),rentLine];
+      });
   revenueChartInst=new Chart(ctx,{
     type:'bar',
     data:{
@@ -1254,7 +1254,8 @@ function renderChart(){
       responsive:true,maintainAspectRatio:false,
       plugins:{
         legend:{position:'top',labels:{font:{size:13,weight:'bold'},padding:16}},
-        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fa(c.parsed.y)}`}}
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fa(c.parsed.y)}`}},
+        annotation:{annotations:{rentLine:{type:'line',yMin:7000000,yMax:7000000,borderColor:'#ef4444',borderWidth:1.5,borderDash:[6,4],label:{display:true,content:'월세 700만',position:'end',xAdjust:-8,backgroundColor:'transparent',color:'#ef4444',font:{size:11,weight:'bold'}}}}}
       },
       scales:{
         x:{grid:{display:false},ticks:{font:{size:12}}},
