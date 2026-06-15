@@ -878,6 +878,8 @@ function todayYmd(){
 }
 function isCountablePayDate(date,year){
   if(!date||date==='입금 예정'||date==='미입금'||date.slice(0,4)!==year)return false;
+  const mo=parseInt(date.slice(5,7),10);
+  if(mo<1||mo>12)return false;
   return date<=todayYmd();
 }
 function paymentParts(ev,year){
