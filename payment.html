@@ -41,7 +41,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .btn-danger{background:#fff;color:var(--red);border-color:#fecaca}
 .btn-danger:hover{background:#fef2f2}
 .btn-hidden.active{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
-.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:18px 28px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:18px 28px}
 .card{background:var(--panel);border-radius:8px;padding:12px 14px;border:1px solid var(--line);box-shadow:0 4px 14px rgba(15,23,42,.04);transition:border-color .15s,box-shadow .15s}
 .card:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
 .card.bl{border-top:3px solid var(--blue)}.card.gr{border-top:3px solid var(--green)}.card.or{border-top:3px solid var(--amber)}
@@ -277,7 +277,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   </select>
   <select id="ss" onchange="render()">
     <option value="">전체 상태</option>
-    <option value="완납">완납</option><option value="예약금 입금">예약금 입금</option><option value="미입금">미입금</option><option value="취소">취소</option><option value="환불">환불</option>
+    <option value="완납">완납</option><option value="예약금 입금">예약금 입금</option><option value="취소">취소</option><option value="환불">환불</option>
   </select>
   <input id="sq" class="search" placeholder="검색" oninput="render()">
   <div class="sp"></div>
@@ -293,7 +293,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div class="card gr"><div class="lbl">대관수익 (대관일 기준)</div><div class="val" id="ca">-</div></div>
   <div class="card bl"><div class="lbl">전체 대관 건수</div><div class="val" id="ct">-</div></div>
   <div class="card pu"><div class="lbl">잔금 입금 예정</div><div class="val" id="cb">-</div></div>
-  <div class="card rd"><div class="lbl">미입금</div><div class="val" id="c4">-</div></div>
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
   <div class="card or"><div class="lbl">환불</div><div class="val" id="c5">-</div></div>
 </div>
@@ -858,15 +857,15 @@ function cell(id,key,val,type='text',cls=''){
   return`<span class="editcell ${type==='area'?'areacell':''} ${cls}" data-val="${esc(val||'')}" onclick="editCell(event,'${id}','${key}','${type}')">${shown?esc(shown):'<span class="dash">-</span>'}</span>`;
 }
 function payDateCell(id,key,dateVal,amountVal){
-  const isPending=!dateVal||(key==='balanceDate'&&dateVal==='입금 예정')||(key==='reservationDate'&&dateVal==='미입금');
+  const isPending=!dateVal||(key==='balanceDate'&&dateVal==='입금 예정')||(key==='reservationDate'&&!dateVal);
   if(isPending&&Number(amountVal)>0){
-    const label=key==='balanceDate'?'입금 예정':'미입금';
+    const label=key==='balanceDate'?'입금 예정':'입금 예정';
     return`<span class="editcell waittxt" data-val="" onclick="editCell(event,'${id}','${key}','text')">${label}</span>`;
   }
   return cell(id,key,dateVal,'text');
 }
 function statusSelect(ev,sCls){
-  const opts=['완납','예약금 입금','미입금','취소','환불'];
+  const opts=['완납','예약금 입금','취소','환불'];
   return`<select class="statusselect ${sCls}" onchange="setOv('${ev.id}','payStatus',this.value);render()" onclick="event.stopPropagation()">${opts.map(v=>`<option value="${v}" ${v===ev.payStatus?'selected':''}>${v}</option>`).join('')}</select>`;
 }
 function editCell(e,id,key,type='text'){
@@ -874,12 +873,11 @@ function editCell(e,id,key,type='text'){
   const host=e.currentTarget;
   const ev=evById(id);if(!ev)return;
   let cur=key==='methodsText'?ev.methods.join('+'):(ev[key]??'');
-  if(!cur&&key==='reservationDate'&&Number(ev.reservationAmount)>0)cur='미입금';
   if(!cur&&key==='balanceDate'&&Number(ev.balanceAmount)>0)cur='입금 예정';
   let input;
   if(type==='select'){
     input=document.createElement('select');
-    const opts=key==='branch'?['문래점','신논현점']:['완납','예약금 입금','미입금','취소','환불'];
+    const opts=key==='branch'?['문래점','신논현점']:['완납','예약금 입금','취소','환불'];
     opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;input.appendChild(o)});
     input.className='editinp';
   }else if(type==='area'){
@@ -978,7 +976,6 @@ function render(){
   const 예약금=data.filter(e=>e.payStatus==='예약금 입금');
   const 취소=data.filter(e=>e.payStatus==='취소');
   const 환불=data.filter(e=>e.payStatus==='환불');
-  const 미입금=data.filter(e=>e.payStatus==='미입금');
   const sumNet=rows=>rows.reduce((s,e)=>s+(Number(e.netIn)||0),0);
   const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(sumNet(rows))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
@@ -986,10 +983,9 @@ function render(){
   document.getElementById('ca').textContent=fa(sumNet(data));
 
 
-  const 잔금예정데이터=data.filter(e=>e.payStatus==='예약금 입금'||e.payStatus==='미입금');
+  const 잔금예정데이터=data.filter(e=>e.payStatus==='예약금 입금');
   document.getElementById('cb').innerHTML=`<span class="count">${잔금예정데이터.length}건</span><span class="money">${fa(잔금예정데이터.reduce((s,e)=>s+e.balanceAmount,0))}</span>`;
   
-  document.getElementById('c4').innerHTML=`<span class="count">${미입금.length}건</span><span class="money">미수납</span>`;
   document.getElementById('c3').innerHTML=statHtml(취소);
   document.getElementById('c5').innerHTML=statHtml(환불);
   if(!data.length){
@@ -1167,7 +1163,6 @@ function renderChart(){
 
     // 미수 잔금: 예약금 입금 상태 → balanceAmount / 미입금 → netIn
     if(e.payStatus==='예약금 입금')brMap[b].out+=Number(e.balanceAmount)||0;
-    else if(e.payStatus==='미입금')brMap[b].out+=Number(e.netIn)||0;
   });
 
   const totalPay=payByMo.reduce((s,v)=>s+v,0);
@@ -1193,7 +1188,7 @@ function renderChart(){
     <div class="an-kpi-card">
       <div class="ak-lbl">잔금 미수금</div>
       <div class="ak-val amber">${fa(totalOut)}</div>
-      <div class="ak-sub">예약금·미입금 건 잔여액</div>
+      <div class="ak-sub">예약금 입금 건 잔여 잔금</div>
       <hr class="ak-divider">
       <div class="ak-branches">${brEntries.map(([n,v])=>
         `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v.out)}</span></div>`
