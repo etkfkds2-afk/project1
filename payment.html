@@ -1237,12 +1237,13 @@ function renderChart(){
   if(revenueChartInst)revenueChartInst.destroy();
   const selectedBr=document.getElementById('sb').value;
   const brChartColors={'문래점':['#2563eb55','#2563eb'],'신논현점':['#7c3aed55','#7c3aed']};
+  const rentLine={type:'line',label:'월세 손익분기 (700만)',data:Array(12).fill(7000000),borderColor:'#ef4444bb',borderWidth:2,borderDash:[7,5],pointRadius:0,fill:false,order:0};
   const chartDatasets=selectedBr
-    ?[{label:`실입금 (${selectedBr})`,data:payByMo,backgroundColor:'#05966999',borderColor:'#059669',borderWidth:1.5,borderRadius:5}]
-    :Object.entries(brPayByMo).map(([br,data])=>{
+    ?[{label:`실입금 (${selectedBr})`,data:payByMo,backgroundColor:'#05966999',borderColor:'#059669',borderWidth:1.5,borderRadius:5},rentLine]
+    :[...Object.entries(brPayByMo).map(([br,data])=>{
         const [bg,border]=brChartColors[br]||['#05966999','#059669'];
         return{label:br,data,backgroundColor:bg,borderColor:border,borderWidth:1.5,borderRadius:5};
-      });
+      }),rentLine];
   revenueChartInst=new Chart(ctx,{
     type:'bar',
     data:{
