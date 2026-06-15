@@ -895,7 +895,7 @@ function render(){
   const sumNet=rows=>rows.reduce((s,e)=>s+periodNetIn(e),0);
   const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+periodNetIn(e),0))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
-  document.getElementById('ca').textContent=fa(sumNet(완납)+sumNet(예약금)+sumNet(취소)-sumNet(환불));
+  document.getElementById('ca').textContent=fa(sumNet(data));
   document.getElementById('c1').innerHTML=statHtml(완납);
   document.getElementById('c2').innerHTML=statHtml(예약금);
 
