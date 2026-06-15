@@ -618,7 +618,7 @@ function parseEv(ev,branch){
     payStatus,totalIn,netIn,dep,depText,methods,txns:pd.txns,
     _actualReservation,_actualBalance,
     reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.amount||pd.plannedReservation||0,
-    balanceDate:(payStatus==='취소'&&!hasActualBalance)?'':(pd.balance?.date||''),balanceAmount,balanceDiAmt:pd.balanceDiAmtTotal,
+    balanceDate:(payStatus==='취소'&&!hasActualBalance)?'':(pd.balance?.date||''),balanceAmount,balanceDiAmt:pd.balanceDiAmtTotal,reservationDiAmt:pd.reservation?.diAmt||0,
     notes:o.notes!==undefined?o.notes:pd.memos.slice(0,3).join(' / '),
     rawTitle:title,rawDesc:ev.description||'',rawStart,rawEnd,rawBranch:branch};
   return applyOverrides(row,o);
@@ -882,12 +882,17 @@ function isCountablePayDate(date,year){
 }
 function paymentParts(ev,year){
   const sign=ev.payStatus==='환불'?-1:1;
+  const _isCash=(ev.methods||[]).includes('현금');
   const parts=[];
+  // 현금만 보증금 차감. 예약금 라인 inline 보증금 → 예약금에서, 잔금 라인 inline → 잔금에서, 별도 라인 → 잔금에서
+  const resDep=_isCash?(Number(ev.reservationDiAmt)||0):0;
+  const balDep=_isCash?(Number(ev.balanceDiAmt)||0):0;
+  const remainDep=_isCash?Math.max(0,(Number(ev.dep)||0)-resDep-balDep):0;
   if(isCountablePayDate(ev.reservationDate,year)){
-    parts.push({date:ev.reservationDate,amount:sign*(Number(ev.reservationAmount)||0)});
+    parts.push({date:ev.reservationDate,amount:sign*Math.max(0,(Number(ev.reservationAmount)||0)-resDep)});
   }
   if(isCountablePayDate(ev.balanceDate,year)){
-    parts.push({date:ev.balanceDate,amount:sign*Math.max(0,(Number(ev.balanceAmount)||0)-(Number(ev.dep)||0))});
+    parts.push({date:ev.balanceDate,amount:sign*Math.max(0,(Number(ev.balanceAmount)||0)-balDep-remainDep)});
   }
   return parts;
 }
