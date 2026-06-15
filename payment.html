@@ -529,7 +529,7 @@ function parseDesc(raw,year=''){
       else if(ds.length===6)date=`${ds.slice(0,4)}-${ds.slice(4)}`;
       else if(ds.length===4){const y=year||String(new Date().getFullYear());date=`${y}-${ds.slice(0,2)}-${ds.slice(2)}`;}
       else continue;
-      const txnLine=stripPlannedPays(line);
+      const txnLine=line;
       const method=gm(txnLine);
       const kind=pk(txnLine);
       const isRef=/→\s*환불|환불완료|환불해줘야|환급/.test(line);
@@ -592,18 +592,19 @@ function parseEv(ev,branch){
   const dep=o.dep!==undefined?Number(o.dep)||0:_depFromTxn;
   const depText=o.depText!==undefined?o.depText:(dep?fa(dep):'');
   const totalIn=o.totalIn!==undefined?Number(o.totalIn):pd.totalIn;
-  const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||pd.plannedBalance||0);
+  const hasActualBalance=!!pd.balance||pd.balanceGrossTotal>0;
+  const balanceAmount=o.balanceAmount!==undefined?Number(o.balanceAmount):((payStatus==='취소'&&!hasActualBalance)?0:(pd.balanceGrossTotal||pd.plannedBalance||0));
   const _isCash=methods.includes('현금');
   const _balanceDateReal=o.balanceDate!==undefined&&o.balanceDate!==''&&o.balanceDate!=='입금 예정';
   const _actualReservation=o.reservationAmount!==undefined?Number(o.reservationAmount):(pd.reservation?.amount||0);
-  const _actualBalance=o.balanceAmount!==undefined?Number(o.balanceAmount):(pd.balanceGrossTotal||(_balanceDateReal?pd.plannedBalance:0)||0);
+  const _actualBalance=o.balanceAmount!==undefined?Number(o.balanceAmount):(hasActualBalance?pd.balanceGrossTotal:(_balanceDateReal?pd.plannedBalance:0))||0;
   const _gross=_actualReservation+_actualBalance;
   const netIn=o.netIn!==undefined?Number(o.netIn):Math.max(0,_isCash?_gross-dep:_gross);
   const row={id:ev.id,date,branch,title,status:baseStatus,
     payStatus,totalIn,netIn,dep,depText,methods,txns:pd.txns,
     _actualReservation,_actualBalance,
     reservationDate:pd.reservation?.date||'',reservationAmount:pd.reservation?.amount||pd.plannedReservation||0,
-    balanceDate:pd.balance?.date||'',balanceAmount,balanceDiAmt:pd.balanceDiAmtTotal,
+    balanceDate:(payStatus==='취소'&&!hasActualBalance)?'':(pd.balance?.date||''),balanceAmount,balanceDiAmt:pd.balanceDiAmtTotal,
     notes:o.notes!==undefined?o.notes:pd.memos.slice(0,3).join(' / '),
     rawTitle:title,rawDesc:ev.description||'',rawStart,rawEnd,rawBranch:branch};
   return applyOverrides(row,o);
@@ -893,7 +894,7 @@ function render(){
   const 환불=data.filter(e=>e.payStatus==='환불');
   const 미입금=data.filter(e=>e.payStatus==='미입금');
   const sumNet=rows=>rows.reduce((s,e)=>s+periodNetIn(e),0);
-  const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+periodNetIn(e),0))}</span>`;
+  const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+(Number(e.netIn)||0),0))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
   document.getElementById('ca').textContent=fa(sumNet(data));
   document.getElementById('c1').innerHTML=statHtml(완납);
@@ -1079,12 +1080,17 @@ function renderChart(){
 
   // 연간 합계 카드
   const sumEl=document.getElementById('chart-summary');
-  let totalAll=0;
+  let branchTotal=0;
   const sumHtml=BRANCHES.map((b,i)=>{
-    const s=totals[b].reduce((a,v)=>a+v,0);totalAll+=s;
+    const s=totals[b].reduce((a,v)=>a+v,0);branchTotal+=s;
     const color=COLORS[b]||palette[i%palette.length];
     return`<div class="chart-sum-card"><div class="cs-lbl" style="color:${color}">${b}</div><div class="cs-val">${fa(s)}</div><div class="cs-sub">${year}년 연간</div></div>`;
   });
+  const totalAll=chartRows.reduce((s,e)=>s+periodNetIn(e),0);
+  const gap=totalAll-branchTotal;
+  if(gap!==0){
+    sumHtml.push(`<div class="chart-sum-card"><div class="cs-lbl" style="color:${COLORS.미분류}">집계 보정</div><div class="cs-val">${fa(gap)}</div><div class="cs-sub">지점 합계 외</div></div>`);
+  }
   sumHtml.unshift(`<div class="chart-sum-card"><div class="cs-lbl">전체 합계</div><div class="cs-val">${fa(totalAll)}</div><div class="cs-sub">${year}년 연간</div></div>`);
   sumEl.innerHTML=sumHtml.join('');
   document.getElementById('chart-title').textContent=`${year}년 월별 수익 현황(입금일 기준)`;
