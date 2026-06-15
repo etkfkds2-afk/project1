@@ -1098,11 +1098,12 @@ function renderChart(){
   const ensureBranch=b=>{if(!totals[b])totals[b]=Array(12).fill(0);};
   BASE_BRANCHES.forEach(ensureBranch);
   const chartRows=getFilteredForChart();
+  const todayYm=todayYmd().slice(0,7);
   chartRows.forEach(e=>{
     const b=chartBranchName(e.branch);
     ensureBranch(b);
     const mo=parseInt(e.date.slice(5,7),10)-1;
-    if(mo>=0&&mo<12)totals[b][mo]+=periodNetIn(e);
+    if(mo>=0&&mo<12&&e.date.slice(0,7)<=todayYm)totals[b][mo]+=periodNetIn(e);
   });
   const extraBranches=Object.keys(totals).filter(b=>!BASE_BRANCHES.includes(b)&&totals[b].some(v=>v!==0));
   const BRANCHES=[...BASE_BRANCHES,...extraBranches];
