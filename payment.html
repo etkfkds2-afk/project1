@@ -980,7 +980,7 @@ function render(){
   const 취소=data.filter(e=>e.payStatus==='취소');
   const 환불=data.filter(e=>e.payStatus==='환불');
   const 미입금=data.filter(e=>e.payStatus==='미입금');
-  const sumNet=rows=>rows.reduce((s,e)=>s+effectiveNetIn(e),0);
+  const sumNet=rows=>rows.reduce((s,e)=>s+(Number(e.netIn)||0),0);
   const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(sumNet(rows))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
   document.getElementById('ca').textContent=fa(sumNet(data));
