@@ -1289,7 +1289,7 @@ function renderChart(){
     <thead class="cf-thead"><tr>
       <th>입금날짜</th><th>행사명</th><th>대관일</th>
       <th style="text-align:center">구분</th><th class="r">금액</th>
-      <th style="text-align:center">결제방법</th><th class="r">지점</th>
+      <th style="text-align:center">결제방법</th><th class="r">지점</th><th></th>
     </tr></thead>`;
 
   for(let mo=0;mo<12;mo++){
@@ -1297,7 +1297,7 @@ function renderChart(){
     const moTotal=items.reduce((s,p)=>s+p.amount,0);
     const bid=`cfb${mo}`;
     html+=`<tbody><tr class="cf-mrow" onclick="toggleCfMo('${bid}',this)">
-      <td colspan="7">${LABELS[mo]}${items.length
+      <td colspan="8">${LABELS[mo]}${items.length
         ?`<span class="cf-mtotal">${fa(moTotal)}</span><span class="cf-mcnt">${items.length}건</span>`
         :'<span class="cf-mempty">입금 없음</span>'}
         <span class="cf-arrow">▼</span>
@@ -1313,6 +1313,7 @@ function renderChart(){
         <td class="cf-td-amt">${fa(p.amount)}</td>
         <td class="cf-td-method">${p.e.methods.join('+')}</td>
         <td class="cf-td-br" style="color:${bc}">${p.e.branch}</td>
+        <td><button class="rawbtn" onclick="openRaw('${p.e.id}',event)">원문</button></td>
       </tr>`;
     });
     html+=`</tbody>`;
