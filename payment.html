@@ -198,6 +198,32 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .chart-sum-card .cs-lbl{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px}
 .chart-sum-card .cs-val{font-size:18px;font-weight:800;color:var(--text)}
 .chart-sum-card .cs-sub{font-size:11px;color:var(--muted);margin-top:2px}
+/* ── 실입금 뷰 ── */
+#view-cashflow{padding:24px 28px;display:none}
+.cf-wrap{background:var(--panel);border-radius:10px;border:1px solid var(--line);padding:24px;box-shadow:var(--shadow)}
+.cf-header{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--line)}
+.cf-title{font-size:16px;font-weight:800;color:var(--text)}
+.cf-sub{font-size:12px;color:var(--muted);font-weight:500;margin-left:4px}
+.cf-total{font-size:22px;font-weight:850;color:var(--green);font-variant-numeric:tabular-nums;margin-left:auto}
+.cf-month{margin-bottom:8px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.cf-mhdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel-soft);cursor:pointer;user-select:none}
+.cf-mhdr:hover{background:#f1f5f9}
+.cf-mname{font-size:14px;font-weight:800;color:var(--text);min-width:36px}
+.cf-mtotal{font-size:15px;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums}
+.cf-mcnt{font-size:12px;color:var(--muted);margin-left:4px}
+.cf-mempty{font-size:13px;color:#c0c6d0;margin-left:auto}
+.cf-items{border-top:1px solid var(--line)}
+.cf-item{display:grid;grid-template-columns:90px 68px 88px 1fr 52px 110px 90px;align-items:center;gap:0;padding:10px 16px;border-bottom:1px solid #f3f4f6;font-size:13px}
+.cf-item:last-child{border-bottom:none}
+.cf-item:hover{background:#f8faff}
+.cf-idate{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+.cf-ibr{font-weight:800;font-size:12px}
+.cf-ievdate{color:var(--muted);font-size:12px}
+.cf-ievtitle{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px}
+.cf-ilbl{font-size:11px;color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:4px;padding:2px 6px;text-align:center;white-space:nowrap}
+.cf-ilbl.res{color:#0369a1;background:#e0f2fe;border-color:#bae6fd}
+.cf-iamt{font-weight:850;text-align:right;font-variant-numeric:tabular-nums;color:#111827;padding-right:8px}
+.cf-imethod{font-size:11px;color:var(--muted);text-align:right}
 </style>
 </head>
 <body class="locked">
@@ -220,6 +246,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div class="view-tabs">
     <button class="vtab active" id="tab-table" onclick="switchView('table')">테이블</button>
     <button class="vtab" id="tab-chart" onclick="switchView('chart')">분석</button>
+    <button class="vtab" id="tab-cashflow" onclick="switchView('cashflow')">실입금</button>
   </div>
   <select id="sy" onchange="loadAll()">
     <option value="2026">2026년</option>
@@ -304,6 +331,11 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <div class="chart-title" id="chart-title">월별 수익 현황</div>
     <div class="chart-canvas-wrap"><canvas id="revenueChart"></canvas></div>
     <div class="chart-summary" id="chart-summary"></div>
+  </div>
+</div>
+<div id="view-cashflow">
+  <div class="cf-wrap">
+    <div id="cashflow-content"></div>
   </div>
 </div>
 <div id="rawModal" class="modal" onclick="closeRaw(event)">
@@ -982,6 +1014,7 @@ function render(){
   }
   updateSelectionUI();
   if(currentView==='chart')renderChart();
+  if(currentView==='cashflow')renderCashflow();
 }
 
 function toggleSelect(id,e){
@@ -1081,9 +1114,12 @@ function switchView(v){
   currentView=v;
   document.getElementById('view-table').style.display=v==='table'?'block':'none';
   document.getElementById('view-chart').style.display=v==='chart'?'block':'none';
+  document.getElementById('view-cashflow').style.display=v==='cashflow'?'block':'none';
   document.getElementById('tab-table').classList.toggle('active',v==='table');
   document.getElementById('tab-chart').classList.toggle('active',v==='chart');
+  document.getElementById('tab-cashflow').classList.toggle('active',v==='cashflow');
   if(v==='chart')renderChart();
+  if(v==='cashflow')renderCashflow();
 }
 
 function renderChart(){
@@ -1151,6 +1187,66 @@ function renderChart(){
       }
     }
   });
+}
+
+function renderCashflow(){
+  const year=document.getElementById('sy').value;
+  const allRows=getFilteredForChart();
+  const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+  // 입금날짜 기준으로 월별 그룹
+  const byMonth={}; // {0:[{ev,date,amount,isRes}],...}
+  let grandTotal=0;
+  allRows.forEach(ev=>{
+    const parts=paymentParts(ev,year);
+    parts.forEach(p=>{
+      const mo=parseInt(p.date.slice(5,7),10)-1;
+      if(mo<0||mo>11)return;
+      if(!byMonth[mo])byMonth[mo]=[];
+      byMonth[mo].push({ev,date:p.date,amount:p.amount,isRes:p.date===ev.reservationDate});
+      grandTotal+=p.amount;
+    });
+  });
+
+  let html=`<div class="cf-header">
+    <span class="cf-title">${year}년 실 입금 현황 <span class="cf-sub">(입금날짜 기준, 보증금 제외)</span></span>
+    <span class="cf-total">${fa(grandTotal)}</span>
+  </div>`;
+
+  for(let mo=0;mo<12;mo++){
+    const items=(byMonth[mo]||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+    const moTotal=items.reduce((s,p)=>s+p.amount,0);
+    const isEmpty=items.length===0;
+    html+=`<div class="cf-month">
+      <div class="cf-mhdr" onclick="this.parentElement.querySelector('.cf-items')?.classList.toggle('collapsed')">
+        <span class="cf-mname">${MONTHS[mo]}</span>
+        ${isEmpty
+          ?'<span class="cf-mempty">입금 없음</span>'
+          :`<span class="cf-mtotal">${fa(moTotal)}</span><span class="cf-mcnt">${items.length}건</span>`
+        }
+      </div>`;
+    if(!isEmpty){
+      html+=`<div class="cf-items">`;
+      items.forEach(p=>{
+        const brColor=normalizeBranch(p.ev.branch)==='문래점'?'#2563eb':'#7c3aed';
+        const lblCls=p.isRes?'cf-ilbl res':'cf-ilbl';
+        const lblTxt=p.isRes?'예약금':'잔금';
+        html+=`<div class="cf-item">
+          <span class="cf-idate">${p.date}</span>
+          <span class="cf-ibr" style="color:${brColor}">${p.ev.branch}</span>
+          <span class="cf-ievdate">${p.ev.date}</span>
+          <span class="cf-ievtitle" title="${esc(p.ev.title)}">${esc(p.ev.title)}</span>
+          <span class="${lblCls}">${lblTxt}</span>
+          <span class="cf-iamt">${fa(p.amount)}</span>
+          <span class="cf-imethod">${p.ev.methods.join('+')}</span>
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+  }
+
+  document.getElementById('cashflow-content').innerHTML=html;
 }
 
 if(sessionStorage.getItem(ACCESS_KEY)==='1')showApp();
