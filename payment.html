@@ -383,6 +383,12 @@ function saveOv(){
 }
 function cleanNum(v){return pa(String(v||'').replace(/[^\d,]/g,''))}
 function normStatus(v){return v==='예약금'?'예약금 입금':v}
+function normalizeBranch(branch){
+  const b=String(branch||'').trim();
+  if(/문래/.test(b))return'문래점';
+  if(/신논현/.test(b))return'신논현점';
+  return b||'미분류';
+}
 function setOv(id,key,val){
   if(!ov[id])ov[id]={};
   ov[id][key]=val;
@@ -393,6 +399,8 @@ function setOv(id,key,val){
     }else if(key==='depText'){
       ev.depText=val;
       ev.dep=pa(val);
+    }else if(key==='branch'){
+      ev[key]=normalizeBranch(val);
     }else{
       ev[key]=key==='payStatus'?normStatus(val):val;
     }
@@ -417,7 +425,7 @@ function setOv(id,key,val){
 }
 function applyOverrides(row,o){
   ['date','branch','title','payStatus','reservationDate','balanceDate','notes','depText'].forEach(k=>{
-    if(o[k]!==undefined)row[k]=k==='payStatus'?normStatus(o[k]):o[k];
+    if(o[k]!==undefined)row[k]=k==='payStatus'?normStatus(o[k]):(k==='branch'?normalizeBranch(o[k]):o[k]);
   });
   ['reservationAmount','balanceAmount','dep','totalIn','netIn'].forEach(k=>{
     if(o[k]!==undefined)row[k]=Number(o[k])||0;
@@ -427,6 +435,7 @@ function applyOverrides(row,o){
 
   // depText -> dep sync
   if(o.depText!==undefined) row.dep=pa(o.depText);
+  row.branch=normalizeBranch(row.branch);
 
   // 예약금/잔금 오버라이드 → 총입금액 재계산 + _actual* 동기
   if(o.reservationAmount!==undefined||o.balanceAmount!==undefined)
@@ -913,7 +922,7 @@ function render(){
   }
   const rows=[];
   for(const ev of data){
-    const bc=ev.branch==='문래점'?'brm':'brs';
+    const bc=normalizeBranch(ev.branch)==='문래점'?'brm':'brs';
     const methodText=ev.methods.join('+')||'기타';
     const sCls='s'+ev.payStatus.replace(/\s+/g,'');
     rows.push(`<tr class="grow${ev.hidden?' hidden-row':''}">
@@ -1040,10 +1049,7 @@ function doExport(){
 let currentView='table';
 let revenueChartInst=null;
 function chartBranchName(branch){
-  const b=String(branch||'').trim();
-  if(/문래/.test(b))return'문래점';
-  if(/신논현/.test(b))return'신논현점';
-  return b||'미분류';
+  return normalizeBranch(branch);
 }
 
 function switchView(v){
