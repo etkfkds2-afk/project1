@@ -1038,6 +1038,12 @@ function doExport(){
 
 let currentView='table';
 let revenueChartInst=null;
+function chartBranchName(branch){
+  const b=String(branch||'').trim();
+  if(/문래/.test(b))return'문래점';
+  if(/신논현/.test(b))return'신논현점';
+  return b||'미분류';
+}
 
 function switchView(v){
   currentView=v;
@@ -1050,27 +1056,34 @@ function switchView(v){
 
 function renderChart(){
   const year=document.getElementById('sy').value;
-  const BRANCHES=['문래점','신논현점'];
-  const COLORS={문래점:'#2563eb',신논현점:'#d97706'};
+  const BASE_BRANCHES=['문래점','신논현점'];
+  const COLORS={문래점:'#2563eb',신논현점:'#d97706',미분류:'#6b7280'};
   const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const palette=['#059669','#7c3aed','#dc2626','#0891b2'];
 
   // 지점별 월별 실수입 합계 (입금일 기준, 오늘 이후 예정 입금 제외)
   const totals={};
-  BRANCHES.forEach(b=>{totals[b]=Array(12).fill(0);});
-  getFiltered().forEach(e=>{
-    const b=e.branch;if(!totals[b])return;
+  const ensureBranch=b=>{if(!totals[b])totals[b]=Array(12).fill(0);};
+  BASE_BRANCHES.forEach(ensureBranch);
+  const chartRows=getFiltered();
+  chartRows.forEach(e=>{
+    const b=chartBranchName(e.branch);
+    ensureBranch(b);
     paymentParts(e,year).forEach(p=>{
       const mo=payMonthIndex(p.date,year);
       if(mo>=0)totals[b][mo]+=p.amount;
     });
   });
+  const extraBranches=Object.keys(totals).filter(b=>!BASE_BRANCHES.includes(b)&&totals[b].some(v=>v!==0));
+  const BRANCHES=[...BASE_BRANCHES,...extraBranches];
 
   // 연간 합계 카드
   const sumEl=document.getElementById('chart-summary');
   let totalAll=0;
-  const sumHtml=BRANCHES.map(b=>{
+  const sumHtml=BRANCHES.map((b,i)=>{
     const s=totals[b].reduce((a,v)=>a+v,0);totalAll+=s;
-    return`<div class="chart-sum-card"><div class="cs-lbl" style="color:${COLORS[b]}">${b}</div><div class="cs-val">${fa(s)}</div><div class="cs-sub">${year}년 연간</div></div>`;
+    const color=COLORS[b]||palette[i%palette.length];
+    return`<div class="chart-sum-card"><div class="cs-lbl" style="color:${color}">${b}</div><div class="cs-val">${fa(s)}</div><div class="cs-sub">${year}년 연간</div></div>`;
   });
   sumHtml.unshift(`<div class="chart-sum-card"><div class="cs-lbl">전체 합계</div><div class="cs-val">${fa(totalAll)}</div><div class="cs-sub">${year}년 연간</div></div>`);
   sumEl.innerHTML=sumHtml.join('');
@@ -1082,11 +1095,11 @@ function renderChart(){
     type:'bar',
     data:{
       labels:LABELS,
-      datasets:BRANCHES.map(b=>({
+      datasets:BRANCHES.map((b,i)=>({
         label:b,
         data:totals[b],
-        backgroundColor:COLORS[b]+'cc',
-        borderColor:COLORS[b],
+        backgroundColor:(COLORS[b]||palette[i%palette.length])+'cc',
+        borderColor:COLORS[b]||palette[i%palette.length],
         borderWidth:1,
         borderRadius:4,
       }))
