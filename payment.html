@@ -239,6 +239,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-td-amt{text-align:right;font-weight:850;font-size:14px;font-variant-numeric:tabular-nums;color:#111827;width:110px}
 .cf-td-method{font-size:12px;color:#9ca3af;text-align:center;width:78px}
 .cf-td-br{font-size:12px;font-weight:800;text-align:right;width:64px}
+.cf-br-hdr td{padding:6px 14px;background:#f8fafc;border-top:1px solid var(--line);border-bottom:1px solid #e5e7eb}
 </style>
 </head>
 <body class="locked">
@@ -1294,28 +1295,41 @@ function renderChart(){
       <th style="text-align:center">결제방법</th><th class="r">지점</th>
     </tr></thead>`;
 
+  const BR_ORDER=['문래점','신논현점'];
+  const BR_COLOR={'문래점':'#2563eb','신논현점':'#7c3aed'};
   for(let mo=0;mo<12;mo++){
-    const items=(byMo[mo]||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
-    const moTotal=items.reduce((s,p)=>s+p.amount,0);
+    const all=(byMo[mo]||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+    const moTotal=all.reduce((s,p)=>s+p.amount,0);
     const bid=`cfb${mo}`;
     html+=`<tbody><tr class="cf-mrow" onclick="toggleCfMo('${bid}',this)">
-      <td colspan="7">${LABELS[mo]}${items.length
-        ?`<span class="cf-mtotal">${fa(moTotal)}</span><span class="cf-mcnt">${items.length}건</span>`
+      <td colspan="7">${LABELS[mo]}${all.length
+        ?`<span class="cf-mtotal">${fa(moTotal)}</span><span class="cf-mcnt">${all.length}건</span>`
         :'<span class="cf-mempty">입금 없음</span>'}
         <span class="cf-arrow">▼</span>
       </td></tr></tbody>
     <tbody class="cf-body" id="${bid}">`;
-    items.forEach(p=>{
-      const bc=normalizeBranch(p.e.branch)==='문래점'?'#2563eb':'#7c3aed';
-      html+=`<tr class="cf-row">
-        <td class="cf-td-date">${p.date}</td>
-        <td class="cf-td-title"><div class="titlecell"><span>${esc(p.e.title)}</span><button class="rawbtn" onclick="openRaw('${p.e.id}',event)">원문</button></div></td>
-        <td class="cf-td-evdate">${p.e.date}</td>
-        <td class="cf-td-lbl"><span class="cf-ilbl ${p.isRes?'res':'bal'}">${p.isRes?'예약금':'잔금'}</span></td>
-        <td class="cf-td-amt">${fa(p.amount)}</td>
-        <td class="cf-td-method">${p.e.methods.join('+')}</td>
-        <td class="cf-td-br" style="color:${bc}">${p.e.branch}</td>
-      </tr>`;
+    // 지점별 그룹
+    const byBr={};
+    all.forEach(p=>{const b=normalizeBranch(p.e.branch);if(!byBr[b])byBr[b]=[];byBr[b].push(p);});
+    const brs=[...BR_ORDER.filter(b=>byBr[b]),...Object.keys(byBr).filter(b=>!BR_ORDER.includes(b))];
+    const multiBr=brs.length>1;
+    brs.forEach(br=>{
+      const bItems=byBr[br];
+      const bColor=BR_COLOR[br]||'#374151';
+      const bTotal=bItems.reduce((s,p)=>s+p.amount,0);
+      if(multiBr)html+=`<tr class="cf-br-hdr"><td colspan="7"><span style="color:${bColor};font-weight:800;font-size:12px">${br}</span><span class="cf-mtotal" style="color:${bColor}">${fa(bTotal)}</span><span class="cf-mcnt">${bItems.length}건</span></td></tr>`;
+      bItems.forEach(p=>{
+        const bc=bColor;
+        html+=`<tr class="cf-row">
+          <td class="cf-td-date">${p.date}</td>
+          <td class="cf-td-title"><div class="titlecell"><span>${esc(p.e.title)}</span><button class="rawbtn" onclick="openRaw('${p.e.id}',event)">원문</button></div></td>
+          <td class="cf-td-evdate">${p.e.date}</td>
+          <td class="cf-td-lbl"><span class="cf-ilbl ${p.isRes?'res':'bal'}">${p.isRes?'예약금':'잔금'}</span></td>
+          <td class="cf-td-amt">${fa(p.amount)}</td>
+          <td class="cf-td-method">${p.e.methods.join('+')}</td>
+          <td class="cf-td-br" style="color:${bc}">${p.e.branch}</td>
+        </tr>`;
+      });
     });
     html+=`</tbody>`;
   }
