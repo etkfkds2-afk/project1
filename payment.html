@@ -74,6 +74,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .brm{color:#2563eb;font-weight:800}.brs{color:#7c3aed;font-weight:800}
 .amt{font-weight:850;font-variant-numeric:tabular-nums;color:#111827}
 .dep{font-weight:850;font-variant-numeric:tabular-nums;color:#c2410c}
+.dep-label{font-weight:700;color:#4f46e5;font-size:12px}
 .moneycell,.datecell,.statuscell,.paycell{white-space:nowrap}
 .paycell{white-space:normal;text-align:center;overflow:visible}
 .paycell .bdg{width:100%;max-width:112px;min-height:30px;padding:5px 8px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-align:center;line-height:1.25}
@@ -1033,7 +1034,7 @@ function render(){
       </td>
       <td class="gcell" data-label="예약금 입금"><div class="date2">${payDateCell(ev.id,'reservationDate',ev.reservationDate,ev.reservationAmount)}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
       <td class="gcell" data-label="잔금 입금"><div class="date2">${payDateCell(ev.id,'balanceDate',ev.balanceDate,ev.balanceAmount)}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
-      <td class="gcell r moneycell" data-label="청소보증금">${cell(ev.id,'depText',ev.depText,'text','dep')}</td>
+      <td class="gcell r moneycell" data-label="청소보증금">${cell(ev.id,'depText',ev.depText,'text',ev.dep>0?'dep':'dep-label')}</td>
       <td class="gcell r moneycell" data-label="대관수익 (대관일 기준)">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
       <td class="gcell paycell" data-label="결제방법">
         <span class="bdg m${methodText.split('+')[0]}">${cell(ev.id,'methodsText',methodText,'text')}</span>
