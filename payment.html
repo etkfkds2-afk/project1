@@ -289,10 +289,10 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 </div>
 <div id="view-table">
 <div class="cards">
-  <div class="card gr"><div class="lbl">실수입(보증금 제외)</div><div class="val" id="ca">-</div></div>
+  <div class="card gr"><div class="lbl">실입금 (입금날짜 기준)</div><div class="val" id="cri">-</div></div>
+  <div class="card gr"><div class="lbl">대관수익</div><div class="val" id="ca">-</div></div>
   <div class="card bl"><div class="lbl">전체 대관 건수</div><div class="val" id="ct">-</div></div>
   <div class="card bl"><div class="lbl">완납</div><div class="val" id="c1">-</div></div>
-  <div class="card"><div class="lbl">예약금</div><div class="val" id="c2">-</div></div>
   <div class="card pu"><div class="lbl">잔금 입금 예정</div><div class="val" id="cb">-</div></div>
   <div class="card rd"><div class="lbl">미입금</div><div class="val" id="c4">-</div></div>
   <div class="card"><div class="lbl">취소</div><div class="val" id="c3">-</div></div>
@@ -324,7 +324,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
       <th class="gcell"><span class="hchip">예약금 입금</span></th>
       <th class="gcell"><span class="hchip">잔금 입금</span></th>
       <th class="gcell r"><span class="hchip">청소보증금</span></th>
-      <th class="gcell r"><span class="hchip">실수입(보증금 제외)</span></th>
+      <th class="gcell r"><span class="hchip">대관수익</span></th>
       <th class="gcell"><span class="hchip">결제방법</span></th>
       <th class="gcell"><span class="hchip">메모</span></th>
       <th class="gcell"></th>
@@ -983,9 +983,9 @@ function render(){
   const sumNet=rows=>rows.reduce((s,e)=>s+(Number(e.netIn)||0),0);
   const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(sumNet(rows))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
+  document.getElementById('cri').textContent=fa(data.reduce((s,e)=>s+effectiveNetIn(e),0));
   document.getElementById('ca').textContent=fa(sumNet(data));
   document.getElementById('c1').innerHTML=statHtml(완납);
-  document.getElementById('c2').innerHTML=statHtml(예약금);
 
   const 잔금예정데이터=data.filter(e=>e.payStatus==='예약금 입금'||e.payStatus==='미입금');
   document.getElementById('cb').innerHTML=`<span class="count">${잔금예정데이터.length}건</span><span class="money">${fa(잔금예정데이터.reduce((s,e)=>s+e.balanceAmount,0))}</span>`;
