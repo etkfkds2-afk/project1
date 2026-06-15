@@ -1157,7 +1157,9 @@ function renderChart(){
 
     const evMo=parseInt(e.date.slice(5,7),10)-1;
     const net=Number(e.netIn)||0;
-    if(evMo>=0&&evMo<12){evByMo[evMo]+=net;brMap[b].ev+=net;}
+    brMap[b].ev+=net;
+    const todayMo=new Date().getMonth();
+    if(evMo>=0&&evMo<=todayMo)evByMo[evMo]+=net;
 
     paymentParts(e,year).forEach(p=>{
       const pMo=parseInt(p.date.slice(5,7),10)-1;
