@@ -188,50 +188,54 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .view-tabs{display:flex;gap:4px;margin-right:4px}
 .vtab{height:36px;padding:0 16px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .vtab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-/* ── 차트 뷰 ── */
-#view-chart{padding:24px 28px;display:none}
-.chart-wrap{background:var(--panel);border-radius:10px;border:1px solid var(--line);padding:24px 24px 16px;box-shadow:var(--shadow)}
-.chart-title{font-size:15px;font-weight:700;margin-bottom:18px;color:var(--text)}
-.chart-canvas-wrap{position:relative;height:360px}
-.chart-summary{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
-.chart-sum-card{flex:1;min-width:140px;background:var(--panel-soft);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
-.chart-sum-card .cs-lbl{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px}
-.chart-sum-card .cs-val{font-size:18px;font-weight:800;color:var(--text)}
-.chart-sum-card .cs-sub{font-size:11px;color:var(--muted);margin-top:2px}
-/* ── 실입금 뷰 ── */
-#view-cashflow{padding:24px 28px;display:none}
-.cf-wrap{background:var(--panel);border-radius:10px;border:1px solid var(--line);padding:24px;box-shadow:var(--shadow)}
-.cf-header{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--line)}
-.cf-title{font-size:16px;font-weight:800;color:var(--text)}
-.cf-sub{font-size:12px;color:var(--muted);font-weight:500;margin-left:4px}
-.cf-total{font-size:22px;font-weight:850;color:var(--green);font-variant-numeric:tabular-nums;margin-left:auto}
-.cf-month{margin-bottom:8px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.cf-mhdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel-soft);cursor:pointer;user-select:none}
-.cf-mhdr:hover{background:#f1f5f9}
-.cf-mname{font-size:14px;font-weight:800;color:var(--text);min-width:36px}
-.cf-mtotal{font-size:15px;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums}
-.cf-mcnt{font-size:12px;color:var(--muted);margin-left:4px}
-.cf-mempty{font-size:13px;color:#c0c6d0;margin-left:auto}
+/* ── 분석 뷰 ── */
+#view-chart{padding:24px 28px 48px;display:none}
+.an-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.an-kpi-card{background:var(--panel);border-radius:10px;border:1px solid var(--line);padding:18px 20px;box-shadow:var(--shadow)}
+.an-kpi-card .ak-lbl{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:6px}
+.an-kpi-card .ak-val{font-size:26px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1}
+.ak-val.green{color:var(--green)}.ak-val.amber{color:var(--amber)}.ak-val.red{color:var(--red)}
+.an-kpi-card .ak-sub{font-size:11px;color:var(--muted);margin-top:5px;margin-bottom:10px}
+.an-kpi-card .ak-divider{border:none;border-top:1px solid var(--line);margin:0}
+.an-kpi-card .ak-branches{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+.ak-br-row{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.ak-br-name{color:var(--muted);font-weight:600}.ak-br-val{font-weight:750;font-variant-numeric:tabular-nums}
+/* 섹션 공통 */
+.an-section{background:var(--panel);border-radius:10px;border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+.an-section:last-child{margin-bottom:0}
+.an-sec-hdr{padding:18px 22px 0;border-bottom:1px solid var(--line);padding-bottom:14px}
+.an-sec-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px}
+.an-sec-sub{font-size:12px;color:var(--muted)}
+.an-sec-hdr-row{display:flex;align-items:baseline;justify-content:space-between}
+.an-sec-total{font-size:16px;font-weight:850;color:var(--green);font-variant-numeric:tabular-nums}
+/* 차트 */
+.an-chart-body{padding:20px 22px 16px;position:relative;height:340px}
+/* 실입금 테이블 */
 .cf-table{width:100%;border-collapse:collapse;font-size:13px}
-.cf-thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#6b7280;background:#f8fafc;border-bottom:2px solid var(--line);white-space:nowrap}
+.cf-thead th{padding:9px 14px;text-align:left;font-size:11px;font-weight:800;color:#6b7280;background:#f8fafc;border-bottom:1px solid var(--line);white-space:nowrap}
 .cf-thead th.r{text-align:right}
-.cf-mrow td{padding:8px 14px;background:#f1f5f9;font-size:12px;font-weight:800;color:#374151;border-top:2px solid var(--line);border-bottom:1px solid var(--line)}
-.cf-mrow td .cf-mtotal{font-size:13px;color:var(--blue);font-variant-numeric:tabular-nums;margin-left:10px}
-.cf-mrow td .cf-mempty{color:#b0b8c4;font-weight:500;margin-left:8px}
-.cf-row{background:#fff}
-.cf-row:hover{background:#f8faff}
+.cf-mrow{cursor:pointer;user-select:none}
+.cf-mrow td{padding:9px 16px;background:#f1f5f9;font-size:12px;font-weight:800;color:#374151;border-top:1px solid var(--line)}
+.cf-mrow:hover td{background:#e8edf5}
+.cf-mtotal{font-size:13px;color:var(--blue);font-variant-numeric:tabular-nums;margin-left:10px}
+.cf-mempty{color:#b0b8c4;font-weight:500;margin-left:8px}
+.cf-mcnt{font-size:11px;color:#9ca3af;font-weight:500;margin-left:4px}
+.cf-arrow{float:right;color:#9ca3af;font-size:10px;transition:transform .2s}
+.cf-mrow.open .cf-arrow{transform:rotate(180deg)}
+.cf-body{display:none}.cf-body.open{display:table-row-group}
+.cf-row{background:#fff}.cf-row:hover{background:#f8faff}
 .cf-row td{padding:10px 14px;border-bottom:1px solid #f1f3f6;vertical-align:middle;white-space:nowrap}
 .cf-row:last-child td{border-bottom:none}
-.cf-td-date{font-size:12px;color:#6b7280;font-variant-numeric:tabular-nums}
-.cf-td-title{font-weight:600;white-space:normal;max-width:280px;line-height:1.4}
-.cf-td-evdate{font-size:12px;color:#9ca3af;font-variant-numeric:tabular-nums}
-.cf-td-lbl{text-align:center}
-.cf-ilbl{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:2px 8px;white-space:nowrap}
+.cf-td-date{font-size:12px;color:#6b7280;font-variant-numeric:tabular-nums;width:106px}
+.cf-td-title{font-weight:600;white-space:normal;max-width:260px;line-height:1.4}
+.cf-td-evdate{font-size:12px;color:#9ca3af;width:96px}
+.cf-td-lbl{text-align:center;width:58px}
+.cf-ilbl{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;white-space:nowrap}
 .cf-ilbl.bal{color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe}
 .cf-ilbl.res{color:#0369a1;background:#e0f2fe;border:1px solid #bae6fd}
-.cf-td-amt{text-align:right;font-weight:850;font-size:14px;font-variant-numeric:tabular-nums;color:#111827}
-.cf-td-method{font-size:12px;color:#9ca3af;text-align:center}
-.cf-td-br{font-size:12px;font-weight:800;text-align:right}
+.cf-td-amt{text-align:right;font-weight:850;font-size:14px;font-variant-numeric:tabular-nums;color:#111827;width:118px}
+.cf-td-method{font-size:12px;color:#9ca3af;text-align:center;width:80px}
+.cf-td-br{font-size:12px;font-weight:800;text-align:right;width:68px}
 </style>
 </head>
 <body class="locked">
@@ -254,7 +258,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div class="view-tabs">
     <button class="vtab active" id="tab-table" onclick="switchView('table')">테이블</button>
     <button class="vtab" id="tab-chart" onclick="switchView('chart')">분석</button>
-    <button class="vtab" id="tab-cashflow" onclick="switchView('cashflow')">실입금</button>
   </div>
   <select id="sy" onchange="loadAll()">
     <option value="2026">2026년</option>
@@ -335,14 +338,24 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 </div>
 </div><!-- /view-table -->
 <div id="view-chart">
-  <div class="chart-wrap">
-    <div class="chart-title" id="chart-title">월별 수익 현황</div>
-    <div class="chart-canvas-wrap"><canvas id="revenueChart"></canvas></div>
-    <div class="chart-summary" id="chart-summary"></div>
+  <div id="an-kpi" class="an-kpi"></div>
+  <div class="an-section">
+    <div class="an-sec-hdr">
+      <div class="an-sec-title" id="an-chart-title">월별 수익 비교</div>
+      <div class="an-sec-sub">파랑 — 대관수익(대관일 기준) &nbsp;·&nbsp; 초록 — 실입금(입금날짜 기준)</div>
+    </div>
+    <div class="an-chart-body"><canvas id="revenueChart"></canvas></div>
   </div>
-</div>
-<div id="view-cashflow">
-  <div class="cf-wrap">
+  <div class="an-section">
+    <div class="an-sec-hdr">
+      <div class="an-sec-hdr-row">
+        <div>
+          <div class="an-sec-title">월별 실입금 내역</div>
+          <div class="an-sec-sub">입금날짜 기준 · 월 클릭으로 펼치기</div>
+        </div>
+        <span class="an-sec-total" id="an-cf-total"></span>
+      </div>
+    </div>
     <div id="cashflow-content"></div>
   </div>
 </div>
@@ -1022,7 +1035,6 @@ function render(){
   }
   updateSelectionUI();
   if(currentView==='chart')renderChart();
-  if(currentView==='cashflow')renderCashflow();
 }
 
 function toggleSelect(id,e){
@@ -1122,140 +1134,167 @@ function switchView(v){
   currentView=v;
   document.getElementById('view-table').style.display=v==='table'?'block':'none';
   document.getElementById('view-chart').style.display=v==='chart'?'block':'none';
-  document.getElementById('view-cashflow').style.display=v==='cashflow'?'block':'none';
   document.getElementById('tab-table').classList.toggle('active',v==='table');
   document.getElementById('tab-chart').classList.toggle('active',v==='chart');
-  document.getElementById('tab-cashflow').classList.toggle('active',v==='cashflow');
   if(v==='chart')renderChart();
-  if(v==='cashflow')renderCashflow();
 }
 
 function renderChart(){
   const year=document.getElementById('sy').value;
-  const BASE_BRANCHES=['문래점','신논현점'];
-  const COLORS={문래점:'#2563eb',신논현점:'#d97706',미분류:'#6b7280'};
   const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const palette=['#059669','#7c3aed','#dc2626','#0891b2'];
-
-  // 지점별 월별 실수입: 대관월 기준, periodNetIn(해당 연도 입금 완료분 합산)
-  const totals={};
-  const ensureBranch=b=>{if(!totals[b])totals[b]=Array(12).fill(0);};
-  BASE_BRANCHES.forEach(ensureBranch);
   const chartRows=getFilteredForChart();
+
+  // ── 듀얼 데이터 집계 ──────────────────────────────
+  // A: 대관수익 (대관월 기준, periodNetIn)
+  // B: 실입금   (입금날짜 기준, paymentParts)
+  const evByMo=Array(12).fill(0);
+  const payByMo=Array(12).fill(0);
+  const brMap={}; // {branch:{ev,pay,outstanding}}
+
   chartRows.forEach(e=>{
-    const b=chartBranchName(e.branch);
-    ensureBranch(b);
+    const b=normalizeBranch(e.branch);
+    if(!brMap[b])brMap[b]={ev:0,pay:0,out:0};
+
     const evMo=parseInt(e.date.slice(5,7),10)-1;
-    if(evMo>=0&&evMo<12)totals[b][evMo]+=effectiveNetIn(e);
-  });
-  const extraBranches=Object.keys(totals).filter(b=>!BASE_BRANCHES.includes(b)&&totals[b].some(v=>v!==0));
-  const BRANCHES=[...BASE_BRANCHES,...extraBranches];
+    const net=effectiveNetIn(e);
+    if(evMo>=0&&evMo<12){evByMo[evMo]+=net;brMap[b].ev+=net;}
 
-  // 연간 합계 카드
-  const sumEl=document.getElementById('chart-summary');
-  let branchTotal=0;
-  const sumHtml=BRANCHES.map((b,i)=>{
-    const s=totals[b].reduce((a,v)=>a+v,0);branchTotal+=s;
-    const color=COLORS[b]||palette[i%palette.length];
-    return`<div class="chart-sum-card"><div class="cs-lbl" style="color:${color}">${b}</div><div class="cs-val">${fa(s)}</div><div class="cs-sub">${year}년 연간</div></div>`;
-  });
-  const totalAll=chartRows.reduce((s,e)=>s+effectiveNetIn(e),0);
-  const gap=totalAll-branchTotal;
-  if(gap!==0){
-    sumHtml.push(`<div class="chart-sum-card"><div class="cs-lbl" style="color:${COLORS.미분류}">집계 보정</div><div class="cs-val">${fa(gap)}</div><div class="cs-sub">지점 합계 외</div></div>`);
-  }
-  sumHtml.unshift(`<div class="chart-sum-card"><div class="cs-lbl">전체 합계</div><div class="cs-val">${fa(totalAll)}</div><div class="cs-sub">${year}년 연간</div></div>`);
-  sumEl.innerHTML=sumHtml.join('');
-  document.getElementById('chart-title').textContent=`${year}년 월별 실수입 현황 (입금일 기준)`;
+    paymentParts(e,year).forEach(p=>{
+      const pMo=parseInt(p.date.slice(5,7),10)-1;
+      if(pMo>=0&&pMo<12){payByMo[pMo]+=p.amount;brMap[b].pay+=p.amount;}
+    });
 
+    // 미수 잔금: 예약금 입금 상태 → balanceAmount / 미입금 → netIn
+    if(e.payStatus==='예약금 입금')brMap[b].out+=Number(e.balanceAmount)||0;
+    else if(e.payStatus==='미입금')brMap[b].out+=Number(e.netIn)||0;
+  });
+
+  const totalPay=payByMo.reduce((s,v)=>s+v,0);
+  const totalOut=Object.values(brMap).reduce((s,v)=>s+v.out,0);
+  const totalCancel=chartRows.filter(e=>e.payStatus==='환불'||e.payStatus==='취소')
+    .reduce((s,e)=>s+effectiveNetIn(e),0);
+
+  // ── KPI 카드 ──────────────────────────────────────
+  const brEntries=Object.entries(brMap).sort((a,b)=>b[1].pay-a[1].pay);
+  const brColor=n=>normalizeBranch(n)==='문래점'?'#2563eb':'#7c3aed';
+  const brRowsHtml=(key)=>brEntries.map(([n,v])=>
+    `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v[key])}</span></div>`
+  ).join('');
+
+  document.getElementById('an-kpi').innerHTML=`
+    <div class="an-kpi-card">
+      <div class="ak-lbl">연간 실입금</div>
+      <div class="ak-val green">${fa(totalPay)}</div>
+      <div class="ak-sub">${year}년 실제 수령액</div>
+      <hr class="ak-divider">
+      <div class="ak-branches">${brRowsHtml('pay')}</div>
+    </div>
+    <div class="an-kpi-card">
+      <div class="ak-lbl">잔금 미수금</div>
+      <div class="ak-val amber">${fa(totalOut)}</div>
+      <div class="ak-sub">예약금·미입금 건 잔여액</div>
+      <hr class="ak-divider">
+      <div class="ak-branches">${brEntries.map(([n,v])=>
+        `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v.out)}</span></div>`
+      ).join('')}</div>
+    </div>
+    <div class="an-kpi-card">
+      <div class="ak-lbl">취소 · 환불</div>
+      <div class="ak-val ${totalCancel<0?'red':'amber'}">${fa(totalCancel)}</div>
+      <div class="ak-sub">${year}년 취소/환불 합계</div>
+      <hr class="ak-divider">
+      <div class="ak-branches">${(()=>{
+        const cb={};
+        chartRows.filter(e=>e.payStatus==='환불'||e.payStatus==='취소').forEach(e=>{
+          const b=normalizeBranch(e.branch);if(!cb[b])cb[b]=0;cb[b]+=effectiveNetIn(e);
+        });
+        return Object.entries(cb).map(([n,v])=>
+          `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v)}</span></div>`
+        ).join('')||'<div style="font-size:12px;color:#b0b8c4">없음</div>';
+      })()}</div>
+    </div>`;
+
+  // ── 듀얼 차트 ─────────────────────────────────────
+  document.getElementById('an-chart-title').textContent=`${year}년 월별 수익 비교`;
   const ctx=document.getElementById('revenueChart').getContext('2d');
   if(revenueChartInst)revenueChartInst.destroy();
   revenueChartInst=new Chart(ctx,{
     type:'bar',
     data:{
       labels:LABELS,
-      datasets:BRANCHES.map((b,i)=>({
-        label:b,
-        data:totals[b],
-        backgroundColor:(COLORS[b]||palette[i%palette.length])+'cc',
-        borderColor:COLORS[b]||palette[i%palette.length],
-        borderWidth:1,
-        borderRadius:4,
-      }))
+      datasets:[
+        {label:'대관수익 (대관일 기준)',data:evByMo,backgroundColor:'#2563eb99',borderColor:'#2563eb',borderWidth:1.5,borderRadius:5},
+        {label:'실입금 (입금날짜 기준)',data:payByMo,backgroundColor:'#05966966',borderColor:'#059669',borderWidth:1.5,borderRadius:5}
+      ]
     },
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{
-        legend:{position:'top',labels:{font:{size:13,weight:'bold'}}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fa(ctx.parsed.y)}`}}
+        legend:{position:'top',labels:{font:{size:13,weight:'bold'},padding:16}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fa(c.parsed.y)}`}}
       },
       scales:{
-        x:{stacked:false,grid:{display:false},ticks:{font:{size:12}}},
-        y:{stacked:false,ticks:{callback:v=>v>=10000?(v/10000)+'만':''+v,font:{size:11}},grid:{color:'#f0f0f0'}}
+        x:{grid:{display:false},ticks:{font:{size:12}}},
+        y:{ticks:{callback:v=>v>=10000?(v/10000)+'만':''+v,font:{size:11}},grid:{color:'#f0f0f0'}}
       }
     }
   });
-}
 
-function renderCashflow(){
-  const year=document.getElementById('sy').value;
-  const allRows=getFilteredForChart();
-  const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-
-  const byMonth={};
+  // ── 실입금 테이블 ─────────────────────────────────
+  const byMo={};
   let grandTotal=0;
-  allRows.forEach(ev=>{
-    paymentParts(ev,year).forEach(p=>{
+  chartRows.forEach(e=>{
+    paymentParts(e,year).forEach(p=>{
       const mo=parseInt(p.date.slice(5,7),10)-1;
       if(mo<0||mo>11)return;
-      if(!byMonth[mo])byMonth[mo]=[];
-      byMonth[mo].push({ev,date:p.date,amount:p.amount,isRes:p.date===ev.reservationDate});
+      if(!byMo[mo])byMo[mo]=[];
+      byMo[mo].push({e,date:p.date,amount:p.amount,isRes:p.date===e.reservationDate});
       grandTotal+=p.amount;
     });
   });
+  document.getElementById('an-cf-total').textContent=fa(grandTotal);
 
-  let html=`<div class="cf-header">
-    <span class="cf-title">${year}년 실 입금 현황 <span class="cf-sub">(입금날짜 기준 · 보증금 제외)</span></span>
-    <span class="cf-total">${fa(grandTotal)}</span>
-  </div>
-  <table class="cf-table">
+  let html=`<table class="cf-table">
     <thead class="cf-thead"><tr>
-      <th style="width:100px">입금날짜</th>
-      <th>행사명</th>
-      <th style="width:100px">대관일</th>
-      <th style="width:60px;text-align:center">구분</th>
-      <th style="width:120px" class="r">금액</th>
-      <th style="width:90px;text-align:center">결제방법</th>
-      <th style="width:70px" class="r">지점</th>
-    </tr></thead>
-    <tbody>`;
+      <th>입금날짜</th><th>행사명</th><th>대관일</th>
+      <th style="text-align:center">구분</th><th class="r">금액</th>
+      <th style="text-align:center">결제방법</th><th class="r">지점</th>
+    </tr></thead>`;
 
   for(let mo=0;mo<12;mo++){
-    const items=(byMonth[mo]||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+    const items=(byMo[mo]||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
     const moTotal=items.reduce((s,p)=>s+p.amount,0);
-    html+=`<tr class="cf-mrow"><td colspan="7">${MONTHS[mo]}${
-      items.length
-        ?`<span class="cf-mtotal">${fa(moTotal)}</span> <span style="font-size:11px;color:#9ca3af;font-weight:500">${items.length}건</span>`
-        :'<span class="cf-mempty">입금 없음</span>'
-    }</td></tr>`;
+    const bid=`cfb${mo}`;
+    html+=`<tbody><tr class="cf-mrow" onclick="toggleCfMo('${bid}',this)">
+      <td colspan="7">${LABELS[mo]}${items.length
+        ?`<span class="cf-mtotal">${fa(moTotal)}</span><span class="cf-mcnt">${items.length}건</span>`
+        :'<span class="cf-mempty">입금 없음</span>'}
+        <span class="cf-arrow">▼</span>
+      </td></tr></tbody>
+    <tbody class="cf-body" id="${bid}">`;
     items.forEach(p=>{
-      const brColor=normalizeBranch(p.ev.branch)==='문래점'?'#2563eb':'#7c3aed';
-      const lblCls=p.isRes?'cf-ilbl res':'cf-ilbl bal';
+      const bc=normalizeBranch(p.e.branch)==='문래점'?'#2563eb':'#7c3aed';
       html+=`<tr class="cf-row">
         <td class="cf-td-date">${p.date}</td>
-        <td class="cf-td-title">${esc(p.ev.title)}</td>
-        <td class="cf-td-evdate">${p.ev.date}</td>
-        <td class="cf-td-lbl"><span class="${lblCls}">${p.isRes?'예약금':'잔금'}</span></td>
+        <td class="cf-td-title">${esc(p.e.title)}</td>
+        <td class="cf-td-evdate">${p.e.date}</td>
+        <td class="cf-td-lbl"><span class="cf-ilbl ${p.isRes?'res':'bal'}">${p.isRes?'예약금':'잔금'}</span></td>
         <td class="cf-td-amt">${fa(p.amount)}</td>
-        <td class="cf-td-method">${p.ev.methods.join('+')}</td>
-        <td class="cf-td-br" style="color:${brColor}">${p.ev.branch}</td>
+        <td class="cf-td-method">${p.e.methods.join('+')}</td>
+        <td class="cf-td-br" style="color:${bc}">${p.e.branch}</td>
       </tr>`;
     });
+    html+=`</tbody>`;
   }
-
-  html+=`</tbody></table>`;
+  html+=`</table>`;
   document.getElementById('cashflow-content').innerHTML=html;
 }
+
+function toggleCfMo(id,hdr){
+  const el=document.getElementById(id);if(!el)return;
+  el.classList.toggle('open');hdr.classList.toggle('open');
+}
+
 
 if(sessionStorage.getItem(ACCESS_KEY)==='1')showApp();
 </script>
