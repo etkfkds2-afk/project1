@@ -401,8 +401,13 @@ function setOv(id,key,val){
       ev.dep=pa(val);
     }else if(key==='branch'){
       ev[key]=normalizeBranch(val);
+    }else if(key==='netIn'){
+      ev.netIn=Number(val)||0;
     }else{
       ev[key]=key==='payStatus'?normStatus(val):val;
+    }
+    if(['reservationAmount','balanceAmount','depText','dep','methodsText','reservationDate','balanceDate','payStatus'].includes(key)){
+      delete ov[id].netIn;
     }
     // 예약금/잔금 → 총입금액 연쇄
     if(key==='reservationAmount'||key==='balanceAmount'){
@@ -890,6 +895,11 @@ function periodNetIn(ev){
   const year=document.getElementById('sy').value;
   return paymentParts(ev,year).reduce((s,p)=>s+p.amount,0);
 }
+function effectiveNetIn(ev){
+  const o=ov[ev.id]||{};
+  if(o.netIn!==undefined&&o.netIn!==null)return Number(o.netIn)||0;
+  return ev.netIn!==undefined&&ev.netIn!==null?Number(ev.netIn)||periodNetIn(ev):periodNetIn(ev);
+}
 function payMonthIndex(date,year){
   if(!isCountablePayDate(date,year))return -1;
   const mo=parseInt(date.slice(5,7),10)-1;
@@ -902,8 +912,8 @@ function render(){
   const 취소=data.filter(e=>e.payStatus==='취소');
   const 환불=data.filter(e=>e.payStatus==='환불');
   const 미입금=data.filter(e=>e.payStatus==='미입금');
-  const sumNet=rows=>rows.reduce((s,e)=>s+periodNetIn(e),0);
-  const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+(Number(e.netIn)||0),0))}</span>`;
+  const sumNet=rows=>rows.reduce((s,e)=>s+effectiveNetIn(e),0);
+  const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(rows.reduce((s,e)=>s+effectiveNetIn(e),0))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
   document.getElementById('ca').textContent=fa(sumNet(data));
   document.getElementById('c1').innerHTML=statHtml(완납);
@@ -1035,7 +1045,7 @@ function doExport(){
   const rows=data.map(e=>[
     e.date,e.branch,`"${e.title.replace(/"/g,'""')}"`,e.payStatus,
     e.reservationDate,e.reservationAmount||0,e.balanceDate,e.balanceAmount||0,
-    e.totalIn||0,`"${(e.depText||e.dep||0)}"`,e.netIn||0,getNetBalance(e),e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
+    e.totalIn||0,`"${(e.depText||e.dep||0)}"`,effectiveNetIn(e),getNetBalance(e),e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
   ]);
   const csv='﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
@@ -1092,7 +1102,7 @@ function renderChart(){
     const color=COLORS[b]||palette[i%palette.length];
     return`<div class="chart-sum-card"><div class="cs-lbl" style="color:${color}">${b}</div><div class="cs-val">${fa(s)}</div><div class="cs-sub">${year}년 연간</div></div>`;
   });
-  const totalAll=chartRows.reduce((s,e)=>s+periodNetIn(e),0);
+  const totalAll=chartRows.reduce((s,e)=>s+effectiveNetIn(e),0);
   const gap=totalAll-branchTotal;
   if(gap!==0){
     sumHtml.push(`<div class="chart-sum-card"><div class="cs-lbl" style="color:${COLORS.미분류}">집계 보정</div><div class="cs-val">${fa(gap)}</div><div class="cs-sub">지점 합계 외</div></div>`);
