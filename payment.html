@@ -789,6 +789,16 @@ function getFiltered(){
     return(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
   });
 }
+function getFilteredForChart(){
+  // 차트는 입금일 기준 월별 집계이므로 월 필터 제외, 나머지(지점/상태/검색)는 유지
+  const br=document.getElementById('sb').value,st=document.getElementById('ss').value;
+  const q=(document.getElementById('sq')?.value||'').trim().toLowerCase();
+  return allData.filter(e=>{
+    if(!showHidden&&e.hidden)return false;
+    const hay=[e.date,e.branch,e.title,e.payStatus,e.reservationDate,e.balanceDate,e.netIn,e.dep,e.methods.join(' '),e.notes,e.rawTitle,e.rawDesc].join(' ').toLowerCase();
+    return(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
+  });
+}
 
 function evById(id){return allData.find(e=>e.id===id)}
 function cell(id,key,val,type='text',cls=''){
@@ -908,8 +918,7 @@ function effectiveNetIn(ev){
 }
 function payMonthIndex(date,year){
   if(!isCountablePayDate(date,year))return -1;
-  const mo=parseInt(date.slice(5,7),10)-1;
-  return mo>=0&&mo<12?mo:-1;
+  return parseInt(date.slice(5,7),10)-1;
 }
 function render(){
   const data=getFiltered();
@@ -1088,7 +1097,7 @@ function renderChart(){
   const totals={};
   const ensureBranch=b=>{if(!totals[b])totals[b]=Array(12).fill(0);};
   BASE_BRANCHES.forEach(ensureBranch);
-  const chartRows=getFiltered();
+  const chartRows=getFilteredForChart();
   chartRows.forEach(e=>{
     const b=chartBranchName(e.branch);
     ensureBranch(b);
