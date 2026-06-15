@@ -213,17 +213,23 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-mcnt{font-size:12px;color:var(--muted);margin-left:4px}
 .cf-mempty{font-size:13px;color:#c0c6d0;margin-left:auto}
 .cf-items{border-top:1px solid var(--line)}
-.cf-item{display:grid;grid-template-columns:90px 68px 88px 1fr 52px 110px 90px;align-items:center;gap:0;padding:10px 16px;border-bottom:1px solid #f3f4f6;font-size:13px}
+.cf-item{padding:11px 18px;border-bottom:1px solid #f1f3f6;display:flex;flex-direction:column;gap:5px}
 .cf-item:last-child{border-bottom:none}
 .cf-item:hover{background:#f8faff}
-.cf-idate{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
-.cf-ibr{font-weight:800;font-size:12px}
-.cf-ievdate{color:var(--muted);font-size:12px}
-.cf-ievtitle{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px}
-.cf-ilbl{font-size:11px;color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:4px;padding:2px 6px;text-align:center;white-space:nowrap}
+.cf-item-top{display:flex;align-items:center;gap:8px}
+.cf-item-bot{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cf-idate{font-size:12px;font-weight:700;color:#374151;font-variant-numeric:tabular-nums;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:5px;padding:2px 8px;white-space:nowrap}
+.cf-idate::before{content:'입금 ';color:var(--muted);font-weight:500}
+.cf-ilbl{font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;white-space:nowrap}
+.cf-ilbl.bal{color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe}
 .cf-ilbl.res{color:#0369a1;background:#e0f2fe;border-color:#bae6fd}
-.cf-iamt{font-weight:850;text-align:right;font-variant-numeric:tabular-nums;color:#111827;padding-right:8px}
-.cf-imethod{font-size:11px;color:var(--muted);text-align:right}
+.cf-iamt{font-size:16px;font-weight:850;font-variant-numeric:tabular-nums;color:#111827;margin-left:auto}
+.cf-ibr{font-size:12px;font-weight:800}
+.cf-dot{color:#d1d5db;font-size:11px}
+.cf-ievtitle{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px}
+.cf-ievdate{font-size:12px;color:var(--muted);white-space:nowrap}
+.cf-ievdate::before{content:'대관 ';font-weight:500}
+.cf-imethod{font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body class="locked">
@@ -1229,16 +1235,23 @@ function renderCashflow(){
       html+=`<div class="cf-items">`;
       items.forEach(p=>{
         const brColor=normalizeBranch(p.ev.branch)==='문래점'?'#2563eb':'#7c3aed';
-        const lblCls=p.isRes?'cf-ilbl res':'cf-ilbl';
+        const lblCls=p.isRes?'cf-ilbl res':'cf-ilbl bal';
         const lblTxt=p.isRes?'예약금':'잔금';
         html+=`<div class="cf-item">
-          <span class="cf-idate">${p.date}</span>
-          <span class="cf-ibr" style="color:${brColor}">${p.ev.branch}</span>
-          <span class="cf-ievdate">${p.ev.date}</span>
-          <span class="cf-ievtitle" title="${esc(p.ev.title)}">${esc(p.ev.title)}</span>
-          <span class="${lblCls}">${lblTxt}</span>
-          <span class="cf-iamt">${fa(p.amount)}</span>
-          <span class="cf-imethod">${p.ev.methods.join('+')}</span>
+          <div class="cf-item-top">
+            <span class="cf-idate">${p.date}</span>
+            <span class="${lblCls}">${lblTxt}</span>
+            <span class="cf-iamt">${fa(p.amount)}</span>
+          </div>
+          <div class="cf-item-bot">
+            <span class="cf-ibr" style="color:${brColor}">${p.ev.branch}</span>
+            <span class="cf-dot">·</span>
+            <span class="cf-ievtitle" title="${esc(p.ev.title)}">${esc(p.ev.title)}</span>
+            <span class="cf-dot">·</span>
+            <span class="cf-ievdate">${p.ev.date}</span>
+            <span class="cf-dot">·</span>
+            <span class="cf-imethod">${p.ev.methods.join('+')}</span>
+          </div>
         </div>`;
       });
       html+=`</div>`;
