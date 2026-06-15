@@ -854,20 +854,34 @@ function editCell(e,id,key,type='text'){
 function getNetBalance(ev){
   return ev.balanceAmount || 0;
 }
-function inSelectedPayPeriod(date){
-  if(!date||date==='입금 예정'||date==='미입금')return false;
-  const y=document.getElementById('sy').value;
-  return date.slice(0,4)===y;
+function todayYmd(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return`${y}-${m}-${day}`;
+}
+function isCountablePayDate(date,year){
+  if(!date||date==='입금 예정'||date==='미입금'||date.slice(0,4)!==year)return false;
+  return date<=todayYmd();
+}
+function paymentParts(ev,year){
+  const sign=ev.payStatus==='환불'?-1:1;
+  const parts=[];
+  if(isCountablePayDate(ev.reservationDate,year)){
+    parts.push({date:ev.reservationDate,amount:sign*(Number(ev.reservationAmount)||0)});
+  }
+  if(isCountablePayDate(ev.balanceDate,year)){
+    parts.push({date:ev.balanceDate,amount:sign*Math.max(0,(Number(ev.balanceAmount)||0)-(Number(ev.dep)||0))});
+  }
+  return parts;
 }
 function periodNetIn(ev){
-  let gross=0;
-  if(inSelectedPayPeriod(ev.reservationDate))gross+=Number(ev.reservationAmount)||0;
-  if(inSelectedPayPeriod(ev.balanceDate))gross+=Number(ev.balanceAmount)||0;
-  const depositInPeriod=inSelectedPayPeriod(ev.balanceDate)?(Number(ev.dep)||0):0;
-  return Math.max(0,gross-depositInPeriod);
+  const year=document.getElementById('sy').value;
+  return paymentParts(ev,year).reduce((s,p)=>s+p.amount,0);
 }
 function payMonthIndex(date,year){
-  if(!date||date==='입금 예정'||date==='미입금'||date.slice(0,4)!==year)return -1;
+  if(!isCountablePayDate(date,year))return -1;
   const mo=parseInt(date.slice(5,7),10)-1;
   return mo>=0&&mo<12?mo:-1;
 }
@@ -1040,16 +1054,15 @@ function renderChart(){
   const COLORS={문래점:'#2563eb',신논현점:'#d97706'};
   const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
-  // 지점별 월별 실수입 합계 (카드 금액과 같은 입금일/보증금/환불 기준)
+  // 지점별 월별 실수입 합계 (입금일 기준, 오늘 이후 예정 입금 제외)
   const totals={};
   BRANCHES.forEach(b=>{totals[b]=Array(12).fill(0);});
   getFiltered().forEach(e=>{
     const b=e.branch;if(!totals[b])return;
-    const sign=e.payStatus==='환불'?-1:1;
-    const rmo=payMonthIndex(e.reservationDate,year);
-    const bmo=payMonthIndex(e.balanceDate,year);
-    if(rmo>=0)totals[b][rmo]+=sign*(Number(e.reservationAmount)||0);
-    if(bmo>=0)totals[b][bmo]+=sign*Math.max(0,(Number(e.balanceAmount)||0)-(Number(e.dep)||0));
+    paymentParts(e,year).forEach(p=>{
+      const mo=payMonthIndex(p.date,year);
+      if(mo>=0)totals[b][mo]+=p.amount;
+    });
   });
 
   // 연간 합계 카드
