@@ -218,7 +218,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-mrow{cursor:pointer;user-select:none}
 .cf-mrow td{padding:9px 16px;background:#f1f5f9;font-size:12px;font-weight:800;color:#374151;border-top:1px solid var(--line)}
 .cf-mrow:hover td{background:#e8edf5}
-.cf-mtotal{font-size:13px;color:var(--blue);font-variant-numeric:tabular-nums;margin-left:10px}
+.cf-mtotal{font-size:13px;color:#111827;font-variant-numeric:tabular-nums;margin-left:10px}
 .cf-mempty{color:#b0b8c4;font-weight:500;margin-left:8px}
 .cf-mcnt{font-size:11px;color:#9ca3af;font-weight:500;margin-left:4px}
 .cf-arrow{float:right;color:#9ca3af;font-size:10px;transition:transform .2s}
@@ -239,7 +239,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-td-amt{text-align:right;font-weight:850;font-size:14px;font-variant-numeric:tabular-nums;color:#111827;width:110px}
 .cf-td-method{font-size:12px;color:#9ca3af;text-align:center;width:78px}
 .cf-td-br{font-size:12px;font-weight:800;text-align:right;width:64px}
-.cf-br-hdr td{padding:6px 14px;background:#f8fafc;border-top:1px solid var(--line);border-bottom:1px solid #e5e7eb}
+.cf-br-hdr td{padding:5px 14px;background:#f8fafc;border-top:1px solid var(--line);border-bottom:1px solid #e5e7eb}
+.cf-br-hdr td>span:first-child{display:inline-flex;align-items:center;gap:6px}
+.cf-br-hdr td>span:first-child::before{content:'';display:inline-block;width:3px;height:13px;border-radius:2px;background:currentColor}
 </style>
 </head>
 <body class="locked">
@@ -1317,7 +1319,7 @@ function renderChart(){
       const bItems=byBr[br];
       const bColor=BR_COLOR[br]||'#374151';
       const bTotal=bItems.reduce((s,p)=>s+p.amount,0);
-      if(multiBr)html+=`<tr class="cf-br-hdr"><td colspan="7"><span style="color:${bColor};font-weight:800;font-size:12px">${br}</span><span class="cf-mtotal" style="color:${bColor}">${fa(bTotal)}</span><span class="cf-mcnt">${bItems.length}건</span></td></tr>`;
+      if(multiBr)html+=`<tr class="cf-br-hdr"><td colspan="7"><span style="color:${bColor};font-weight:800;font-size:12px">${br}</span><span class="cf-mtotal">${fa(bTotal)}</span><span class="cf-mcnt">${bItems.length}건</span></td></tr>`;
       bItems.forEach(p=>{
         const bc=bColor;
         html+=`<tr class="cf-row">
