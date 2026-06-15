@@ -816,6 +816,7 @@ async function loadAll(){
   btn.disabled=true;btn.textContent='로딩 중...';selectedIds.clear();
   document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
   const year=document.getElementById('sy').value;
+  const nextYear=String(parseInt(year)+1);
   try{
     await loadRemoteOv();
     if(!hasCowork()&&!getGoogleClientId()){showGoogleSetup();return}
@@ -823,6 +824,9 @@ async function loadAll(){
     for(const cal of CALS){
       const evs=await fetchEvs(cal.id,year);
       evs.filter(isRel).forEach(ev=>allData.push(parseEv(ev,cal.name)));
+      // 다음 연도 이벤트도 로드 — 선납 예약금이 현재 연도 실입금에 잡히도록
+      const nextEvs=await fetchEvs(cal.id,nextYear);
+      nextEvs.filter(isRel).forEach(ev=>allData.push(parseEv(ev,cal.name)));
     }
     allData.sort((a,b)=>a.date.localeCompare(b.date));
     render();
@@ -833,10 +837,12 @@ async function loadAll(){
 }
 
 function getFiltered(){
+  const yr=document.getElementById('sy').value;
   const mo=document.getElementById('sm').value,br=document.getElementById('sb').value,st=document.getElementById('ss').value;
   const q=(document.getElementById('sq')?.value||'').trim().toLowerCase();
   return allData.filter(e=>{
     if(!showHidden&&e.hidden)return false;
+    if(e.date.slice(0,4)!==yr)return false; // 메인 테이블은 선택 연도 이벤트만
     const hay=[e.date,e.branch,e.title,e.payStatus,e.reservationDate,e.balanceDate,e.netIn,e.dep,e.methods.join(' '),e.notes,e.rawTitle,e.rawDesc].join(' ').toLowerCase();
     return(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
   });
