@@ -1095,7 +1095,7 @@ function renderChart(){
   const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const palette=['#059669','#7c3aed','#dc2626','#0891b2'];
 
-  // 지점별 월별 실수입 합계 (입금일 기준, 미래 입금 자동 제외)
+  // 지점별 월별 실수입: 대관월 기준, 해당 월에 입금된 금액만 집계
   const totals={};
   const ensureBranch=b=>{if(!totals[b])totals[b]=Array(12).fill(0);};
   BASE_BRANCHES.forEach(ensureBranch);
@@ -1103,9 +1103,11 @@ function renderChart(){
   chartRows.forEach(e=>{
     const b=chartBranchName(e.branch);
     ensureBranch(b);
+    const evMo=parseInt(e.date.slice(5,7),10)-1;
+    if(evMo<0||evMo>=12)return;
+    const evMoStr=String(evMo+1).padStart(2,'0');
     paymentParts(e,year).forEach(p=>{
-      const mo=payMonthIndex(p.date,year);
-      if(mo>=0)totals[b][mo]+=p.amount;
+      if(p.date.slice(5,7)===evMoStr)totals[b][evMo]+=p.amount;
     });
   });
   const extraBranches=Object.keys(totals).filter(b=>!BASE_BRANCHES.includes(b)&&totals[b].some(v=>v!==0));
