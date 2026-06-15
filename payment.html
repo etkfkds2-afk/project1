@@ -927,9 +927,7 @@ function render(){
   const 취소=data.filter(e=>e.payStatus==='취소');
   const 환불=data.filter(e=>e.payStatus==='환불');
   const 미입금=data.filter(e=>e.payStatus==='미입금');
-  const year=document.getElementById('sy').value;
-  const mo=document.getElementById('sm').value;
-  const sumNet=rows=>{let t=0;rows.forEach(e=>paymentParts(e,year).forEach(p=>{if(!mo||p.date.slice(5,7)===mo)t+=p.amount;}));return t;};
+  const sumNet=rows=>rows.reduce((s,e)=>s+effectiveNetIn(e),0);
   const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(sumNet(rows))}</span>`;
   document.getElementById('ct').textContent=data.length+'건';
   document.getElementById('ca').textContent=fa(sumNet(data));
@@ -1095,7 +1093,7 @@ function renderChart(){
   const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const palette=['#059669','#7c3aed','#dc2626','#0891b2'];
 
-  // 지점별 월별 실수입: 대관월 기준, 해당 월에 입금된 금액만 집계
+  // 지점별 월별 실수입: 대관월 기준, periodNetIn(해당 연도 입금 완료분 합산)
   const totals={};
   const ensureBranch=b=>{if(!totals[b])totals[b]=Array(12).fill(0);};
   BASE_BRANCHES.forEach(ensureBranch);
@@ -1104,11 +1102,7 @@ function renderChart(){
     const b=chartBranchName(e.branch);
     ensureBranch(b);
     const evMo=parseInt(e.date.slice(5,7),10)-1;
-    if(evMo<0||evMo>=12)return;
-    const evMoStr=String(evMo+1).padStart(2,'0');
-    paymentParts(e,year).forEach(p=>{
-      if(p.date.slice(5,7)===evMoStr)totals[b][evMo]+=p.amount;
-    });
+    if(evMo>=0&&evMo<12)totals[b][evMo]+=effectiveNetIn(e);
   });
   const extraBranches=Object.keys(totals).filter(b=>!BASE_BRANCHES.includes(b)&&totals[b].some(v=>v!==0));
   const BRANCHES=[...BASE_BRANCHES,...extraBranches];
