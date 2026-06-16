@@ -37,6 +37,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .btn:disabled{opacity:.45;cursor:default;box-shadow:none}
 .btn-reload,.btn-hidden{background:#fff;color:#374151;border-color:var(--line-strong)}
 .btn-reload:hover,.btn-hidden:hover{background:#f9fafb}
+.btn-add{background:#111827;color:#fff;border-color:#111827}
+.btn-add:hover{background:#1f2937}
 .btn-export{background:var(--green);color:#fff;border-color:var(--green)}
 .btn-danger{background:#fff;color:var(--red);border-color:#fecaca}
 .btn-danger:hover{background:#fef2f2}
@@ -155,6 +157,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   .toolbar .search{width:100%;flex:1 1 100%}
   .sp{display:none}
   .btn{flex:1 1 calc(50% - 4px);height:40px;padding:0 10px}
+  .btn-add{flex-basis:100%}
   .btn-export{flex-basis:100%}
   .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px 20px}
   .card{padding:12px;border-radius:8px}
@@ -240,9 +243,59 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-td-amt{text-align:right;font-weight:850;font-size:14px;font-variant-numeric:tabular-nums;color:#111827;width:110px}
 .cf-td-method{font-size:12px;color:#9ca3af;text-align:center;width:78px}
 .cf-td-br{font-size:12px;font-weight:800;text-align:right;width:64px}
+.cf-td-action{text-align:center;width:58px}
+.cf-add{height:26px;padding:0 8px;margin-left:8px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:#374151;font-size:11px;font-weight:800;cursor:pointer}
+.cf-add:hover{background:#f9fafb;border-color:#9ca3af;color:#111827}
+.cf-table .editcell{min-height:24px;padding:2px 6px}
+.cf-table .editinp{height:26px;font-size:12px}
 .cf-br-hdr td{padding:5px 14px;background:#f8fafc;border-top:1px solid var(--line);border-bottom:1px solid #e5e7eb}
 .cf-br-hdr td>span:first-child{display:inline-flex;align-items:center;gap:6px}
 .cf-br-hdr td>span:first-child::before{content:'';display:inline-block;width:3px;height:13px;border-radius:2px;background:currentColor}
+/* ── 고객관리 ── */
+#view-customer{padding:24px 28px 48px;display:none}
+.cust-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.cust-search{height:34px;padding:0 12px;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;color:var(--text);background:#fff;min-width:200px}
+.cust-search:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px #2563eb22}
+.cust-stat{font-size:12px;color:var(--muted);margin-left:auto}
+.cust-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);border-radius:10px;border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow)}
+.cust-thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#6b7280;background:#f8fafc;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+.cust-thead th.r{text-align:right}
+.cust-thead th:hover{background:#f1f5f9}
+.cust-row{cursor:pointer;background:#fff;transition:background .12s}
+.cust-row:hover{background:#f8faff}
+.cust-row.open{background:#f0f7ff}
+.cust-row td{padding:12px 14px;border-bottom:1px solid #f1f3f6;vertical-align:middle}
+.cust-name{font-weight:700;color:#111827;font-size:14px}
+.cust-phone{font-size:13px;color:#4b5563;font-variant-numeric:tabular-nums}
+.cust-cnt{display:inline-block;font-size:12px;font-weight:800;border-radius:12px;padding:2px 9px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.cust-cnt.hi{background:#f0fdf4;color:#16a34a;border-color:#bbf7d0}
+.cust-cnt.vhi{background:#fdf4ff;color:#7e22ce;border-color:#e9d5ff}
+.cust-revenue{font-weight:850;font-size:14px;font-variant-numeric:tabular-nums;color:#111827}
+.cust-br{font-size:12px;font-weight:700}
+.cust-last{font-size:12px;color:#6b7280;font-variant-numeric:tabular-nums}
+.cust-memo{font-size:12px;color:#9ca3af;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-arrow{float:right;color:#9ca3af;font-size:10px;transition:transform .2s;margin-left:6px}
+.cust-row.open .cust-arrow{transform:rotate(180deg)}
+.cust-detail{display:none;background:#f8fafc}
+.cust-detail.open{display:table-row-group}
+.cust-detail>td{padding:0;border-bottom:1px solid var(--line)}
+.cust-detail-inner{padding:14px 20px 18px 36px}
+.cust-edit-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.cust-edit-label{font-size:11px;font-weight:800;color:#6b7280;width:36px;flex-shrink:0}
+.cust-edit-inp{height:30px;padding:0 10px;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;color:var(--text);background:#fff;min-width:180px}
+.cust-edit-inp:focus{outline:none;border-color:var(--blue)}
+.cust-save-btn{height:30px;padding:0 14px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
+.cust-save-btn:hover{background:#1d4ed8}
+.cust-visits{margin-top:8px}
+.cust-visit-hdr{font-size:11px;font-weight:800;color:#6b7280;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.cust-visit-row{display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid #f1f3f6;font-size:13px}
+.cust-visit-row:last-child{border-bottom:none}
+.cust-visit-date{font-size:12px;color:#6b7280;font-variant-numeric:tabular-nums;width:90px;flex-shrink:0}
+.cust-visit-title{color:#374151;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-visit-br{font-size:11px;font-weight:700;width:60px;flex-shrink:0}
+.cust-visit-amt{font-weight:800;font-size:13px;font-variant-numeric:tabular-nums;color:#111827;text-align:right;width:100px;flex-shrink:0}
+.cust-visit-status{font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;white-space:nowrap;flex-shrink:0}
+.cust-loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px}
 </style>
 </head>
 <body class="locked">
@@ -265,6 +318,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div class="view-tabs">
     <button class="vtab active" id="tab-table" onclick="switchView('table')">테이블</button>
     <button class="vtab" id="tab-chart" onclick="switchView('chart')">분석</button>
+    <button class="vtab" id="tab-customer" onclick="switchView('customer')">고객관리</button>
   </div>
   <select id="sy" onchange="loadAll()">
     <option value="2027">2027년</option>
@@ -290,6 +344,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <input id="sq" class="search" placeholder="검색" oninput="render()">
   <div class="sp"></div>
   <button id="delbtn" class="btn btn-danger" onclick="deleteSelected()" disabled>삭제 (0)</button>
+  <button class="btn btn-add" onclick="addManualRow()">행 추가</button>
   <button class="btn btn-danger" onclick="deleteAll()" style="opacity:0.85">전체 삭제</button>
   <button id="thbtn" class="btn btn-hidden" onclick="toggleHidden()">숨긴 항목</button>
   <button id="rb" class="btn btn-reload" onclick="loadAll()">새로고침</button>
@@ -364,6 +419,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <div id="cashflow-content"></div>
   </div>
 </div>
+<div id="view-customer">
+  <div id="cust-content"><div class="cust-loading"><div class="spin"></div>고객 데이터 로딩 중...</div></div>
+</div>
 <div id="rawModal" class="modal" onclick="closeRaw(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
     <div class="modal-hd">
@@ -387,7 +445,10 @@ const ACCESS_HASH='6ed178d23d6ca5f22708b85244b2b368f9e837bfabfa3a43617408f3a3ef5
 const ACCESS_KEY='atm_payment_access_ok';
 const GOOGLE_CLIENT_KEY='atm_google_client_id_v2';
 const OV_KEY='payment_overrides';
+const GC_KEY='google_client_id';
+const CONTACTS_KEY='customer_contacts';
 const OV_API='/api/overrides';
+const MANUAL_ROWS_KEY='__manualRows';
 const GOOGLE_DEFAULT_CLIENT_ID='';
 const GOOGLE_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
 const GOOGLE_DISCOVERY='https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
@@ -396,7 +457,9 @@ const CALS=[
   {id:'1824a066dc6b3d4d7f89ae11beaf22d7f24c78856a04552a3a03ce3200b7fbd2@group.calendar.google.com',name:'신논현점'}
 ];
 const TOOL='mcp__7562d3df-f0a0-4481-87e0-f6c4660717b3__list_events';
-let allData=[], ov={};
+let allData=[], ov={}, contacts={};
+let customerAllData=null;
+let custSortKey='visits', custSortAsc=false;
 let refreshTimer=null;
 let showHidden=false;
 let selectedIds=new Set();
@@ -407,6 +470,48 @@ const open=new Set();
 try{ov=JSON.parse(localStorage.getItem('atm_ov')||'{}')}catch(e){}
 
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function manualRows(){return Array.isArray(ov[MANUAL_ROWS_KEY])?ov[MANUAL_ROWS_KEY]:[]}
+function setManualRows(rows){ov[MANUAL_ROWS_KEY]=rows}
+function makeManualRow(src={}){
+  const year=document.getElementById('sy')?.value||String(new Date().getFullYear());
+  const date=src.date||`${year}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  const branch=normalizeBranch(src.branch||document.getElementById('sb')?.value||'문래점');
+  const reservationAmount=Number(src.reservationAmount??src.amount)||0;
+  const balanceAmount=Number(src.balanceAmount)||0;
+  const methods=String(src.methodsText||src.method||'현금').split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
+  const dep=Number(src.dep)||pa(src.depText)||0;
+  const isCash=methods.includes('현금');
+  const gross=reservationAmount+balanceAmount;
+  return{
+    id:src.id||`manual_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+    manual:true,date,branch,title:src.title||'직접 입력',status:src.payStatus||'완납',payStatus:src.payStatus||'완납',
+    totalIn:gross,netIn:src.netIn!==undefined?Number(src.netIn)||0:Math.max(0,isCash?gross-dep:gross),
+    dep,depText:src.depText||'',methods:methods.length?methods:['현금'],txns:[],
+    _actualReservation:reservationAmount,_actualBalance:balanceAmount,
+    reservationDate:src.reservationDate||date,reservationAmount,
+    balanceDate:src.balanceDate||'',balanceAmount,balanceDiAmt:0,reservationDiAmt:0,
+    notes:src.notes||'',rawTitle:src.rawTitle||'직접 추가한 행',rawDesc:src.rawDesc||'',rawStart:date,rawEnd:date,rawBranch:branch,
+    hidden:!!src.hidden
+  };
+}
+function addManualRowsToData(){
+  const rows=manualRows().map(r=>applyOverrides(makeManualRow(r),ov[r.id]||{}));
+  allData.push(...rows);
+}
+function persistManualRow(row){
+  const rows=manualRows();
+  const idx=rows.findIndex(r=>r.id===row.id);
+  const saved={
+    id:row.id,date:row.date,branch:row.branch,title:row.title,payStatus:row.payStatus,
+    reservationDate:row.reservationDate,reservationAmount:Number(row.reservationAmount)||0,
+    balanceDate:row.balanceDate,balanceAmount:Number(row.balanceAmount)||0,
+    dep:Number(row.dep)||0,depText:row.depText||'',netIn:Number(row.netIn)||0,
+    methodsText:(row.methods||[]).join('+'),notes:row.notes||'',hidden:!!row.hidden
+  };
+  if(idx>=0)rows[idx]=saved;
+  else rows.push(saved);
+  setManualRows(rows);
+}
 async function loadRemoteOv(){
   try{
     await lastOvSave;
@@ -484,6 +589,7 @@ function setOv(id,key,val){
       const _dep=key==='depText'||key==='dep'?pa(val):(ev.dep||0);
       ev.netIn=Math.max(0,_isCash?(_ra+_ba)-_dep:(_ra+_ba));
     }
+    if(ev.manual)persistManualRow(ev);
   }
   saveOv();
 }
@@ -690,6 +796,29 @@ function isRel(ev){
 
 function hasCowork(){return !!window.cowork?.callMcpTool}
 function getGoogleClientId(){return localStorage.getItem(GOOGLE_CLIENT_KEY)||GOOGLE_DEFAULT_CLIENT_ID}
+async function loadRemoteGC(){
+  try{
+    const res=await fetch(`${OV_API}?key=${encodeURIComponent(GC_KEY)}`,{cache:'no-store'});
+    if(!res.ok)return;
+    const data=await res.json();
+    const id=data?.value?.id;
+    if(id&&typeof id==='string'){
+      localStorage.setItem(GOOGLE_CLIENT_KEY,id);
+    }
+  }catch(e){}
+}
+async function saveRemoteGC(id){
+  try{
+    await fetch(OV_API,{method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key:GC_KEY,value:{id}})});
+  }catch(e){}
+}
+async function clearRemoteGC(){
+  try{
+    await fetch(OV_API,{method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key:GC_KEY,value:{}})});
+  }catch(e){}
+}
 
 function waitFor(name,check){
   return new Promise((resolve,reject)=>{
@@ -754,6 +883,7 @@ async function saveGoogleClient(e){
   const v=document.getElementById('googleClientId').value.trim();
   if(!v){showGoogleSetup('클라이언트 ID를 입력하세요.');return}
   localStorage.setItem(GOOGLE_CLIENT_KEY,v);
+  saveRemoteGC(v);
   googleReady=null;tokenClient=null;
   await connectGoogle();
 }
@@ -761,6 +891,7 @@ async function saveGoogleClient(e){
 function clearGoogleClient(e){
   e.stopPropagation();
   localStorage.removeItem(GOOGLE_CLIENT_KEY);
+  clearRemoteGC();
   googleReady=null;tokenClient=null;
   if(window.gapi?.client)gapi.client.setToken(null);
   showGoogleSetup('저장된 클라이언트 ID를 지웠습니다.');
@@ -819,6 +950,7 @@ async function fetchEvs(calId,year){
 }
 
 async function loadAll(){
+  customerAllData=null;
   const btn=document.getElementById('rb');
   btn.disabled=true;btn.textContent='로딩 중...';selectedIds.clear();
   document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
@@ -826,6 +958,7 @@ async function loadAll(){
   const nextYear=String(parseInt(year)+1);
   try{
     await loadRemoteOv();
+    if(!hasCowork()&&!getGoogleClientId())await loadRemoteGC();
     if(!hasCowork()&&!getGoogleClientId()){showGoogleSetup();return}
     allData=[];
     for(const cal of CALS){
@@ -835,6 +968,7 @@ async function loadAll(){
       const nextEvs=await fetchEvs(cal.id,nextYear);
       nextEvs.filter(isRel).forEach(ev=>allData.push(parseEv(ev,cal.name)));
     }
+    addManualRowsToData();
     allData.sort((a,b)=>a.date.localeCompare(b.date));
     render();
   }catch(e){
@@ -950,11 +1084,11 @@ function todayYmd(){
   const day=String(d.getDate()).padStart(2,'0');
   return`${y}-${m}-${day}`;
 }
-function isCountablePayDate(date,year){
+function isCountablePayDate(date,year,allowFuture=false){
   if(!date||date==='입금 예정'||date==='미입금'||date.slice(0,4)!==year)return false;
   const mo=parseInt(date.slice(5,7),10);
   if(mo<1||mo>12)return false;
-  return date<=todayYmd();
+  return allowFuture||date<=todayYmd();
 }
 function paymentParts(ev,year){
   const sign=ev.payStatus==='환불'?-1:1;
@@ -964,11 +1098,15 @@ function paymentParts(ev,year){
   const resDep=_isCash?(Number(ev.reservationDiAmt)||0):0;
   const balDep=_isCash?(Number(ev.balanceDiAmt)||0):0;
   const remainDep=_isCash?Math.max(0,(Number(ev.dep)||0)-resDep-balDep):0;
-  if(isCountablePayDate(ev.reservationDate,year)){
-    parts.push({date:ev.reservationDate,amount:sign*Math.max(0,(Number(ev.reservationAmount)||0)-resDep)});
+  if(isCountablePayDate(ev.reservationDate,year,!!ev.manual)){
+    const gross=Number(ev.reservationAmount)||0;
+    const amount=sign*Math.max(0,gross-resDep);
+    parts.push({date:ev.reservationDate,amount,gross,depositOffset:Math.max(0,gross)-Math.max(0,amount),dateKey:'reservationDate',amountKey:'reservationAmount',kind:'예약금'});
   }
-  if(isCountablePayDate(ev.balanceDate,year)){
-    parts.push({date:ev.balanceDate,amount:sign*Math.max(0,(Number(ev.balanceAmount)||0)-balDep-remainDep)});
+  if(isCountablePayDate(ev.balanceDate,year,!!ev.manual)){
+    const gross=Number(ev.balanceAmount)||0;
+    const amount=sign*Math.max(0,gross-balDep-remainDep);
+    parts.push({date:ev.balanceDate,amount,gross,depositOffset:Math.max(0,gross)-Math.max(0,amount),dateKey:'balanceDate',amountKey:'balanceAmount',kind:'잔금'});
   }
   return parts;
 }
@@ -1104,6 +1242,72 @@ function toggleHidden(){
   render();
 }
 
+function defaultManualDate(mo){
+  const year=document.getElementById('sy').value;
+  const month=mo||document.getElementById('sm').value||String(new Date().getMonth()+1).padStart(2,'0');
+  return`${year}-${month}-01`;
+}
+function addManualRow(src={}){
+  const row=makeManualRow({
+    date:src.date||defaultManualDate(src.mo),
+    reservationDate:src.reservationDate||src.date||defaultManualDate(src.mo),
+    branch:src.branch||document.getElementById('sb').value||'문래점',
+    title:src.title||'직접 입력',
+    payStatus:src.payStatus||document.getElementById('ss').value||'완납',
+    amount:src.amount||0,
+    method:src.method||'현금'
+  });
+  persistManualRow(row);
+  ov[row.id]={};
+  allData.push(row);
+  allData.sort((a,b)=>a.date.localeCompare(b.date));
+  saveOv();
+  render();
+  return row.id;
+}
+function addCashflowRow(mo,e){
+  e?.stopPropagation();
+  const id=addManualRow({mo:String(mo+1).padStart(2,'0')});
+  open.add(`cfb${mo}`);
+  switchView('chart');
+  setTimeout(()=>{
+    const row=document.querySelector(`[data-cf-id="${id}"]`);
+    row?.scrollIntoView({block:'center',behavior:'smooth'});
+    row?.querySelector('.cf-td-title .editcell')?.click();
+  },0);
+}
+function cashflowEditCell(e,id,key,type='text'){
+  e.stopPropagation();
+  editCell(e,id,key,type);
+}
+function editCashflowAmount(e,id,key,depositOffset=0){
+  e.stopPropagation();
+  const host=e.currentTarget;
+  const ev=evById(id);if(!ev)return;
+  const input=document.createElement('input');
+  input.type='text';
+  input.value=Number(host.dataset.val)||0;
+  input.className='editinp editnum';
+  host.classList.add('editingcell');
+  host.innerHTML='';
+  host.appendChild(input);
+  input.focus();
+  input.select();
+  let saved=false;
+  const done=()=>{
+    if(saved)return;
+    saved=true;
+    const net=cleanNum(input.value);
+    setOv(id,key,net+(Number(depositOffset)||0));
+    render();
+  };
+  input.addEventListener('blur',done,{once:true});
+  input.addEventListener('keydown',ev=>{
+    if(ev.key==='Enter'){ev.preventDefault();done();}
+    if(ev.key==='Escape'){saved=true;render();}
+  });
+}
+
 function openRaw(id,e){
   e?.stopPropagation();
   const ev=evById(id);if(!ev)return;
@@ -1146,13 +1350,187 @@ function chartBranchName(branch){
   return normalizeBranch(branch);
 }
 
+/* ── 고객관리 ── */
+function parsePhone(raw){
+  const m=(raw||'').match(/01[0-9]-?\d{3,4}-?\d{4}/);
+  return m?m[0].replace(/-/g,''):'';
+}
+function nameFromTxns(txns){
+  for(const t of(txns||[])){if(t.name)return t.name;}
+  return'';
+}
+function nameFromTitle(title){
+  return(title||'')
+    .replace(/^\[.*?\]\s*/,'')
+    .replace(/^\d+층\s*/,'')
+    .replace(/[\[(][^)\]]*\/[^)\]]*[\])]$/,'')
+    .replace(/\([^)]*\)$/,'')
+    .trim();
+}
+async function loadRemoteContacts(){
+  try{
+    const res=await fetch(`${OV_API}?key=${encodeURIComponent(CONTACTS_KEY)}`,{cache:'no-store'});
+    if(!res.ok)return;
+    const data=await res.json();
+    if(data?.value&&typeof data.value==='object')contacts=data.value;
+  }catch(e){}
+}
+function saveRemoteContacts(){
+  fetch(OV_API,{method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({key:CONTACTS_KEY,value:contacts})
+  }).catch(e=>console.warn('연락처 저장 실패',e));
+}
+function buildCustomerMap(data){
+  const map={};
+  data.forEach(ev=>{
+    const phone=parsePhone(ev.rawDesc);
+    if(!phone)return;
+    if(!map[phone]){
+      const autoName=nameFromTxns(ev.txns)||nameFromTitle(ev.rawTitle);
+      map[phone]={phone,autoName,visits:[]};
+    }
+    if(!map[phone].autoName)map[phone].autoName=nameFromTxns(ev.txns)||nameFromTitle(ev.rawTitle);
+    map[phone].visits.push(ev);
+  });
+  return map;
+}
+async function loadCustomerData(){
+  if(customerAllData)return customerAllData;
+  const years=['2025','2026','2027'];
+  const seen=new Set();
+  const all=[];
+  for(const yr of years){
+    for(const cal of CALS){
+      try{
+        const evs=await fetchEvs(cal.id,yr);
+        evs.filter(isRel).forEach(ev=>{
+          if(seen.has(ev.id))return;
+          seen.add(ev.id);
+          all.push(parseEv(ev,cal.name));
+        });
+      }catch(e){}
+    }
+  }
+  customerAllData=all;
+  return all;
+}
+async function renderCustomers(q=''){
+  const el=document.getElementById('cust-content');
+  if(!el)return;
+  el.innerHTML='<div class="cust-loading"><div class="spin"></div>캘린더 데이터 불러오는 중...</div>';
+  await loadRemoteContacts();
+  const data=await loadCustomerData();
+  const map=buildCustomerMap(data);
+  let rows=Object.values(map).map(c=>{
+    const ct=contacts[c.phone]||{};
+    const displayName=ct.name||c.autoName||'이름 없음';
+    const memo=ct.memo||'';
+    const visits=c.visits.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    const totalRevenue=visits.reduce((s,e)=>s+Number(e.netIn||0),0);
+    const lastVisit=visits[0]?.date||'';
+    const branches=[...new Set(visits.map(e=>normalizeBranch(e.branch)))];
+    return{phone:c.phone,displayName,autoName:c.autoName,memo,visits,totalRevenue,lastVisit,branches};
+  });
+  if(custSortKey==='visits')rows.sort((a,b)=>custSortAsc?a.visits.length-b.visits.length:b.visits.length-a.visits.length);
+  else if(custSortKey==='revenue')rows.sort((a,b)=>custSortAsc?a.totalRevenue-b.totalRevenue:b.totalRevenue-a.totalRevenue);
+  else if(custSortKey==='last')rows.sort((a,b)=>custSortAsc?a.lastVisit.localeCompare(b.lastVisit):b.lastVisit.localeCompare(a.lastVisit));
+  else if(custSortKey==='name')rows.sort((a,b)=>custSortAsc?a.displayName.localeCompare(b.displayName,'ko'):b.displayName.localeCompare(a.displayName,'ko'));
+  if(q){const lq=q.toLowerCase();rows=rows.filter(r=>r.displayName.toLowerCase().includes(lq)||r.phone.includes(lq)||r.memo.toLowerCase().includes(lq));}
+  function sortTh(key,label,cls=''){
+    const active=custSortKey===key;
+    const arrow=active?(custSortAsc?'↑':'↓'):'';
+    return`<th class="${cls}" onclick="custSort('${key}')" style="cursor:pointer">${label}${active?` <span style="color:var(--blue)">${arrow}</span>`:' <span style="color:#d1d5db;font-size:9px">↕</span>'}</th>`;
+  }
+  let html=`<div class="cust-toolbar">
+    <input class="cust-search" placeholder="이름·전화번호·메모 검색..." oninput="renderCustomers(this.value)" value="${esc(q)}">
+    <span class="cust-stat">총 ${rows.length}명 / 전체 ${Object.keys(map).length}명</span>
+    <button class="cf-add" style="margin-left:0" onclick="customerAllData=null;renderCustomers()">새로고침</button>
+  </div>`;
+  if(!rows.length){el.innerHTML=html+'<div class="cust-loading">검색 결과가 없습니다.</div>';return;}
+  html+=`<table class="cust-table">
+  <thead class="cust-thead"><tr>
+    ${sortTh('name','이름')}
+    <th>전화번호</th>
+    ${sortTh('visits','방문','r')}
+    ${sortTh('revenue','총매출','r')}
+    <th>지점</th>
+    ${sortTh('last','마지막 방문')}
+    <th>메모</th>
+  </tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const cntCls=r.visits.length>=6?'vhi':r.visits.length>=3?'hi':'';
+    const brText=r.branches.map(b=>b.replace('점','')).join('+');
+    const brColor=r.branches.length>1?'#7c3aed':r.branches[0]==='문래점'?'#0369a1':'#c2410c';
+    const fmtPhone=r.phone.replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3');
+    const pid=`cp_${r.phone}`;
+    html+=`<tr class="cust-row" id="cust-row-${r.phone}" onclick="toggleCustDetail('${r.phone}')">
+      <td><span class="cust-name">${esc(r.displayName)}<span class="cust-arrow">▼</span></span></td>
+      <td><span class="cust-phone">${fmtPhone}</span></td>
+      <td style="text-align:right"><span class="cust-cnt ${cntCls}">${r.visits.length}회</span></td>
+      <td style="text-align:right"><span class="cust-revenue">${fa(r.totalRevenue)}</span></td>
+      <td><span class="cust-br" style="color:${brColor}">${esc(brText)}</span></td>
+      <td><span class="cust-last">${r.lastVisit||'-'}</span></td>
+      <td><span class="cust-memo">${r.memo?esc(r.memo):'<span style="color:#d1d5db">-</span>'}</span></td>
+    </tr>
+    <tr class="cust-detail" id="${pid}"><td colspan="7"><div class="cust-detail-inner">
+      <div class="cust-edit-row">
+        <span class="cust-edit-label">이름</span>
+        <input class="cust-edit-inp" id="cust-name-${r.phone}" value="${esc(contacts[r.phone]?.name||r.autoName||'')}" placeholder="${esc(r.autoName||'자동감지 이름 없음')}" onclick="event.stopPropagation()">
+        <button class="cust-save-btn" onclick="event.stopPropagation();saveContactField('${r.phone}','name',document.getElementById('cust-name-${r.phone}').value)">저장</button>
+      </div>
+      <div class="cust-edit-row">
+        <span class="cust-edit-label">메모</span>
+        <input class="cust-edit-inp" id="cust-memo-${r.phone}" value="${esc(r.memo)}" placeholder="특이사항 입력..." onclick="event.stopPropagation()">
+        <button class="cust-save-btn" onclick="event.stopPropagation();saveContactField('${r.phone}','memo',document.getElementById('cust-memo-${r.phone}').value)">저장</button>
+      </div>
+      <div class="cust-visits">
+        <div class="cust-visit-hdr">방문 이력 (${r.visits.length}건)</div>
+        ${r.visits.map(ev=>{
+          const bc2=normalizeBranch(ev.branch)==='문래점'?'#0369a1':'#c2410c';
+          const stStyle=ev.payStatus==='완납'?'color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0':ev.payStatus==='취소'?'color:#dc2626;background:#fef2f2;border:1px solid #fecaca':'color:#b45309;background:#fffbeb;border:1px solid #fde68a';
+          return`<div class="cust-visit-row">
+            <span class="cust-visit-date">${ev.date}</span>
+            <span class="cust-visit-title" title="${esc(ev.rawTitle)}">${esc(ev.title||ev.rawTitle)}</span>
+            <span class="cust-visit-br" style="color:${bc2}">${esc(normalizeBranch(ev.branch))}</span>
+            <span class="cust-visit-status" style="${stStyle}">${ev.payStatus}</span>
+            <span class="cust-visit-amt">${fa(Number(ev.netIn)||0)}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  el.innerHTML=html;
+}
+function toggleCustDetail(phone){
+  const row=document.getElementById(`cust-row-${phone}`);
+  const det=document.getElementById(`cp_${phone}`);
+  if(!row||!det)return;
+  const isOpen=det.classList.toggle('open');
+  row.classList.toggle('open',isOpen);
+}
+function custSort(key){
+  if(custSortKey===key)custSortAsc=!custSortAsc;
+  else{custSortKey=key;custSortAsc=false;}
+  renderCustomers(document.querySelector('.cust-search')?.value||'');
+}
+function saveContactField(phone,key,val){
+  if(!contacts[phone])contacts[phone]={};
+  contacts[phone][key]=val.trim();
+  saveRemoteContacts();
+  renderCustomers(document.querySelector('.cust-search')?.value||'');
+}
+
 function switchView(v){
   currentView=v;
   document.getElementById('view-table').style.display=v==='table'?'block':'none';
   document.getElementById('view-chart').style.display=v==='chart'?'block':'none';
+  document.getElementById('view-customer').style.display=v==='customer'?'block':'none';
   document.getElementById('tab-table').classList.toggle('active',v==='table');
   document.getElementById('tab-chart').classList.toggle('active',v==='chart');
+  document.getElementById('tab-customer').classList.toggle('active',v==='customer');
   if(v==='chart')renderChart();
+  if(v==='customer')renderCustomers();
 }
 
 function renderChart(){
@@ -1286,7 +1664,7 @@ function renderChart(){
       const mo=parseInt(p.date.slice(5,7),10)-1;
       if(mo<0||mo>11)return;
       if(!byMo[mo])byMo[mo]=[];
-      byMo[mo].push({e,date:p.date,amount:p.amount,isRes:p.date===e.reservationDate});
+      byMo[mo].push({...p,e,isRes:p.kind==='예약금'});
       grandTotal+=p.amount;
     });
   });
@@ -1296,7 +1674,7 @@ function renderChart(){
     <thead class="cf-thead"><tr>
       <th>입금날짜</th><th>행사명</th><th>대관일</th>
       <th style="text-align:center">구분</th><th class="r">금액</th>
-      <th style="text-align:center">결제방법</th><th class="r">지점</th>
+      <th style="text-align:center">결제방법</th><th class="r">지점</th><th></th>
     </tr></thead>`;
 
   const BR_ORDER=['문래점','신논현점'];
@@ -1305,13 +1683,14 @@ function renderChart(){
     const all=(byMo[mo]||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
     const moTotal=all.reduce((s,p)=>s+p.amount,0);
     const bid=`cfb${mo}`;
-    html+=`<tbody><tr class="cf-mrow" onclick="toggleCfMo('${bid}',this)">
-      <td colspan="7">${LABELS[mo]}${all.length
+    html+=`<tbody><tr class="cf-mrow ${open.has(bid)?'open':''}" onclick="toggleCfMo('${bid}',this)">
+      <td colspan="8">${LABELS[mo]}${all.length
         ?`<span class="cf-mtotal">${fa(moTotal)}</span><span class="cf-mcnt">${all.length}건</span>`
         :'<span class="cf-mempty">입금 없음</span>'}
+        <button class="cf-add" onclick="addCashflowRow(${mo},event)">추가</button>
         <span class="cf-arrow">▼</span>
       </td></tr></tbody>
-    <tbody class="cf-body" id="${bid}">`;
+    <tbody class="cf-body ${open.has(bid)?'open':''}" id="${bid}">`;
     // 지점별 그룹
     const byBr={};
     all.forEach(p=>{const b=normalizeBranch(p.e.branch);if(!byBr[b])byBr[b]=[];byBr[b].push(p);});
@@ -1321,17 +1700,19 @@ function renderChart(){
       const bItems=byBr[br];
       const bColor=BR_COLOR[br]||'#374151';
       const bTotal=bItems.reduce((s,p)=>s+p.amount,0);
-      if(multiBr)html+=`<tr class="cf-br-hdr"><td colspan="7"><span style="color:${bColor};font-weight:800;font-size:12px">${br}</span><span class="cf-mtotal">${fa(bTotal)}</span><span class="cf-mcnt">${bItems.length}건</span></td></tr>`;
+      if(multiBr)html+=`<tr class="cf-br-hdr"><td colspan="8"><span style="color:${bColor};font-weight:800;font-size:12px">${br}</span><span class="cf-mtotal">${fa(bTotal)}</span><span class="cf-mcnt">${bItems.length}건</span></td></tr>`;
       bItems.forEach(p=>{
         const bc=bColor;
-        html+=`<tr class="cf-row">
-          <td class="cf-td-date">${p.date}</td>
-          <td class="cf-td-title"><div class="titlecell"><span>${esc(p.e.title)}</span><button class="rawbtn" onclick="openRaw('${p.e.id}',event)">원문</button></div></td>
-          <td class="cf-td-evdate">${p.e.date}</td>
+        const methodText=p.e.methods.join('+')||'기타';
+        html+=`<tr class="cf-row" data-cf-id="${p.e.id}">
+          <td class="cf-td-date">${cell(p.e.id,p.dateKey,p.date,'date')}</td>
+          <td class="cf-td-title"><div class="titlecell"><span>${cell(p.e.id,'title',p.e.title,'text')}</span><button class="rawbtn" onclick="openRaw('${p.e.id}',event)">원문</button></div></td>
+          <td class="cf-td-evdate">${cell(p.e.id,'date',p.e.date,'date')}</td>
           <td class="cf-td-lbl"><span class="cf-ilbl ${p.isRes?'res':'bal'}">${p.isRes?'예약금':'잔금'}</span></td>
-          <td class="cf-td-amt">${fa(p.amount)}</td>
-          <td class="cf-td-method">${p.e.methods.join('+')}</td>
-          <td class="cf-td-br" style="color:${bc}">${p.e.branch}</td>
+          <td class="cf-td-amt"><span class="editcell amt" data-val="${p.amount}" onclick="editCashflowAmount(event,'${p.e.id}','${p.amountKey}',${Number(p.depositOffset)||0})">${fa(p.amount)}</span></td>
+          <td class="cf-td-method">${cell(p.e.id,'methodsText',methodText,'text')}</td>
+          <td class="cf-td-br" style="color:${bc}">${cell(p.e.id,'branch',p.e.branch,'select')}</td>
+          <td class="cf-td-action"><button class="delbtn" onclick="hideRow('${p.e.id}',event)" title="숨기기">숨김</button></td>
         </tr>`;
       });
     });
@@ -1343,7 +1724,10 @@ function renderChart(){
 
 function toggleCfMo(id,hdr){
   const el=document.getElementById(id);if(!el)return;
-  el.classList.toggle('open');hdr.classList.toggle('open');
+  const isOpen=el.classList.toggle('open');
+  hdr.classList.toggle('open',isOpen);
+  if(isOpen)open.add(id);
+  else open.delete(id);
 }
 
 
