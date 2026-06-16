@@ -292,11 +292,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-detail>td{padding:0;border-bottom:1px solid var(--line)}
 .cust-detail-inner{padding:14px 20px 18px 36px}
 .cust-edit-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
-.cust-edit-label{font-size:11px;font-weight:800;color:#6b7280;width:36px;flex-shrink:0}
-.cust-edit-inp{height:30px;padding:0 10px;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;color:var(--text);background:#fff;min-width:180px}
+.cust-edit-inp{height:30px;padding:0 10px;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;color:var(--text);background:#fff;min-width:160px}
 .cust-edit-inp:focus{outline:none;border-color:var(--blue)}
-.cust-save-btn{height:30px;padding:0 14px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
-.cust-save-btn:hover{background:#1d4ed8}
 .cust-visits{margin-top:8px}
 .cust-visit-hdr{font-size:11px;font-weight:800;color:#6b7280;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
 .cust-visit-row{display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid #f1f3f6;font-size:13px}
@@ -1632,14 +1629,8 @@ async function renderCustomers(){
     </tr>
     <tr class="cust-detail" id="${pid}"><td colspan="7"><div class="cust-detail-inner">
       <div class="cust-edit-row">
-        <span class="cust-edit-label">이름</span>
-        <input class="cust-edit-inp" id="cust-name-${r.phone}" value="${esc(contacts[r.phone]?.name||r.autoName||'')}" placeholder="${esc(r.autoName||'자동감지 이름 없음')}" onclick="event.stopPropagation()">
-        <button class="cust-save-btn" onclick="event.stopPropagation();saveContactField('${r.phone}','name',document.getElementById('cust-name-${r.phone}').value)">저장</button>
-      </div>
-      <div class="cust-edit-row">
-        <span class="cust-edit-label">메모</span>
-        <input class="cust-edit-inp" id="cust-memo-${r.phone}" value="${esc(r.memo)}" placeholder="특이사항 입력..." onclick="event.stopPropagation()">
-        <button class="cust-save-btn" onclick="event.stopPropagation();saveContactField('${r.phone}','memo',document.getElementById('cust-memo-${r.phone}').value)">저장</button>
+        <input class="cust-edit-inp" id="cust-name-${r.phone}" value="${esc(contacts[r.phone]?.name||r.autoName||'')}" placeholder="${esc(r.autoName||'이름')}" onclick="event.stopPropagation()" onblur="event.stopPropagation();saveContactField('${r.phone}','name',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();saveContactField('${r.phone}','name',this.value);this.blur()}">
+        <input class="cust-edit-inp" id="cust-memo-${r.phone}" value="${esc(r.memo)}" placeholder="메모" onclick="event.stopPropagation()" onblur="event.stopPropagation();saveContactField('${r.phone}','memo',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();saveContactField('${r.phone}','memo',this.value);this.blur()}">
       </div>
       <div class="cust-visits">
         <div class="cust-visit-hdr">방문 이력 (${r.visits.length}건)</div>
