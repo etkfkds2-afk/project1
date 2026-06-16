@@ -1583,18 +1583,19 @@ async function renderCustomers(){
     const displayName=ct.name||c.autoName||'이름 없음';
     const memo=ct.memo||'';
     const visits=c.visits.slice().sort((a,b)=>b.date.localeCompare(a.date));
-    const totalRevenue=visits.reduce((s,e)=>s+Number(e.netIn||0),0);
-    const lastVisit=visits[0]?.date||'';
-    const branches=[...new Set(visits.map(e=>normalizeBranch(e.branch)))];
-    return{phone:c.phone,displayName,autoName:c.autoName,memo,visits,totalRevenue,lastVisit,branches};
+    const countableVisits=visits.filter(e=>!/\[취소\]/.test(e.rawTitle||''));
+    const totalRevenue=countableVisits.reduce((s,e)=>s+Number(e.netIn||0),0);
+    const lastVisit=countableVisits[0]?.date||visits[0]?.date||'';
+    const branches=[...new Set(countableVisits.map(e=>normalizeBranch(e.branch)))];
+    return{phone:c.phone,displayName,autoName:c.autoName,memo,visits,countableVisits,totalRevenue,lastVisit,branches};
   });
-  const effVisits=r=>Number((contacts[r.phone]||{}).visitCount??r.visits.length);
+  const effVisits=r=>Number((contacts[r.phone]||{}).visitCount??r.countableVisits.length);
   const effRev=r=>{const ct=contacts[r.phone]||{};return Number(ct.totalRevenue!=null?ct.totalRevenue:r.totalRevenue);};
   if(custSortKey==='visits')rows.sort((a,b)=>custSortAsc?effVisits(a)-effVisits(b):effVisits(b)-effVisits(a));
   else if(custSortKey==='revenue')rows.sort((a,b)=>custSortAsc?effRev(a)-effRev(b):effRev(b)-effRev(a));
   else if(custSortKey==='last')rows.sort((a,b)=>custSortAsc?a.lastVisit.localeCompare(b.lastVisit):b.lastVisit.localeCompare(a.lastVisit));
   else if(custSortKey==='name')rows.sort((a,b)=>custSortAsc?a.displayName.localeCompare(b.displayName,'ko'):b.displayName.localeCompare(a.displayName,'ko'));
-  const totalVisits=rows.reduce((s,r)=>s+Number((contacts[r.phone]||{}).visitCount??r.visits.length),0);
+  const totalVisits=rows.reduce((s,r)=>s+Number((contacts[r.phone]||{}).visitCount??r.countableVisits.length),0);
   const totalRev=rows.reduce((s,r)=>{const ct=contacts[r.phone]||{};return s+Number(ct.totalRevenue!=null?ct.totalRevenue:r.totalRevenue);},0);
   const kpiEl=document.getElementById('cust-kpi');
   if(kpiEl)kpiEl.innerHTML=`
@@ -1630,7 +1631,7 @@ async function renderCustomers(){
   </tr></thead><tbody>`;
   rows.forEach(r=>{
     const ct=contacts[r.phone]||{};
-    const visitCount=ct.visitCount??r.visits.length;
+    const visitCount=ct.visitCount??r.countableVisits.length;
     const cntCls=visitCount>=6?'vhi':visitCount>=3?'hi':'';
     const lastVisit=ct.lastVisit||r.lastVisit||'-';
     const totalRevenue=ct.totalRevenue!=null?Number(ct.totalRevenue):r.totalRevenue;
@@ -1741,7 +1742,7 @@ function refreshCustKPI(){
   if(!customerAllData)return;
   const map=buildCustomerMap(customerAllData);
   const rows=Object.values(map);
-  const totalVisits=rows.reduce((s,r)=>s+Number((contacts[r.phone]||{}).visitCount??r.visits.length),0);
+  const totalVisits=rows.reduce((s,r)=>s+Number((contacts[r.phone]||{}).visitCount??r.countableVisits.length),0);
   const totalRev=rows.reduce((s,r)=>{const ct=contacts[r.phone]||{};return s+Number(ct.totalRevenue!=null?ct.totalRevenue:r.totalRevenue);},0);
   const v=document.getElementById('cust-kpi-visits');
   const rv=document.getElementById('cust-kpi-rev');
