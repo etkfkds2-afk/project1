@@ -296,6 +296,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-visit-amt{font-weight:800;font-size:13px;font-variant-numeric:tabular-nums;color:#111827;text-align:right;width:100px;flex-shrink:0}
 .cust-visit-status{font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;white-space:nowrap;flex-shrink:0}
 .cust-loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px}
+.cust-row.filtered-out{display:none!important}
+.cust-detail.filtered-out{display:none!important}
 </style>
 </head>
 <body class="locked">
@@ -320,6 +322,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <button class="vtab" id="tab-chart" onclick="switchView('chart')">분석</button>
     <button class="vtab" id="tab-customer" onclick="switchView('customer')">고객관리</button>
   </div>
+  <div id="toolbar-controls" style="display:contents">
   <select id="sy" onchange="loadAll()">
     <option value="2027">2027년</option>
     <option value="2026" selected>2026년</option>
@@ -349,6 +352,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <button id="thbtn" class="btn btn-hidden" onclick="toggleHidden()">숨긴 항목</button>
   <button id="rb" class="btn btn-reload" onclick="loadAll()">새로고침</button>
   <button class="btn btn-export" onclick="doExport()">CSV 내보내기</button>
+  </div>
 </div>
 <div id="view-table">
 <div class="cards">
@@ -420,6 +424,11 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   </div>
 </div>
 <div id="view-customer">
+  <div class="cust-toolbar">
+    <input class="cust-search" id="cust-search-inp" placeholder="이름·전화번호·메모 검색..." oninput="filterCustomers(this.value)">
+    <span class="cust-stat" id="cust-stat"></span>
+    <button class="cf-add" style="margin-left:0" onclick="customerAllData=null;remoteContactsReady=false;renderCustomers()">새로고침</button>
+  </div>
   <div id="cust-content"><div class="cust-loading"><div class="spin"></div>고객 데이터 로딩 중...</div></div>
 </div>
 <div id="rawModal" class="modal" onclick="closeRaw(event)">
@@ -459,6 +468,7 @@ const CALS=[
 const TOOL='mcp__7562d3df-f0a0-4481-87e0-f6c4660717b3__list_events';
 let allData=[], ov={}, contacts={};
 let customerAllData=null;
+let remoteContactsReady=false;
 let custSortKey='visits', custSortAsc=false;
 let refreshTimer=null;
 let showHidden=false;
@@ -951,6 +961,7 @@ async function fetchEvs(calId,year){
 
 async function loadAll(){
   customerAllData=null;
+  remoteContactsReady=false;
   const btn=document.getElementById('rb');
   btn.disabled=true;btn.textContent='로딩 중...';selectedIds.clear();
   document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
@@ -1355,13 +1366,15 @@ function parsePhone(raw){
   const m=(raw||'').match(/01[0-9]-?\d{3,4}-?\d{4}/);
   return m?m[0].replace(/-/g,''):'';
 }
+const NAME_BLACKLIST=/^(개인계좌|법인계좌|법인|개인|현금|세금계산서|계산서|카드|신신페이|기타)$/;
 function nameFromTxns(txns){
-  for(const t of(txns||[])){if(t.name)return t.name;}
+  for(const t of(txns||[])){if(t.name&&!NAME_BLACKLIST.test(t.name.trim()))return t.name.trim();}
   return'';
 }
 function nameFromTitle(title){
   return(title||'')
     .replace(/^\[.*?\]\s*/,'')
+    .replace(/\[.*?\]\s*$/,'')
     .replace(/^\d+층\s*/,'')
     .replace(/[\[(][^)\]]*\/[^)\]]*[\])]$/,'')
     .replace(/\([^)]*\)$/,'')
@@ -1374,6 +1387,7 @@ async function loadRemoteContacts(){
     const data=await res.json();
     if(data?.value&&typeof data.value==='object')contacts=data.value;
   }catch(e){}
+  remoteContactsReady=true;
 }
 function saveRemoteContacts(){
   fetch(OV_API,{method:'PUT',headers:{'Content-Type':'application/json'},
@@ -1414,11 +1428,11 @@ async function loadCustomerData(){
   customerAllData=all;
   return all;
 }
-async function renderCustomers(q=''){
+async function renderCustomers(){
   const el=document.getElementById('cust-content');
   if(!el)return;
   el.innerHTML='<div class="cust-loading"><div class="spin"></div>캘린더 데이터 불러오는 중...</div>';
-  await loadRemoteContacts();
+  if(!remoteContactsReady)await loadRemoteContacts();
   const data=await loadCustomerData();
   const map=buildCustomerMap(data);
   let rows=Object.values(map).map(c=>{
@@ -1435,19 +1449,15 @@ async function renderCustomers(q=''){
   else if(custSortKey==='revenue')rows.sort((a,b)=>custSortAsc?a.totalRevenue-b.totalRevenue:b.totalRevenue-a.totalRevenue);
   else if(custSortKey==='last')rows.sort((a,b)=>custSortAsc?a.lastVisit.localeCompare(b.lastVisit):b.lastVisit.localeCompare(a.lastVisit));
   else if(custSortKey==='name')rows.sort((a,b)=>custSortAsc?a.displayName.localeCompare(b.displayName,'ko'):b.displayName.localeCompare(a.displayName,'ko'));
-  if(q){const lq=q.toLowerCase();rows=rows.filter(r=>r.displayName.toLowerCase().includes(lq)||r.phone.includes(lq)||r.memo.toLowerCase().includes(lq));}
+  const statEl=document.getElementById('cust-stat');
+  if(statEl)statEl.textContent=`총 ${rows.length}명`;
   function sortTh(key,label,cls=''){
     const active=custSortKey===key;
     const arrow=active?(custSortAsc?'↑':'↓'):'';
-    return`<th class="${cls}" onclick="custSort('${key}')" style="cursor:pointer">${label}${active?` <span style="color:var(--blue)">${arrow}</span>`:' <span style="color:#d1d5db;font-size:9px">↕</span>'}</th>`;
+    return`<th class="${cls}" onclick="custSort('${key}')">${label}${active?` <span style="color:var(--blue)">${arrow}</span>`:' <span style="color:#d1d5db;font-size:9px">↕</span>'}</th>`;
   }
-  let html=`<div class="cust-toolbar">
-    <input class="cust-search" placeholder="이름·전화번호·메모 검색..." oninput="renderCustomers(this.value)" value="${esc(q)}">
-    <span class="cust-stat">총 ${rows.length}명 / 전체 ${Object.keys(map).length}명</span>
-    <button class="cf-add" style="margin-left:0" onclick="customerAllData=null;renderCustomers()">새로고침</button>
-  </div>`;
-  if(!rows.length){el.innerHTML=html+'<div class="cust-loading">검색 결과가 없습니다.</div>';return;}
-  html+=`<table class="cust-table">
+  if(!rows.length){el.innerHTML='<div class="cust-loading">전화번호가 등록된 고객이 없습니다.</div>';return;}
+  let html=`<table class="cust-table">
   <thead class="cust-thead"><tr>
     ${sortTh('name','이름')}
     <th>전화번호</th>
@@ -1463,7 +1473,8 @@ async function renderCustomers(q=''){
     const brColor=r.branches.length>1?'#7c3aed':r.branches[0]==='문래점'?'#0369a1':'#c2410c';
     const fmtPhone=r.phone.replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3');
     const pid=`cp_${r.phone}`;
-    html+=`<tr class="cust-row" id="cust-row-${r.phone}" onclick="toggleCustDetail('${r.phone}')">
+    const searchData=`${r.displayName} ${r.phone} ${r.memo}`.toLowerCase();
+    html+=`<tr class="cust-row" id="cust-row-${r.phone}" data-search="${esc(searchData)}" onclick="toggleCustDetail('${r.phone}')">
       <td><span class="cust-name">${esc(r.displayName)}<span class="cust-arrow">▼</span></span></td>
       <td><span class="cust-phone">${fmtPhone}</span></td>
       <td style="text-align:right"><span class="cust-cnt ${cntCls}">${r.visits.length}회</span></td>
@@ -1501,6 +1512,22 @@ async function renderCustomers(q=''){
   });
   html+=`</tbody></table>`;
   el.innerHTML=html;
+  filterCustomers(document.getElementById('cust-search-inp')?.value||'');
+}
+function filterCustomers(q){
+  const lq=(q||'').toLowerCase().trim();
+  let shown=0,total=0;
+  document.querySelectorAll('#cust-content .cust-row').forEach(row=>{
+    total++;
+    const visible=!lq||(row.dataset.search||'').includes(lq);
+    row.classList.toggle('filtered-out',!visible);
+    const phone=row.id.replace('cust-row-','');
+    const det=document.getElementById(`cp_${phone}`);
+    if(det)det.classList.toggle('filtered-out',!visible);
+    if(visible)shown++;
+  });
+  const statEl=document.getElementById('cust-stat');
+  if(statEl)statEl.textContent=lq?`${shown}/${total}명`:`총 ${total}명`;
 }
 function toggleCustDetail(phone){
   const row=document.getElementById(`cust-row-${phone}`);
@@ -1512,13 +1539,24 @@ function toggleCustDetail(phone){
 function custSort(key){
   if(custSortKey===key)custSortAsc=!custSortAsc;
   else{custSortKey=key;custSortAsc=false;}
-  renderCustomers(document.querySelector('.cust-search')?.value||'');
+  renderCustomers();
 }
 function saveContactField(phone,key,val){
   if(!contacts[phone])contacts[phone]={};
   contacts[phone][key]=val.trim();
   saveRemoteContacts();
-  renderCustomers(document.querySelector('.cust-search')?.value||'');
+  const row=document.getElementById(`cust-row-${phone}`);
+  if(row){
+    if(key==='name'){
+      const nameEl=row.querySelector('.cust-name');
+      if(nameEl){const arrow=nameEl.querySelector('.cust-arrow');nameEl.textContent=val.trim()||'이름 없음';if(arrow)nameEl.appendChild(arrow);}
+      const searchData=(row.dataset.search||'').replace(/^[^ ]*/,val.trim().toLowerCase());
+      row.dataset.search=searchData;
+    }else if(key==='memo'){
+      const memoEl=row.querySelector('.cust-memo');
+      if(memoEl)memoEl.innerHTML=val.trim()?esc(val.trim()):'<span style="color:#d1d5db">-</span>';
+    }
+  }
 }
 
 function switchView(v){
@@ -1526,6 +1564,7 @@ function switchView(v){
   document.getElementById('view-table').style.display=v==='table'?'block':'none';
   document.getElementById('view-chart').style.display=v==='chart'?'block':'none';
   document.getElementById('view-customer').style.display=v==='customer'?'block':'none';
+  document.getElementById('toolbar-controls').style.display=v==='customer'?'none':'contents';
   document.getElementById('tab-table').classList.toggle('active',v==='table');
   document.getElementById('tab-chart').classList.toggle('active',v==='chart');
   document.getElementById('tab-customer').classList.toggle('active',v==='customer');
