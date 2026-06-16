@@ -269,9 +269,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-kpi-label{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:4px}
 .cust-kpi-val{font-size:24px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1}
 .cust-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);border-radius:10px;border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow)}
-.cust-thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#6b7280;background:#f8fafc;border-bottom:2px solid #e5e7eb;border-right:1px solid #e5e7eb;white-space:nowrap;cursor:pointer;user-select:none}
+.cust-thead th{padding:10px 14px;text-align:center;font-size:11px;font-weight:800;color:#6b7280;background:#f8fafc;border-bottom:2px solid #e5e7eb;border-right:1px solid #e5e7eb;white-space:nowrap;cursor:pointer;user-select:none}
 .cust-thead th:last-child{border-right:none}
-.cust-thead th.r{text-align:right}
 .cust-thead th:hover{background:#f1f5f9}
 .cust-row{background:#fff;transition:background .12s}
 .cust-row:hover{background:#f8faff}
@@ -1636,13 +1635,13 @@ async function renderCustomers(){
     const searchData=`${r.displayName} ${r.phone} ${r.memo}`.toLowerCase();
     const memoDisplay=r.memo?esc(r.memo):'<span style="color:#d1d5db;font-size:11px">메모 입력</span>';
     html+=`<tr class="cust-row" id="cust-row-${r.phone}" data-search="${esc(searchData)}">
-      <td class="cust-editable-cell" onclick="startCustNameEdit('${r.phone}',event)"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span></td>
+      <td class="cust-editable-cell" style="text-align:center" onclick="startCustNameEdit('${r.phone}',event)"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span></td>
       <td style="text-align:center"><button class="cust-hist-btn" onclick="toggleCustDetail('${r.phone}')">방문이력</button></td>
-      <td class="r"><span class="cust-cnt ${cntCls}">${r.visits.length}회</span></td>
-      <td><span class="cust-last">${r.lastVisit||'-'}</span></td>
-      <td class="r"><span class="cust-revenue">${fa(r.totalRevenue)}</span></td>
-      <td><span class="cust-br" style="color:${brColor}">${esc(brText)}</span></td>
-      <td><span class="cust-phone">${fmtPhone}</span></td>
+      <td style="text-align:right"><span class="cust-cnt ${cntCls}">${r.visits.length}회</span></td>
+      <td style="text-align:center"><span class="cust-last">${r.lastVisit||'-'}</span></td>
+      <td style="text-align:right"><span class="cust-revenue">${fa(r.totalRevenue)}</span></td>
+      <td style="text-align:center"><span class="cust-br" style="color:${brColor}">${esc(brText)}</span></td>
+      <td style="text-align:center"><span class="cust-phone">${fmtPhone}</span></td>
       <td class="cust-memo-cell cust-editable-cell" id="cust-memo-cell-${r.phone}" onclick="startCustMemoEdit('${r.phone}',event)">${memoDisplay}</td>
     </tr>
     <tr class="cust-detail" id="${pid}"><td colspan="8"><div class="cust-detail-inner">
