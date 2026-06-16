@@ -360,13 +360,14 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <button id="delbtn" class="btn btn-danger" onclick="deleteSelected()" disabled>삭제 (0)</button>
   <button class="btn btn-danger" onclick="deleteAll()" style="opacity:0.85">전체 삭제</button>
   <button id="thbtn" class="btn btn-hidden" onclick="toggleHidden()">숨긴 항목</button>
-  <button id="undobtn" class="btn btn-undo" onclick="undoLast()" disabled>뒤로가기</button>
+  <button class="btn btn-undo undobtn" onclick="undoLast()" disabled>뒤로가기</button>
   <button id="rb" class="btn btn-reload" onclick="loadAll()">새로고침</button>
   <button class="btn btn-export" onclick="doExport()">CSV 내보내기</button>
   </div>
   <div id="cust-toolbar-inner" style="display:none;contents">
     <input class="search" id="cust-search-inp" placeholder="이름·전화번호·메모 검색" oninput="filterCustomers(this.value)" style="width:180px">
     <div class="sp"></div>
+    <button class="btn btn-undo undobtn" onclick="undoLast()" disabled>뒤로가기</button>
     <button class="btn btn-reload" onclick="customerAllData=null;remoteContactsReady=false;renderCustomers()">새로고침</button>
   </div>
 </div>
@@ -482,7 +483,7 @@ const CALS=[
 ];
 const TOOL='mcp__7562d3df-f0a0-4481-87e0-f6c4660717b3__list_events';
 let allData=[], ov={}, contacts={};
-let ovHistory=[], _undoing=false;
+let ovHistory=[], contactsHistory=[], _undoing=false;
 let customerAllData=null;
 let remoteContactsReady=false;
 let custSortKey='visits', custSortAsc=false;
@@ -573,12 +574,15 @@ function pushHistory(){
   updateUndoBtn();
 }
 function updateUndoBtn(){
-  const btn=document.getElementById('undobtn');
-  if(!btn)return;
-  btn.disabled=ovHistory.length===0;
-  btn.textContent=`뒤로가기${ovHistory.length?` (${ovHistory.length})`:''}`;
+  const isCust=currentView==='customer';
+  const cnt=isCust?contactsHistory.length:ovHistory.length;
+  document.querySelectorAll('.undobtn').forEach(btn=>{
+    btn.disabled=cnt===0;
+    btn.textContent=`뒤로가기${cnt?` (${cnt})`:''}`;
+  });
 }
 function undoLast(){
+  if(currentView==='customer'){undoLastContacts();return;}
   if(!ovHistory.length)return;
   _undoing=true;
   const snap=ovHistory.pop();
@@ -1685,7 +1689,23 @@ function custSort(key){
   else{custSortKey=key;custSortAsc=false;}
   renderCustomers();
 }
+function pushContactsHistory(){
+  if(_undoing)return;
+  contactsHistory.push(JSON.parse(JSON.stringify(contacts)));
+  if(contactsHistory.length>20)contactsHistory.shift();
+  updateUndoBtn();
+}
+function undoLastContacts(){
+  if(!contactsHistory.length)return;
+  _undoing=true;
+  contacts=contactsHistory.pop();
+  saveRemoteContacts();
+  renderCustomers();
+  _undoing=false;
+  updateUndoBtn();
+}
 function saveContactField(phone,key,val){
+  pushContactsHistory();
   if(!contacts[phone])contacts[phone]={};
   contacts[phone][key]=val.trim();
   saveRemoteContacts();
@@ -1715,6 +1735,7 @@ function switchView(v){
   document.getElementById('tab-customer').classList.toggle('active',v==='customer');
   if(v==='chart')renderChart();
   if(v==='customer')renderCustomers();
+  updateUndoBtn();
 }
 
 function renderChart(){
