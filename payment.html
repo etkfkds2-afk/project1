@@ -1615,6 +1615,7 @@ async function renderCustomers(){
     <col>
     <col>
     <col>
+    <col>
   </colgroup>
   <thead class="cust-thead"><tr>
     ${sortTh('name','이름')}
@@ -1623,12 +1624,14 @@ async function renderCustomers(){
     ${sortTh('last','마지막 방문')}
     ${sortTh('revenue','총매출','r')}
     <th>지점</th>
+    <th>전화번호</th>
     <th>메모</th>
   </tr></thead><tbody>`;
   rows.forEach(r=>{
     const cntCls=r.visits.length>=6?'vhi':r.visits.length>=3?'hi':'';
     const brText=r.branches.map(b=>b.replace('점','')).join('+');
     const brColor=r.branches.length>1?'#7c3aed':r.branches[0]==='문래점'?'#0369a1':'#c2410c';
+    const fmtPhone=r.phone.replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3');
     const pid=`cp_${r.phone}`;
     const searchData=`${r.displayName} ${r.phone} ${r.memo}`.toLowerCase();
     const memoDisplay=r.memo?esc(r.memo):'<span style="color:#d1d5db;font-size:11px">메모 입력</span>';
@@ -1639,9 +1642,10 @@ async function renderCustomers(){
       <td><span class="cust-last">${r.lastVisit||'-'}</span></td>
       <td class="r"><span class="cust-revenue">${fa(r.totalRevenue)}</span></td>
       <td><span class="cust-br" style="color:${brColor}">${esc(brText)}</span></td>
+      <td><span class="cust-phone">${fmtPhone}</span></td>
       <td class="cust-memo-cell cust-editable-cell" id="cust-memo-cell-${r.phone}" onclick="startCustMemoEdit('${r.phone}',event)">${memoDisplay}</td>
     </tr>
-    <tr class="cust-detail" id="${pid}"><td colspan="7"><div class="cust-detail-inner">
+    <tr class="cust-detail" id="${pid}"><td colspan="8"><div class="cust-detail-inner">
       <div class="cust-visits">
         <div class="cust-visit-hdr">방문 이력 (${r.visits.length}건)</div>
         ${r.visits.map(ev=>{
