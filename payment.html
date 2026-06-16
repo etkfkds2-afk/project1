@@ -1349,7 +1349,7 @@ function editCashflowAmount(e,id,key,depositOffset=0){
 
 function openRaw(id,e){
   e?.stopPropagation();
-  const ev=evById(id);if(!ev)return;
+  const ev=evById(id)||(customerAllData?.find(e=>e.id===id));if(!ev)return;
   document.getElementById('rawMeta').innerHTML=`
     <b>원본 제목</b><div>${esc(ev.rawTitle||'-')}</div>
     <b>표시 제목</b><div>${esc(ev.title||'-')}</div>
