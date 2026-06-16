@@ -256,8 +256,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-td-method{font-size:12px;color:#9ca3af;text-align:center;width:78px}
 .cf-td-br{font-size:12px;font-weight:800;text-align:right;width:64px}
 .cf-td-action{text-align:center;width:58px}
-.cf-add{height:26px;padding:0 8px;margin-left:8px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:#374151;font-size:11px;font-weight:800;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .15s}
-.cf-add:hover{background:#f9fafb;border-color:#9ca3af;color:#111827}
+.cf-add{background:none;border:none;padding:0 4px;margin-left:6px;cursor:pointer;font-size:15px;opacity:0;pointer-events:none;transition:opacity .15s;vertical-align:middle;line-height:1}
 .cf-mrow:hover .cf-add{opacity:1;pointer-events:auto}
 .cf-table .editcell{min-height:24px;padding:2px 6px}
 .cf-table .editinp{height:26px;font-size:12px}
@@ -2001,7 +2000,7 @@ function renderChart(){
       <td colspan="8">${LABELS[mo]}${all.length
         ?`<span class="cf-mtotal">${fa(moTotal)}</span><span class="cf-mcnt">${all.length}건</span>`
         :'<span class="cf-mempty">입금 없음</span>'}
-        <button class="cf-add" onclick="addCashflowRow(${mo},event)">추가</button>
+        <button class="cf-add" onclick="addCashflowRow(${mo},event)" title="행 추가">🖊️</button>
         <span class="cf-arrow">▼</span>
       </td></tr></tbody>
     <tbody class="cf-body ${open.has(bid)?'open':''}" id="${bid}">`;
