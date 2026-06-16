@@ -354,7 +354,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   </div>
   <div id="cust-toolbar-inner" style="display:none;contents">
     <input class="search" id="cust-search-inp" placeholder="이름·전화번호·메모 검색" oninput="filterCustomers(this.value)" style="width:180px">
-    <span id="cust-stat" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
     <button class="btn btn-reload" onclick="customerAllData=null;remoteContactsReady=false;renderCustomers()">새로고침</button>
   </div>
 </div>
@@ -421,7 +420,10 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
           <div class="an-sec-title">월별 실입금 내역</div>
           <div class="an-sec-sub">입금날짜 기준 · 월 클릭으로 펼치기</div>
         </div>
-        <span class="an-sec-total" id="an-cf-total"></span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button id="clear-manual-btn" class="btn btn-danger" onclick="clearAllManualRows()" style="display:none;font-size:11px;padding:0 10px;height:28px">직접 추가 항목 전체 삭제</button>
+          <span class="an-sec-total" id="an-cf-total"></span>
+        </div>
       </div>
     </div>
     <div id="cashflow-content"></div>
@@ -1249,6 +1251,22 @@ function deleteManualRow(id,e){
   render();
   if(currentView==='chart')renderChart();
 }
+function clearAllManualRows(){
+  const cnt=manualRows().length;
+  if(!cnt)return;
+  if(!confirm(`직접 추가한 항목 ${cnt}건을 모두 삭제하시겠습니까?`))return;
+  manualRows().forEach(r=>delete ov[r.id]);
+  setManualRows([]);
+  allData=allData.filter(ev=>!ev.manual);
+  saveOv();
+  render();
+  if(currentView==='chart')renderChart();
+  updateClearManualBtn();
+}
+function updateClearManualBtn(){
+  const btn=document.getElementById('clear-manual-btn');
+  if(btn)btn.style.display=manualRows().length?'':'none';
+}
 function restoreRow(id,e){
   e?.stopPropagation();
   setOv(id,'hidden',false);
@@ -1470,8 +1488,6 @@ async function renderCustomers(){
     <div class="cust-kpi-card"><div class="cust-kpi-label">등록 고객</div><div class="cust-kpi-val">${rows.length}<span style="font-size:14px;font-weight:600;color:var(--muted)">명</span></div></div>
     <div class="cust-kpi-card"><div class="cust-kpi-label">총 방문 (2025-27)</div><div class="cust-kpi-val">${totalVisits}<span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
     <div class="cust-kpi-card"><div class="cust-kpi-label">총 매출</div><div class="cust-kpi-val" style="font-size:18px">${fa(totalRev)}</div></div>`;
-  const statEl=document.getElementById('cust-stat');
-  if(statEl)statEl.textContent=`총 ${rows.length}명`;
   function sortTh(key,label,cls=''){
     const active=custSortKey===key;
     const arrow=active?(custSortAsc?'↑':'↓'):'';
@@ -1547,8 +1563,8 @@ function filterCustomers(q){
     if(det)det.classList.toggle('filtered-out',!visible);
     if(visible)shown++;
   });
-  const statEl=document.getElementById('cust-stat');
-  if(statEl)statEl.textContent=lq?`${shown} / ${total}명`:`총 ${total}명`;
+  const kpiEl=document.getElementById('cust-kpi');
+  if(kpiEl&&lq){const first=kpiEl.querySelector('.cust-kpi-val');if(first)first.innerHTML=`${shown}<span style="font-size:14px;font-weight:600;color:var(--muted)">/${total}명</span>`;}
 }
 function toggleCustDetail(phone){
   const row=document.getElementById(`cust-row-${phone}`);
@@ -1781,6 +1797,7 @@ function renderChart(){
   }
   html+=`</table>`;
   document.getElementById('cashflow-content').innerHTML=html;
+  updateClearManualBtn();
 }
 
 function toggleCfMo(id,hdr){
