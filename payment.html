@@ -1329,7 +1329,9 @@ function editCashflowKind(e,id,kind,dateKey,date,amount){
   sel.className='editinp';sel.style.cssText='width:68px;font-size:11px;height:26px;padding:0 4px';
   const host=e.currentTarget;
   host.classList.add('editingcell');host.innerHTML='';host.appendChild(sel);sel.focus();
+  let applied=false;
   const apply=()=>{
+    applied=true;
     const newKind=sel.value;
     if(newKind!==kind){
       if(kind==='예약금'&&newKind==='잔금'){
@@ -1344,7 +1346,7 @@ function editCashflowKind(e,id,kind,dateKey,date,amount){
     renderChart();
   };
   sel.onchange=apply;
-  sel.onblur=()=>{if(document.activeElement!==sel)renderChart();};
+  sel.onblur=()=>{setTimeout(()=>{if(!applied)renderChart();},150)};
 }
 function editCashflowAmount(e,id,key,depositOffset=0){
   e.stopPropagation();
