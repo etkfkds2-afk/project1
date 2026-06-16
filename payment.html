@@ -1584,7 +1584,7 @@ async function renderCustomers(){
     const memo=ct.memo||'';
     const visits=c.visits.slice().sort((a,b)=>b.date.localeCompare(a.date));
     const countableVisits=visits.filter(e=>!/\[취소\]/.test(e.rawTitle||''));
-    const totalRevenue=countableVisits.reduce((s,e)=>s+Number(e.netIn||0),0);
+    const totalRevenue=visits.reduce((s,e)=>s+Number(e.netIn||0),0);
     const lastVisit=countableVisits[0]?.date||visits[0]?.date||'';
     const branches=[...new Set(countableVisits.map(e=>normalizeBranch(e.branch)))];
     return{phone:c.phone,displayName,autoName:c.autoName,memo,visits,countableVisits,totalRevenue,lastVisit,branches};
