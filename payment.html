@@ -1609,22 +1609,22 @@ async function renderCustomers(){
   <colgroup>
     <col style="width:11%">
     <col style="width:8%">
+    <col style="width:8%">
     <col style="width:11%">
     <col style="width:12%">
     <col style="width:7%">
     <col style="width:13%">
     <col>
-    <col style="width:8%">
   </colgroup>
   <thead class="cust-thead"><tr>
     ${sortTh('name','이름')}
+    <th></th>
     ${sortTh('visits','방문횟수','r')}
     ${sortTh('last','마지막 방문')}
     ${sortTh('revenue','총매출','r')}
     <th>지점</th>
     <th>전화번호</th>
     <th>메모</th>
-    <th></th>
   </tr></thead><tbody>`;
   rows.forEach(r=>{
     const cntCls=r.visits.length>=6?'vhi':r.visits.length>=3?'hi':'';
@@ -1636,13 +1636,13 @@ async function renderCustomers(){
     const memoDisplay=r.memo?esc(r.memo):'<span style="color:#d1d5db;font-size:11px">메모 입력</span>';
     html+=`<tr class="cust-row" id="cust-row-${r.phone}" data-search="${esc(searchData)}">
       <td class="cust-editable-cell" style="text-align:center" onclick="startCustNameEdit('${r.phone}',event)"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span></td>
+      <td style="text-align:center"><button class="cust-hist-btn" onclick="toggleCustDetail('${r.phone}')">방문이력</button></td>
       <td style="text-align:right"><span class="cust-cnt ${cntCls}">${r.visits.length}회</span></td>
       <td style="text-align:center"><span class="cust-last">${r.lastVisit||'-'}</span></td>
       <td style="text-align:right"><span class="cust-revenue">${fa(r.totalRevenue)}</span></td>
       <td style="text-align:center"><span class="cust-br" style="color:${brColor}">${esc(brText)}</span></td>
       <td style="text-align:center"><span class="cust-phone">${fmtPhone}</span></td>
       <td class="cust-memo-cell cust-editable-cell" id="cust-memo-cell-${r.phone}" onclick="startCustMemoEdit('${r.phone}',event)">${memoDisplay}</td>
-      <td style="text-align:center"><button class="cust-hist-btn" onclick="toggleCustDetail('${r.phone}')">방문이력</button></td>
     </tr>
     <tr class="cust-detail" id="${pid}"><td colspan="8"><div class="cust-detail-inner">
       <div class="cust-visits">
