@@ -252,11 +252,11 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-br-hdr td>span:first-child{display:inline-flex;align-items:center;gap:6px}
 .cf-br-hdr td>span:first-child::before{content:'';display:inline-block;width:3px;height:13px;border-radius:2px;background:currentColor}
 /* ── 고객관리 ── */
-#view-customer{padding:24px 28px 48px;display:none}
-.cust-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
-.cust-search{height:34px;padding:0 12px;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;color:var(--text);background:#fff;min-width:200px}
-.cust-search:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px #2563eb22}
-.cust-stat{font-size:12px;color:var(--muted);margin-left:auto}
+#view-customer{padding:20px 28px 48px;display:none}
+.cust-kpi{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.cust-kpi-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 20px;box-shadow:var(--shadow);min-width:130px}
+.cust-kpi-label{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:4px}
+.cust-kpi-val{font-size:24px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1}
 .cust-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);border-radius:10px;border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow)}
 .cust-thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#6b7280;background:#f8fafc;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
 .cust-thead th.r{text-align:right}
@@ -347,11 +347,15 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <input id="sq" class="search" placeholder="검색" oninput="render()">
   <div class="sp"></div>
   <button id="delbtn" class="btn btn-danger" onclick="deleteSelected()" disabled>삭제 (0)</button>
-  <button class="btn btn-add" onclick="addManualRow()">행 추가</button>
   <button class="btn btn-danger" onclick="deleteAll()" style="opacity:0.85">전체 삭제</button>
   <button id="thbtn" class="btn btn-hidden" onclick="toggleHidden()">숨긴 항목</button>
   <button id="rb" class="btn btn-reload" onclick="loadAll()">새로고침</button>
   <button class="btn btn-export" onclick="doExport()">CSV 내보내기</button>
+  </div>
+  <div id="cust-toolbar-inner" style="display:none;contents">
+    <input class="search" id="cust-search-inp" placeholder="이름·전화번호·메모 검색" oninput="filterCustomers(this.value)" style="width:180px">
+    <span id="cust-stat" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
+    <button class="btn btn-reload" onclick="customerAllData=null;remoteContactsReady=false;renderCustomers()">새로고침</button>
   </div>
 </div>
 <div id="view-table">
@@ -424,11 +428,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   </div>
 </div>
 <div id="view-customer">
-  <div class="cust-toolbar">
-    <input class="cust-search" id="cust-search-inp" placeholder="이름·전화번호·메모 검색..." oninput="filterCustomers(this.value)">
-    <span class="cust-stat" id="cust-stat"></span>
-    <button class="cf-add" style="margin-left:0" onclick="customerAllData=null;remoteContactsReady=false;renderCustomers()">새로고침</button>
-  </div>
+  <div id="cust-kpi" class="cust-kpi"></div>
   <div id="cust-content"><div class="cust-loading"><div class="spin"></div>고객 데이터 로딩 중...</div></div>
 </div>
 <div id="rawModal" class="modal" onclick="closeRaw(event)">
@@ -1240,6 +1240,15 @@ function hideRow(id,e){
   setOv(id,'hidden',true);
   render();
 }
+function deleteManualRow(id,e){
+  e?.stopPropagation();
+  setManualRows(manualRows().filter(r=>r.id!==id));
+  allData=allData.filter(ev=>ev.id!==id);
+  delete ov[id];
+  saveOv();
+  render();
+  if(currentView==='chart')renderChart();
+}
 function restoreRow(id,e){
   e?.stopPropagation();
   setOv(id,'hidden',false);
@@ -1366,9 +1375,14 @@ function parsePhone(raw){
   const m=(raw||'').match(/01[0-9]-?\d{3,4}-?\d{4}/);
   return m?m[0].replace(/-/g,''):'';
 }
-const NAME_BLACKLIST=/^(개인계좌|법인계좌|법인|개인|현금|세금계산서|계산서|카드|신신페이|기타)$/;
+const NAME_BLACKLIST_WORDS=['개인계좌','법인계좌','세금계산서','계산서','법인','개인','현금','카드','신신페이','기타','입금','추가입금'];
 function nameFromTxns(txns){
-  for(const t of(txns||[])){if(t.name&&!NAME_BLACKLIST.test(t.name.trim()))return t.name.trim();}
+  for(const t of(txns||[])){
+    const n=t.name?.trim();
+    if(!n)continue;
+    if(NAME_BLACKLIST_WORDS.some(w=>n===w||n.startsWith(w+' ')||n.startsWith(w+'계')))continue;
+    return n;
+  }
   return'';
 }
 function nameFromTitle(title){
@@ -1449,6 +1463,13 @@ async function renderCustomers(){
   else if(custSortKey==='revenue')rows.sort((a,b)=>custSortAsc?a.totalRevenue-b.totalRevenue:b.totalRevenue-a.totalRevenue);
   else if(custSortKey==='last')rows.sort((a,b)=>custSortAsc?a.lastVisit.localeCompare(b.lastVisit):b.lastVisit.localeCompare(a.lastVisit));
   else if(custSortKey==='name')rows.sort((a,b)=>custSortAsc?a.displayName.localeCompare(b.displayName,'ko'):b.displayName.localeCompare(a.displayName,'ko'));
+  const totalVisits=rows.reduce((s,r)=>s+r.visits.length,0);
+  const totalRev=rows.reduce((s,r)=>s+r.totalRevenue,0);
+  const kpiEl=document.getElementById('cust-kpi');
+  if(kpiEl)kpiEl.innerHTML=`
+    <div class="cust-kpi-card"><div class="cust-kpi-label">등록 고객</div><div class="cust-kpi-val">${rows.length}<span style="font-size:14px;font-weight:600;color:var(--muted)">명</span></div></div>
+    <div class="cust-kpi-card"><div class="cust-kpi-label">총 방문 (2025-27)</div><div class="cust-kpi-val">${totalVisits}<span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
+    <div class="cust-kpi-card"><div class="cust-kpi-label">총 매출</div><div class="cust-kpi-val" style="font-size:18px">${fa(totalRev)}</div></div>`;
   const statEl=document.getElementById('cust-stat');
   if(statEl)statEl.textContent=`총 ${rows.length}명`;
   function sortTh(key,label,cls=''){
@@ -1527,7 +1548,7 @@ function filterCustomers(q){
     if(visible)shown++;
   });
   const statEl=document.getElementById('cust-stat');
-  if(statEl)statEl.textContent=lq?`${shown}/${total}명`:`총 ${total}명`;
+  if(statEl)statEl.textContent=lq?`${shown} / ${total}명`:`총 ${total}명`;
 }
 function toggleCustDetail(phone){
   const row=document.getElementById(`cust-row-${phone}`);
@@ -1565,6 +1586,7 @@ function switchView(v){
   document.getElementById('view-chart').style.display=v==='chart'?'block':'none';
   document.getElementById('view-customer').style.display=v==='customer'?'block':'none';
   document.getElementById('toolbar-controls').style.display=v==='customer'?'none':'contents';
+  document.getElementById('cust-toolbar-inner').style.display=v==='customer'?'contents':'none';
   document.getElementById('tab-table').classList.toggle('active',v==='table');
   document.getElementById('tab-chart').classList.toggle('active',v==='chart');
   document.getElementById('tab-customer').classList.toggle('active',v==='customer');
@@ -1751,7 +1773,7 @@ function renderChart(){
           <td class="cf-td-amt"><span class="editcell amt" data-val="${p.amount}" onclick="editCashflowAmount(event,'${p.e.id}','${p.amountKey}',${Number(p.depositOffset)||0})">${fa(p.amount)}</span></td>
           <td class="cf-td-method">${cell(p.e.id,'methodsText',methodText,'text')}</td>
           <td class="cf-td-br" style="color:${bc}">${cell(p.e.id,'branch',p.e.branch,'select')}</td>
-          <td class="cf-td-action"><button class="delbtn" onclick="hideRow('${p.e.id}',event)" title="숨기기">숨김</button></td>
+          <td class="cf-td-action">${p.e.manual?`<button class="delbtn" onclick="deleteManualRow('${p.e.id}',event)">삭제</button>`:`<button class="delbtn" onclick="hideRow('${p.e.id}',event)" title="숨기기">숨김</button>`}</td>
         </tr>`;
       });
     });
