@@ -1697,7 +1697,7 @@ function startCustNameEdit(phone,e){
   e.stopPropagation();
   const nameSpan=document.getElementById(`cust-name-txt-${phone}`);
   if(!nameSpan||nameSpan.querySelector('input'))return;
-  const cur=contacts[phone]?.name||'';
+  const cur=contacts[phone]?.name||nameSpan.textContent.trim()||'';
   const inp=document.createElement('input');
   inp.className='cust-inline-inp';
   inp.value=cur;
