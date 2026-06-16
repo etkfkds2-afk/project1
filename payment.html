@@ -276,8 +276,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-row:hover{background:#f8faff}
 .cust-row.open{background:#f0f7ff}
 .cust-row td{padding:12px 14px;border-bottom:1px solid #f1f3f6;vertical-align:middle}
-.cust-name{font-weight:700;color:#111827;font-size:14px}
-.cust-name-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-name-wrap{display:flex;align-items:center;gap:6px}
+.cust-name-text{font-weight:700;color:#111827;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cust-editable-cell{cursor:text}
 .cust-editable-cell:hover{background:#f8faff}
 .cust-hist-btn{border:1px solid #e0e7ff;background:#f5f3ff;color:#6366f1;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;white-space:nowrap;transition:all .15s}
@@ -1603,16 +1603,15 @@ async function renderCustomers(){
     return`<th class="${cls}" onclick="custSort('${key}')">${label}${active?` <span style="color:var(--blue)">${arrow}</span>`:' <span style="color:#d1d5db;font-size:9px">↕</span>'}</th>`;
   }
   if(!rows.length){el.innerHTML='<div class="cust-loading">전화번호가 등록된 고객이 없습니다.</div>';return;}
-  let html=`<table class="cust-table">
+  let html=`<table class="cust-table" style="table-layout:fixed">
   <colgroup>
-    <col style="width:130px">
-    <col style="width:120px">
+    <col style="width:180px">
+    <col style="width:125px">
     <col style="width:55px">
-    <col style="width:110px">
+    <col style="width:115px">
     <col style="width:65px">
     <col style="width:100px">
-    <col>
-    <col style="width:72px">
+    <col style="width:160px">
   </colgroup>
   <thead class="cust-thead"><tr>
     ${sortTh('name','이름')}
@@ -1622,7 +1621,6 @@ async function renderCustomers(){
     <th>지점</th>
     ${sortTh('last','마지막 방문')}
     <th>메모</th>
-    <th></th>
   </tr></thead><tbody>`;
   rows.forEach(r=>{
     const cntCls=r.visits.length>=6?'vhi':r.visits.length>=3?'hi':'';
@@ -1633,16 +1631,15 @@ async function renderCustomers(){
     const searchData=`${r.displayName} ${r.phone} ${r.memo}`.toLowerCase();
     const memoDisplay=r.memo?esc(r.memo):'<span style="color:#d1d5db;font-size:11px">메모 입력</span>';
     html+=`<tr class="cust-row" id="cust-row-${r.phone}" data-search="${esc(searchData)}">
-      <td onclick="startCustNameEdit('${r.phone}',event)" class="cust-editable-cell"><span class="cust-name"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span></span></td>
+      <td class="cust-editable-cell" onclick="startCustNameEdit('${r.phone}',event)"><div class="cust-name-wrap"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span><button class="cust-hist-btn" onclick="toggleCustDetail('${r.phone}');event.stopPropagation()">방문이력</button></div></td>
       <td><span class="cust-phone">${fmtPhone}</span></td>
       <td style="text-align:right"><span class="cust-cnt ${cntCls}">${r.visits.length}회</span></td>
       <td style="text-align:right"><span class="cust-revenue">${fa(r.totalRevenue)}</span></td>
       <td><span class="cust-br" style="color:${brColor}">${esc(brText)}</span></td>
       <td><span class="cust-last">${r.lastVisit||'-'}</span></td>
       <td class="cust-memo-cell cust-editable-cell" id="cust-memo-cell-${r.phone}" onclick="startCustMemoEdit('${r.phone}',event)">${memoDisplay}</td>
-      <td style="text-align:center"><button class="cust-hist-btn" onclick="toggleCustDetail('${r.phone}')">방문이력</button></td>
     </tr>
-    <tr class="cust-detail" id="${pid}"><td colspan="8"><div class="cust-detail-inner">
+    <tr class="cust-detail" id="${pid}"><td colspan="7"><div class="cust-detail-inner">
       <div class="cust-visits">
         <div class="cust-visit-hdr">방문 이력 (${r.visits.length}건)</div>
         ${r.visits.map(ev=>{
