@@ -247,16 +247,18 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-td-title .titlecell .rawbtn{flex-shrink:0}
 .cf-td-evdate{font-size:12px;color:#9ca3af;width:90px}
 .cf-td-lbl{text-align:center;width:56px}
-.cf-ilbl{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;white-space:nowrap;cursor:pointer}
-.cf-ilbl:hover{filter:brightness(.92)}
+.cf-ilbl{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;white-space:nowrap}
+.cf-ilbl[onclick]{cursor:pointer}
+.cf-ilbl[onclick]:hover{filter:brightness(.92)}
 .cf-ilbl.bal{color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe}
 .cf-ilbl.res{color:#0369a1;background:#e0f2fe;border:1px solid #bae6fd}
 .cf-td-amt{text-align:right;font-weight:850;font-size:14px;font-variant-numeric:tabular-nums;color:#111827;width:110px}
 .cf-td-method{font-size:12px;color:#9ca3af;text-align:center;width:78px}
 .cf-td-br{font-size:12px;font-weight:800;text-align:right;width:64px}
 .cf-td-action{text-align:center;width:58px}
-.cf-add{height:26px;padding:0 8px;margin-left:8px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:#374151;font-size:11px;font-weight:800;cursor:pointer}
+.cf-add{height:26px;padding:0 8px;margin-left:8px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:#374151;font-size:11px;font-weight:800;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .15s}
 .cf-add:hover{background:#f9fafb;border-color:#9ca3af;color:#111827}
+.cf-mrow:hover .cf-add{opacity:1;pointer-events:auto}
 .cf-table .editcell{min-height:24px;padding:2px 6px}
 .cf-table .editinp{height:26px;font-size:12px}
 .cf-br-hdr td{padding:5px 14px;background:#f8fafc;border-top:1px solid var(--line);border-bottom:1px solid #e5e7eb}
@@ -2020,7 +2022,7 @@ function renderChart(){
           <td class="cf-td-date">${cell(p.e.id,p.dateKey,p.date,'date')}</td>
           <td class="cf-td-title"><div class="titlecell"><span>${cell(p.e.id,'title',p.e.title,'text')}</span><button class="rawbtn" onclick="openRaw('${p.e.id}',event)">원문</button></div></td>
           <td class="cf-td-evdate">${cell(p.e.id,'date',p.e.date,'date')}</td>
-          <td class="cf-td-lbl"><span class="cf-ilbl ${p.isRes?'res':'bal'}" onclick="editCashflowKind(event,'${p.e.id}','${p.kind}','${p.dateKey}','${p.date}',${p.amount})">${p.isRes?'예약금':'잔금'}</span></td>
+          <td class="cf-td-lbl"><span class="cf-ilbl ${p.isRes?'res':'bal'}"${p.e.manual?'':` onclick="editCashflowKind(event,'${p.e.id}','${p.kind}','${p.dateKey}','${p.date}',${p.amount})"`}>${p.isRes?'예약금':'잔금'}</span></td>
           <td class="cf-td-amt"><span class="editcell amt" data-val="${p.amount}" onclick="editCashflowAmount(event,'${p.e.id}','${p.amountKey}',${Number(p.depositOffset)||0})">${fa(p.amount)}</span></td>
           <td class="cf-td-method">${cell(p.e.id,'methodsText',methodText,'text')}</td>
           <td class="cf-td-br" style="color:${bc}">${cell(p.e.id,'branch',p.e.branch,'select')}</td>
