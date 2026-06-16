@@ -81,13 +81,13 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .paycell{white-space:normal;text-align:center;overflow:visible}
 .paycell .bdg{width:100%;max-width:112px;min-height:30px;padding:5px 8px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-align:center;line-height:1.25}
 .paycell .editcell{white-space:normal;justify-content:center;text-align:center;overflow-wrap:anywhere}
-.date2{font-size:13px;line-height:1.45}
+.date2{font-size:13px;line-height:1.45;position:relative}
 .date2 .sub{display:block;color:#8b95a1;font-size:12px;margin-top:3px}
 .bal2row{margin-top:5px;padding-top:4px;border-top:1px dashed #e2e8f0;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .bal2lbl{color:#94a3b8;font-size:11px;font-weight:700}
 .bal2rm{border:none;background:transparent;color:#cbd5e1;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;font-weight:700;transition:color .15s}
 .bal2rm:hover{color:#ef4444}
-.bal2add{border:1px dashed #cbd5e1;background:transparent;color:#94a3b8;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px;margin-top:4px;line-height:1.4;transition:all .15s;opacity:0;pointer-events:none}
+.bal2add{position:absolute;bottom:-2px;right:0;border:1px dashed #cbd5e1;background:#fff;color:#94a3b8;cursor:pointer;font-size:10px;padding:1px 5px;border-radius:4px;line-height:1.4;transition:all .15s;opacity:0;pointer-events:none}
 .bal2add:hover{border-color:#6366f1;color:#6366f1;background:#eef2ff}
 .gcell:hover .bal2add{opacity:1;pointer-events:auto}
 .oktxt{color:var(--green);font-weight:700}.waittxt{color:var(--amber);font-weight:700}.badtxt{color:var(--red);font-weight:700}
