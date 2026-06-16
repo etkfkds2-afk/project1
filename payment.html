@@ -1627,21 +1627,25 @@ async function renderCustomers(){
     <th>메모</th>
   </tr></thead><tbody>`;
   rows.forEach(r=>{
-    const cntCls=r.visits.length>=6?'vhi':r.visits.length>=3?'hi':'';
-    const brText=r.branches.map(b=>b.replace('점','')).join('+');
+    const ct=contacts[r.phone]||{};
+    const visitCount=ct.visitCount??r.visits.length;
+    const cntCls=visitCount>=6?'vhi':visitCount>=3?'hi':'';
+    const lastVisit=ct.lastVisit||r.lastVisit||'-';
+    const totalRevenue=ct.totalRevenue!=null?Number(ct.totalRevenue):r.totalRevenue;
+    const brText=ct.branch||(r.branches.map(b=>b.replace('점','')).join('+'));
     const brColor=r.branches.length>1?'#7c3aed':r.branches[0]==='문래점'?'#0369a1':'#c2410c';
-    const fmtPhone=r.phone.replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3');
+    const fmtPhone=ct.phoneDisplay||(r.phone.replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3'));
     const pid=`cp_${r.phone}`;
     const searchData=`${r.displayName} ${r.phone} ${r.memo}`.toLowerCase();
     const memoDisplay=r.memo?esc(r.memo):'<span style="color:#d1d5db;font-size:11px">메모 입력</span>';
     html+=`<tr class="cust-row" id="cust-row-${r.phone}" data-search="${esc(searchData)}">
       <td class="cust-editable-cell" style="text-align:center" onclick="startCustNameEdit('${r.phone}',event)"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span></td>
       <td style="text-align:center"><button class="cust-hist-btn" onclick="toggleCustDetail('${r.phone}')">방문이력</button></td>
-      <td style="text-align:right"><span class="cust-cnt ${cntCls}">${r.visits.length}회</span></td>
-      <td style="text-align:center"><span class="cust-last">${r.lastVisit||'-'}</span></td>
-      <td style="text-align:right"><span class="cust-revenue">${fa(r.totalRevenue)}</span></td>
-      <td style="text-align:center"><span class="cust-br" style="color:${brColor}">${esc(brText)}</span></td>
-      <td style="text-align:center"><span class="cust-phone">${fmtPhone}</span></td>
+      <td class="cust-editable-cell" style="text-align:right" onclick="startCustFieldEdit('${r.phone}','visitCount','${visitCount}',event)"><span class="cust-cnt ${cntCls}" id="cust-f-visitCount-${r.phone}">${visitCount}회</span></td>
+      <td class="cust-editable-cell" style="text-align:center" onclick="startCustFieldEdit('${r.phone}','lastVisit','${lastVisit}',event)"><span class="cust-last" id="cust-f-lastVisit-${r.phone}">${esc(lastVisit)}</span></td>
+      <td class="cust-editable-cell" style="text-align:right" onclick="startCustFieldEdit('${r.phone}','totalRevenue','${totalRevenue}',event)"><span class="cust-revenue" id="cust-f-totalRevenue-${r.phone}">${fa(totalRevenue)}</span></td>
+      <td class="cust-editable-cell" style="text-align:center" onclick="startCustFieldEdit('${r.phone}','branch','${esc(brText)}',event)"><span class="cust-br" style="color:${brColor}" id="cust-f-branch-${r.phone}">${esc(brText)}</span></td>
+      <td class="cust-editable-cell" style="text-align:center" onclick="startCustFieldEdit('${r.phone}','phoneDisplay','${fmtPhone}',event)"><span class="cust-phone" id="cust-f-phoneDisplay-${r.phone}">${fmtPhone}</span></td>
       <td class="cust-memo-cell cust-editable-cell" id="cust-memo-cell-${r.phone}" onclick="startCustMemoEdit('${r.phone}',event)">${memoDisplay}</td>
     </tr>
     <tr class="cust-detail" id="${pid}"><td colspan="8"><div class="cust-detail-inner">
@@ -1692,6 +1696,44 @@ function custSort(key){
   if(custSortKey===key)custSortAsc=!custSortAsc;
   else{custSortKey=key;custSortAsc=false;}
   renderCustomers();
+}
+function startCustFieldEdit(phone,field,curVal,e){
+  e.stopPropagation();
+  const span=document.getElementById(`cust-f-${field}-${phone}`);
+  if(!span||span.querySelector('input'))return;
+  const cur=contacts[phone]?.[field]??curVal;
+  const inp=document.createElement('input');
+  inp.className='cust-inline-inp';
+  inp.value=cur==='회'?cur.replace('회',''):cur;
+  inp.style.cssText='width:100%;text-align:inherit';
+  span.innerHTML='';
+  span.appendChild(inp);
+  inp.focus();inp.select();
+  const commit=()=>{
+    const val=inp.value.trim();
+    if(val===''||val===curVal){
+      // 변경없으면 원래대로
+      renderCustFieldSpan(phone,field,curVal);
+      return;
+    }
+    pushContactsHistory();
+    if(!contacts[phone])contacts[phone]={};
+    contacts[phone][field]=val;
+    saveRemoteContacts();
+    renderCustFieldSpan(phone,field,val);
+  };
+  inp.onblur=commit;
+  inp.onkeydown=ev=>{
+    if(ev.key==='Enter'){ev.preventDefault();inp.blur();}
+    if(ev.key==='Escape'){renderCustFieldSpan(phone,field,curVal);inp.onblur=null;}
+  };
+}
+function renderCustFieldSpan(phone,field,val){
+  const span=document.getElementById(`cust-f-${field}-${phone}`);
+  if(!span)return;
+  if(field==='visitCount')span.textContent=val+'회';
+  else if(field==='totalRevenue')span.textContent=fa(Number(String(val).replace(/[^0-9]/g,''))||0);
+  else span.textContent=val;
 }
 function startCustNameEdit(phone,e){
   e.stopPropagation();
