@@ -277,7 +277,10 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-row.open{background:#f0f7ff}
 .cust-row td{padding:12px 14px;border-bottom:1px solid #f1f3f6;vertical-align:middle}
 .cust-name{font-weight:700;color:#111827;font-size:14px;display:flex;align-items:center;gap:4px}
-.cust-name-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-name-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-edit-btn{border:none;background:transparent;color:#c7d2fe;cursor:pointer;font-size:12px;padding:0 2px;line-height:1;flex-shrink:0;opacity:0;transition:opacity .15s}
+.cust-row:hover .cust-edit-btn{opacity:1}
+.cust-edit-btn:hover{color:#6366f1}
 .cust-phone{font-size:13px;color:#4b5563;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cust-cnt{display:inline-block;font-size:12px;font-weight:800;border-radius:12px;padding:2px 9px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
 .cust-cnt.hi{background:#f0fdf4;color:#16a34a;border-color:#bbf7d0}
@@ -1604,13 +1607,13 @@ async function renderCustomers(){
   if(!rows.length){el.innerHTML='<div class="cust-loading">전화번호가 등록된 고객이 없습니다.</div>';return;}
   let html=`<table class="cust-table">
   <colgroup>
-    <col style="width:130px">
-    <col style="width:130px">
-    <col style="width:60px">
-    <col style="width:120px">
-    <col style="width:70px">
-    <col style="width:100px">
-    <col>
+    <col style="width:150px">
+    <col style="width:125px">
+    <col style="width:58px">
+    <col style="width:115px">
+    <col style="width:68px">
+    <col style="width:105px">
+    <col style="width:200px">
   </colgroup>
   <thead class="cust-thead"><tr>
     ${sortTh('name','이름')}
@@ -1630,7 +1633,7 @@ async function renderCustomers(){
     const searchData=`${r.displayName} ${r.phone} ${r.memo}`.toLowerCase();
     const memoDisplay=r.memo?esc(r.memo):'<span style="color:#d1d5db">-</span>';
     html+=`<tr class="cust-row" id="cust-row-${r.phone}" data-search="${esc(searchData)}" onclick="toggleCustDetail('${r.phone}')">
-      <td onclick="startCustNameEdit('${r.phone}',event)"><span class="cust-name"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span><span class="cust-arrow">▼</span></span></td>
+      <td><span class="cust-name"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span><button class="cust-edit-btn" onclick="startCustNameEdit('${r.phone}',event)" title="이름 수정">✎</button><span class="cust-arrow">▼</span></span></td>
       <td><span class="cust-phone">${fmtPhone}</span></td>
       <td style="text-align:right"><span class="cust-cnt ${cntCls}">${r.visits.length}회</span></td>
       <td style="text-align:right"><span class="cust-revenue">${fa(r.totalRevenue)}</span></td>
