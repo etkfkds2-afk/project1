@@ -276,24 +276,25 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-row:hover{background:#f8faff}
 .cust-row.open{background:#f0f7ff}
 .cust-row td{padding:12px 14px;border-bottom:1px solid #f1f3f6;vertical-align:middle}
-.cust-name{font-weight:700;color:#111827;font-size:14px}
-.cust-phone{font-size:13px;color:#4b5563;font-variant-numeric:tabular-nums}
+.cust-name{font-weight:700;color:#111827;font-size:14px;display:flex;align-items:center;gap:4px}
+.cust-name-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-phone{font-size:13px;color:#4b5563;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cust-cnt{display:inline-block;font-size:12px;font-weight:800;border-radius:12px;padding:2px 9px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
 .cust-cnt.hi{background:#f0fdf4;color:#16a34a;border-color:#bbf7d0}
 .cust-cnt.vhi{background:#fdf4ff;color:#7e22ce;border-color:#e9d5ff}
 .cust-revenue{font-weight:850;font-size:14px;font-variant-numeric:tabular-nums;color:#111827}
-.cust-br{font-size:12px;font-weight:700}
-.cust-last{font-size:12px;color:#6b7280;font-variant-numeric:tabular-nums}
-.cust-memo{font-size:12px;color:#9ca3af;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cust-arrow{float:right;color:#9ca3af;font-size:10px;transition:transform .2s;margin-left:6px}
+.cust-br{font-size:12px;font-weight:700;white-space:nowrap}
+.cust-last{font-size:12px;color:#6b7280;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cust-memo-cell{color:#9ca3af;font-size:12px;cursor:text}
+.cust-memo-cell:hover{color:#374151}
+.cust-arrow{color:#9ca3af;font-size:10px;transition:transform .2s;flex-shrink:0}
 .cust-row.open .cust-arrow{transform:rotate(180deg)}
 .cust-detail{display:none;background:#f8fafc}
 .cust-detail.open{display:table-row-group}
 .cust-detail>td{padding:0;border-bottom:1px solid var(--line)}
-.cust-detail-inner{padding:14px 20px 18px 36px}
-.cust-edit-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
-.cust-edit-inp{height:30px;padding:0 10px;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;color:var(--text);background:#fff;min-width:160px}
-.cust-edit-inp:focus{outline:none;border-color:var(--blue)}
+.cust-detail-inner{padding:12px 20px 16px 20px}
+.cust-inline-inp{height:26px;padding:0 8px;border:1.5px solid var(--blue);border-radius:5px;font-size:13px;color:var(--text);background:#fff;outline:none;width:100%;box-sizing:border-box}
+.cust-memo-inp{height:26px;padding:0 8px;border:1.5px solid var(--blue);border-radius:5px;font-size:12px;color:var(--text);background:#fff;outline:none;width:100%;box-sizing:border-box}
 .cust-visits{margin-top:8px}
 .cust-visit-hdr{font-size:11px;font-weight:800;color:#6b7280;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
 .cust-visit-row{display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid #f1f3f6;font-size:13px}
@@ -1602,6 +1603,15 @@ async function renderCustomers(){
   }
   if(!rows.length){el.innerHTML='<div class="cust-loading">전화번호가 등록된 고객이 없습니다.</div>';return;}
   let html=`<table class="cust-table">
+  <colgroup>
+    <col style="width:130px">
+    <col style="width:130px">
+    <col style="width:60px">
+    <col style="width:120px">
+    <col style="width:70px">
+    <col style="width:100px">
+    <col>
+  </colgroup>
   <thead class="cust-thead"><tr>
     ${sortTh('name','이름')}
     <th>전화번호</th>
@@ -1618,20 +1628,17 @@ async function renderCustomers(){
     const fmtPhone=r.phone.replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3');
     const pid=`cp_${r.phone}`;
     const searchData=`${r.displayName} ${r.phone} ${r.memo}`.toLowerCase();
+    const memoDisplay=r.memo?esc(r.memo):'<span style="color:#d1d5db">-</span>';
     html+=`<tr class="cust-row" id="cust-row-${r.phone}" data-search="${esc(searchData)}" onclick="toggleCustDetail('${r.phone}')">
-      <td><span class="cust-name">${esc(r.displayName)}<span class="cust-arrow">▼</span></span></td>
+      <td onclick="startCustNameEdit('${r.phone}',event)"><span class="cust-name"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span><span class="cust-arrow">▼</span></span></td>
       <td><span class="cust-phone">${fmtPhone}</span></td>
       <td style="text-align:right"><span class="cust-cnt ${cntCls}">${r.visits.length}회</span></td>
       <td style="text-align:right"><span class="cust-revenue">${fa(r.totalRevenue)}</span></td>
       <td><span class="cust-br" style="color:${brColor}">${esc(brText)}</span></td>
       <td><span class="cust-last">${r.lastVisit||'-'}</span></td>
-      <td><span class="cust-memo">${r.memo?esc(r.memo):'<span style="color:#d1d5db">-</span>'}</span></td>
+      <td class="cust-memo-cell" id="cust-memo-cell-${r.phone}" onclick="startCustMemoEdit('${r.phone}',event)">${memoDisplay}</td>
     </tr>
     <tr class="cust-detail" id="${pid}"><td colspan="7"><div class="cust-detail-inner">
-      <div class="cust-edit-row">
-        <input class="cust-edit-inp" id="cust-name-${r.phone}" value="${esc(contacts[r.phone]?.name||r.autoName||'')}" placeholder="${esc(r.autoName||'이름')}" onclick="event.stopPropagation()" onblur="event.stopPropagation();saveContactField('${r.phone}','name',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();saveContactField('${r.phone}','name',this.value);this.blur()}">
-        <input class="cust-edit-inp" id="cust-memo-${r.phone}" value="${esc(r.memo)}" placeholder="메모" onclick="event.stopPropagation()" onblur="event.stopPropagation();saveContactField('${r.phone}','memo',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();saveContactField('${r.phone}','memo',this.value);this.blur()}">
-      </div>
       <div class="cust-visits">
         <div class="cust-visit-hdr">방문 이력 (${r.visits.length}건)</div>
         ${r.visits.map(ev=>{
@@ -1680,6 +1687,52 @@ function custSort(key){
   else{custSortKey=key;custSortAsc=false;}
   renderCustomers();
 }
+function startCustNameEdit(phone,e){
+  e.stopPropagation();
+  const nameSpan=document.getElementById(`cust-name-txt-${phone}`);
+  if(!nameSpan||nameSpan.querySelector('input'))return;
+  const cur=contacts[phone]?.name||'';
+  const inp=document.createElement('input');
+  inp.className='cust-inline-inp';
+  inp.value=cur;
+  inp.placeholder='이름';
+  nameSpan.textContent='';
+  nameSpan.appendChild(inp);
+  inp.focus();inp.select();
+  const commit=()=>{
+    const val=inp.value.trim();
+    saveContactField(phone,'name',val);
+    nameSpan.textContent=val||(contacts[phone]?.autoName||'이름 없음');
+  };
+  inp.onblur=commit;
+  inp.onkeydown=ev=>{
+    if(ev.key==='Enter'){ev.preventDefault();inp.blur();}
+    if(ev.key==='Escape'){nameSpan.textContent=cur||(contacts[phone]?.autoName||'이름 없음');inp.onblur=null;}
+  };
+}
+function startCustMemoEdit(phone,e){
+  e.stopPropagation();
+  const cell=document.getElementById(`cust-memo-cell-${phone}`);
+  if(!cell||cell.querySelector('input'))return;
+  const cur=contacts[phone]?.memo||'';
+  const inp=document.createElement('input');
+  inp.className='cust-memo-inp';
+  inp.value=cur;
+  inp.placeholder='메모 입력...';
+  cell.innerHTML='';
+  cell.appendChild(inp);
+  inp.focus();
+  const commit=()=>{
+    const val=inp.value.trim();
+    saveContactField(phone,'memo',val);
+    cell.innerHTML=val?esc(val):'<span style="color:#d1d5db">-</span>';
+  };
+  inp.onblur=commit;
+  inp.onkeydown=ev=>{
+    if(ev.key==='Enter'){ev.preventDefault();inp.blur();}
+    if(ev.key==='Escape'){cell.innerHTML=cur?esc(cur):'<span style="color:#d1d5db">-</span>';inp.onblur=null;}
+  };
+}
 function pushContactsHistory(){
   if(_undoing)return;
   contactsHistory.push(JSON.parse(JSON.stringify(contacts)));
@@ -1703,13 +1756,13 @@ function saveContactField(phone,key,val){
   const row=document.getElementById(`cust-row-${phone}`);
   if(row){
     if(key==='name'){
-      const nameEl=row.querySelector('.cust-name');
-      if(nameEl){const arrow=nameEl.querySelector('.cust-arrow');nameEl.textContent=val.trim()||'이름 없음';if(arrow)nameEl.appendChild(arrow);}
+      const nameEl=document.getElementById(`cust-name-txt-${phone}`);
+      if(nameEl&&!nameEl.querySelector('input'))nameEl.textContent=val.trim()||'이름 없음';
       const searchData=(row.dataset.search||'').replace(/^[^ ]*/,val.trim().toLowerCase());
       row.dataset.search=searchData;
     }else if(key==='memo'){
-      const memoEl=row.querySelector('.cust-memo');
-      if(memoEl)memoEl.innerHTML=val.trim()?esc(val.trim()):'<span style="color:#d1d5db">-</span>';
+      const memoEl=document.getElementById(`cust-memo-cell-${phone}`);
+      if(memoEl&&!memoEl.querySelector('input'))memoEl.innerHTML=val.trim()?esc(val.trim()):'<span style="color:#d1d5db">-</span>';
     }
   }
 }
