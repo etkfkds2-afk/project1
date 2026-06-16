@@ -237,7 +237,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-td-title .titlecell .rawbtn{flex-shrink:0}
 .cf-td-evdate{font-size:12px;color:#9ca3af;width:90px}
 .cf-td-lbl{text-align:center;width:56px}
-.cf-ilbl{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;white-space:nowrap}
+.cf-ilbl{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;white-space:nowrap;cursor:pointer}
+.cf-ilbl:hover{filter:brightness(.92)}
 .cf-ilbl.bal{color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe}
 .cf-ilbl.res{color:#0369a1;background:#e0f2fe;border:1px solid #bae6fd}
 .cf-td-amt{text-align:right;font-weight:850;font-size:14px;font-variant-numeric:tabular-nums;color:#111827;width:110px}
@@ -1050,7 +1051,7 @@ function editCell(e,id,key,type='text'){
     host.closest('.note')?.classList.add('editing');
   }else{
     input=document.createElement('input');
-    input.type=type==='date'?'date':'text';
+    input.type='text';
     input.value=type==='money'?(Number(cur)||''):cur;
     input.className='editinp '+(type==='money'?'editnum':'');
   }
@@ -1318,6 +1319,32 @@ function addCashflowRow(mo,e){
 function cashflowEditCell(e,id,key,type='text'){
   e.stopPropagation();
   editCell(e,id,key,type);
+}
+function editCashflowKind(e,id,kind,dateKey,date,amount){
+  e.stopPropagation();
+  const ev=evById(id);if(!ev)return;
+  const opts=['예약금','잔금'];
+  const sel=document.createElement('select');
+  opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===kind)o.selected=true;sel.appendChild(o);});
+  sel.className='editinp';sel.style.cssText='width:68px;font-size:11px;height:26px;padding:0 4px';
+  const host=e.currentTarget;
+  host.classList.add('editingcell');host.innerHTML='';host.appendChild(sel);sel.focus();
+  const apply=()=>{
+    const newKind=sel.value;
+    if(newKind!==kind){
+      if(kind==='예약금'&&newKind==='잔금'){
+        setOv(id,'reservationDate','');setOv(id,'reservationAmount',0);
+        setOv(id,'balanceDate',date);setOv(id,'balanceAmount',amount);
+      }else{
+        setOv(id,'balanceDate','');setOv(id,'balanceAmount',0);
+        setOv(id,'reservationDate',date);setOv(id,'reservationAmount',amount);
+      }
+      saveOv();render();
+    }
+    renderChart();
+  };
+  sel.onchange=apply;
+  sel.onblur=()=>{if(document.activeElement!==sel)renderChart();};
 }
 function editCashflowAmount(e,id,key,depositOffset=0){
   e.stopPropagation();
@@ -1790,7 +1817,7 @@ function renderChart(){
           <td class="cf-td-date">${cell(p.e.id,p.dateKey,p.date,'date')}</td>
           <td class="cf-td-title"><div class="titlecell"><span>${cell(p.e.id,'title',p.e.title,'text')}</span><button class="rawbtn" onclick="openRaw('${p.e.id}',event)">원문</button></div></td>
           <td class="cf-td-evdate">${cell(p.e.id,'date',p.e.date,'date')}</td>
-          <td class="cf-td-lbl"><span class="cf-ilbl ${p.isRes?'res':'bal'}">${p.isRes?'예약금':'잔금'}</span></td>
+          <td class="cf-td-lbl"><span class="cf-ilbl ${p.isRes?'res':'bal'}" onclick="editCashflowKind(event,'${p.e.id}','${p.kind}','${p.dateKey}','${p.date}',${p.amount})">${p.isRes?'예약금':'잔금'}</span></td>
           <td class="cf-td-amt"><span class="editcell amt" data-val="${p.amount}" onclick="editCashflowAmount(event,'${p.e.id}','${p.amountKey}',${Number(p.depositOffset)||0})">${fa(p.amount)}</span></td>
           <td class="cf-td-method">${cell(p.e.id,'methodsText',methodText,'text')}</td>
           <td class="cf-td-br" style="color:${bc}">${cell(p.e.id,'branch',p.e.branch,'select')}</td>
