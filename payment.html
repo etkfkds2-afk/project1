@@ -1592,13 +1592,13 @@ async function renderCustomers(){
   else if(custSortKey==='revenue')rows.sort((a,b)=>custSortAsc?a.totalRevenue-b.totalRevenue:b.totalRevenue-a.totalRevenue);
   else if(custSortKey==='last')rows.sort((a,b)=>custSortAsc?a.lastVisit.localeCompare(b.lastVisit):b.lastVisit.localeCompare(a.lastVisit));
   else if(custSortKey==='name')rows.sort((a,b)=>custSortAsc?a.displayName.localeCompare(b.displayName,'ko'):b.displayName.localeCompare(a.displayName,'ko'));
-  const totalVisits=rows.reduce((s,r)=>s+r.visits.length,0);
-  const totalRev=rows.reduce((s,r)=>s+r.totalRevenue,0);
+  const totalVisits=rows.reduce((s,r)=>s+Number((contacts[r.phone]||{}).visitCount??r.visits.length),0);
+  const totalRev=rows.reduce((s,r)=>{const ct=contacts[r.phone]||{};return s+Number(ct.totalRevenue!=null?ct.totalRevenue:r.totalRevenue);},0);
   const kpiEl=document.getElementById('cust-kpi');
   if(kpiEl)kpiEl.innerHTML=`
     <div class="cust-kpi-card"><div class="cust-kpi-label">등록 고객</div><div class="cust-kpi-val">${rows.length}<span style="font-size:14px;font-weight:600;color:var(--muted)">명</span></div></div>
-    <div class="cust-kpi-card"><div class="cust-kpi-label">총 방문 (2025-27)</div><div class="cust-kpi-val">${totalVisits}<span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
-    <div class="cust-kpi-card"><div class="cust-kpi-label">총 매출</div><div class="cust-kpi-val" style="font-size:18px">${fa(totalRev)}</div></div>`;
+    <div class="cust-kpi-card"><div class="cust-kpi-label">총 방문 (2025-27)</div><div class="cust-kpi-val"><span id="cust-kpi-visits">${totalVisits}</span><span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
+    <div class="cust-kpi-card"><div class="cust-kpi-label">총 매출</div><div class="cust-kpi-val" style="font-size:18px"><span id="cust-kpi-rev">${fa(totalRev)}</span></div></div>`;
   function sortTh(key,label,cls=''){
     const active=custSortKey===key;
     const arrow=active?(custSortAsc?'↑':'↓'):'';
@@ -1731,9 +1731,20 @@ function startCustFieldEdit(phone,field,curVal,e){
 function renderCustFieldSpan(phone,field,val){
   const span=document.getElementById(`cust-f-${field}-${phone}`);
   if(!span)return;
-  if(field==='visitCount')span.textContent=val+'회';
-  else if(field==='totalRevenue')span.textContent=fa(Number(String(val).replace(/[^0-9]/g,''))||0);
+  if(field==='visitCount'){span.textContent=val+'회';refreshCustKPI();}
+  else if(field==='totalRevenue'){span.textContent=fa(Number(String(val).replace(/[^0-9]/g,''))||0);refreshCustKPI();}
   else span.textContent=val;
+}
+function refreshCustKPI(){
+  if(!customerAllData)return;
+  const map=buildCustomerMap(customerAllData);
+  const rows=Object.values(map);
+  const totalVisits=rows.reduce((s,r)=>s+Number((contacts[r.phone]||{}).visitCount??r.visits.length),0);
+  const totalRev=rows.reduce((s,r)=>{const ct=contacts[r.phone]||{};return s+Number(ct.totalRevenue!=null?ct.totalRevenue:r.totalRevenue);},0);
+  const v=document.getElementById('cust-kpi-visits');
+  const rv=document.getElementById('cust-kpi-rev');
+  if(v)v.textContent=totalVisits;
+  if(rv)rv.textContent=fa(totalRev);
 }
 function startCustNameEdit(phone,e){
   e.stopPropagation();
