@@ -268,7 +268,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-kpi-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 20px;box-shadow:var(--shadow);min-width:130px}
 .cust-kpi-label{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:4px}
 .cust-kpi-val{font-size:24px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1}
-.cust-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);border-radius:10px;border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow);table-layout:fixed}
+.cust-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);border-radius:10px;border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow)}
 .cust-thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#6b7280;background:#f8fafc;border-bottom:2px solid #e5e7eb;border-right:1px solid #e5e7eb;white-space:nowrap;cursor:pointer;user-select:none}
 .cust-thead th:last-child{border-right:none}
 .cust-thead th.r{text-align:right}
@@ -278,11 +278,12 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-row.open{background:#f0f7ff}
 .cust-row td{padding:11px 14px;border-bottom:1px solid #f1f3f6;border-right:1px solid #f1f3f6;vertical-align:middle;overflow:hidden}
 .cust-row td:last-child{border-right:none}
-.cust-name-wrap{display:flex;align-items:center;gap:6px}
-.cust-name-text{font-weight:700;color:#111827;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-name-wrap{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.cust-name-text{font-weight:700;color:#111827;font-size:14px}
 .cust-editable-cell{cursor:text}
 .cust-editable-cell:hover{background:#f8faff}
-.cust-hist-btn{border:1px solid #e0e7ff;background:#f5f3ff;color:#6366f1;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;white-space:nowrap;transition:all .15s}
+.cust-memo-cell{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-hist-btn{border:1px solid #e0e7ff;background:#f5f3ff;color:#6366f1;cursor:pointer;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;white-space:nowrap;transition:all .15s;flex-shrink:0}
 .cust-hist-btn:hover{background:#ede9fe;border-color:#a5b4fc}
 .cust-phone{font-size:13px;color:#4b5563;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cust-cnt{display:inline-block;font-size:12px;font-weight:800;border-radius:12px;padding:2px 9px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
@@ -1606,15 +1607,6 @@ async function renderCustomers(){
   }
   if(!rows.length){el.innerHTML='<div class="cust-loading">전화번호가 등록된 고객이 없습니다.</div>';return;}
   let html=`<table class="cust-table">
-  <colgroup>
-    <col style="width:200px">
-    <col style="width:120px">
-    <col style="width:52px">
-    <col style="width:115px">
-    <col style="width:62px">
-    <col style="width:100px">
-    <col>
-  </colgroup>
   <thead class="cust-thead"><tr>
     ${sortTh('name','이름')}
     <th>전화번호</th>
