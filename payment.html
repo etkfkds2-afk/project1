@@ -37,6 +37,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .btn:disabled{opacity:.45;cursor:default;box-shadow:none}
 .btn-reload,.btn-hidden{background:#fff;color:#374151;border-color:var(--line-strong)}
 .btn-reload:hover,.btn-hidden:hover{background:#f9fafb}
+.btn-undo{background:#fff;color:#6366f1;border-color:#c7d2fe}
+.btn-undo:hover:not(:disabled){background:#eef2ff;border-color:#a5b4fc}
+.btn-undo:disabled{color:#c7d2fe;border-color:#e0e7ff;cursor:default}
 .btn-add{background:#111827;color:#fff;border-color:#111827}
 .btn-add:hover{background:#1f2937}
 .btn-export{background:var(--green);color:#fff;border-color:var(--green)}
@@ -357,6 +360,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <button id="delbtn" class="btn btn-danger" onclick="deleteSelected()" disabled>삭제 (0)</button>
   <button class="btn btn-danger" onclick="deleteAll()" style="opacity:0.85">전체 삭제</button>
   <button id="thbtn" class="btn btn-hidden" onclick="toggleHidden()">숨긴 항목</button>
+  <button id="undobtn" class="btn btn-undo" onclick="undoLast()" disabled>뒤로가기</button>
   <button id="rb" class="btn btn-reload" onclick="loadAll()">새로고침</button>
   <button class="btn btn-export" onclick="doExport()">CSV 내보내기</button>
   </div>
@@ -478,6 +482,7 @@ const CALS=[
 ];
 const TOOL='mcp__7562d3df-f0a0-4481-87e0-f6c4660717b3__list_events';
 let allData=[], ov={}, contacts={};
+let ovHistory=[], _undoing=false;
 let customerAllData=null;
 let remoteContactsReady=false;
 let custSortKey='visits', custSortAsc=false;
@@ -557,6 +562,34 @@ async function loadRemoteOv(){
     console.warn('D1 저장소를 사용할 수 없어 이 브라우저 저장소를 사용합니다.',e);
   }
 }
+let _lastHistoryTs=0;
+function pushHistory(){
+  if(_undoing)return;
+  const now=Date.now();
+  if(now-_lastHistoryTs<80)return; // 80ms 내 연속 호출은 같은 액션으로 취급
+  _lastHistoryTs=now;
+  ovHistory.push({ov:JSON.parse(JSON.stringify(ov)),allData:JSON.parse(JSON.stringify(allData))});
+  if(ovHistory.length>20)ovHistory.shift();
+  updateUndoBtn();
+}
+function updateUndoBtn(){
+  const btn=document.getElementById('undobtn');
+  if(!btn)return;
+  btn.disabled=ovHistory.length===0;
+  btn.textContent=`뒤로가기${ovHistory.length?` (${ovHistory.length})`:''}`;
+}
+function undoLast(){
+  if(!ovHistory.length)return;
+  _undoing=true;
+  const snap=ovHistory.pop();
+  ov=snap.ov;
+  allData=snap.allData;
+  saveOv();
+  render();
+  if(currentView==='chart')renderChart();
+  _undoing=false;
+  updateUndoBtn();
+}
 function saveOv(){
   try{localStorage.setItem('atm_ov',JSON.stringify(ov))}catch(e){}
   if(!remoteOvReady)return;
@@ -575,6 +608,7 @@ function normalizeBranch(branch){
   return b||'미분류';
 }
 function setOv(id,key,val){
+  pushHistory();
   if(!ov[id])ov[id]={};
   ov[id][key]=val;
   const ev=allData.find(e=>e.id===id);
@@ -1276,6 +1310,7 @@ function hideRow(id,e){
 }
 function deleteManualRow(id,e){
   e?.stopPropagation();
+  pushHistory();
   setManualRows(manualRows().filter(r=>r.id!==id));
   allData=allData.filter(ev=>ev.id!==id);
   delete ov[id];
@@ -1287,6 +1322,7 @@ function clearAllManualRows(){
   const cnt=manualRows().length;
   if(!cnt)return;
   if(!confirm(`직접 추가한 항목 ${cnt}건을 모두 삭제하시겠습니까?`))return;
+  pushHistory();
   manualRows().forEach(r=>delete ov[r.id]);
   setManualRows([]);
   allData=allData.filter(ev=>!ev.manual);
