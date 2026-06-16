@@ -1323,30 +1323,37 @@ function cashflowEditCell(e,id,key,type='text'){
 function editCashflowKind(e,id,kind,dateKey,date,amount){
   e.stopPropagation();
   const ev=evById(id);if(!ev)return;
-  const opts=['예약금','잔금'];
+  const opts=['예약금','잔금','청소보증금'];
   const sel=document.createElement('select');
   opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===kind)o.selected=true;sel.appendChild(o);});
-  sel.className='editinp';sel.style.cssText='width:68px;font-size:11px;height:26px;padding:0 4px';
+  sel.className='editinp';sel.style.cssText='width:88px;font-size:11px;height:26px;padding:0 4px';
   const host=e.currentTarget;
   host.classList.add('editingcell');host.innerHTML='';host.appendChild(sel);sel.focus();
-  let applied=false;
   const apply=()=>{
-    applied=true;
     const newKind=sel.value;
+    cleanup();
     if(newKind!==kind){
-      if(kind==='예약금'&&newKind==='잔금'){
-        setOv(id,'reservationDate','');setOv(id,'reservationAmount',0);
-        setOv(id,'balanceDate',date);setOv(id,'balanceAmount',amount);
-      }else{
-        setOv(id,'balanceDate','');setOv(id,'balanceAmount',0);
+      if(newKind==='예약금'){
+        if(kind==='잔금'){setOv(id,'balanceDate','');setOv(id,'balanceAmount',0);}
+        else{setOv(id,'dep',0);setOv(id,'depText','');}
         setOv(id,'reservationDate',date);setOv(id,'reservationAmount',amount);
+      }else if(newKind==='잔금'){
+        if(kind==='예약금'){setOv(id,'reservationDate','');setOv(id,'reservationAmount',0);}
+        else{setOv(id,'dep',0);setOv(id,'depText','');}
+        setOv(id,'balanceDate',date);setOv(id,'balanceAmount',amount);
+      }else if(newKind==='청소보증금'){
+        if(kind==='예약금'){setOv(id,'reservationDate','');setOv(id,'reservationAmount',0);}
+        else{setOv(id,'balanceDate','');setOv(id,'balanceAmount',0);}
+        setOv(id,'dep',amount);setOv(id,'depText',String(amount));
       }
       saveOv();render();
     }
     renderChart();
   };
+  const cleanup=()=>document.removeEventListener('mousedown',outside,true);
+  const outside=(ev)=>{if(!host.contains(ev.target)){cleanup();renderChart();}};
   sel.onchange=apply;
-  sel.onblur=()=>{setTimeout(()=>{if(!applied)renderChart();},150)};
+  setTimeout(()=>document.addEventListener('mousedown',outside,true),0);
 }
 function editCashflowAmount(e,id,key,depositOffset=0){
   e.stopPropagation();
