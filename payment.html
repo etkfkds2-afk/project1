@@ -83,6 +83,12 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .paycell .editcell{white-space:normal;justify-content:center;text-align:center;overflow-wrap:anywhere}
 .date2{font-size:13px;line-height:1.45}
 .date2 .sub{display:block;color:#8b95a1;font-size:12px;margin-top:3px}
+.bal2row{margin-top:5px;padding-top:4px;border-top:1px dashed #e2e8f0;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.bal2lbl{color:#94a3b8;font-size:11px;font-weight:700}
+.bal2rm{border:none;background:transparent;color:#cbd5e1;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;font-weight:700;transition:color .15s}
+.bal2rm:hover{color:#ef4444}
+.bal2add{border:1px dashed #cbd5e1;background:transparent;color:#94a3b8;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px;margin-top:4px;line-height:1.4;transition:all .15s}
+.bal2add:hover{border-color:#6366f1;color:#6366f1;background:#eef2ff}
 .oktxt{color:var(--green);font-weight:700}.waittxt{color:var(--amber);font-weight:700}.badtxt{color:var(--red);font-weight:700}
 .statuscell{text-align:center;padding-left:6px;padding-right:6px;overflow:visible}
 .statusselect{display:block;width:102px;max-width:100%;height:30px;margin:0 auto;border-radius:999px;border:1px solid transparent;padding:0 6px;font-size:12px;font-weight:800;text-align:center;outline:none;cursor:pointer}
@@ -584,34 +590,37 @@ function setOv(id,key,val){
     }else{
       ev[key]=key==='payStatus'?normStatus(val):val;
     }
-    if(['reservationAmount','balanceAmount','depText','dep','methodsText','reservationDate','balanceDate','payStatus'].includes(key)){
+    if(['reservationAmount','balanceAmount','balanceAmount2','depText','dep','methodsText','reservationDate','balanceDate','balanceDate2','payStatus'].includes(key)){
       delete ov[id].netIn;
     }
     // 예약금/잔금 → 총입금액 연쇄
-    if(key==='reservationAmount'||key==='balanceAmount'){
-      ev.totalIn=(Number(ev.reservationAmount)||0)+(Number(ev.balanceAmount)||0);
+    if(key==='reservationAmount'||key==='balanceAmount'||key==='balanceAmount2'){
+      ev.totalIn=(Number(ev.reservationAmount)||0)+(Number(ev.balanceAmount)||0)+(Number(ev.balanceAmount2)||0);
       delete ov[id].netIn;
     }
     // _actual* 동기: 수동 수정 시 실제 입금액도 갱신
     if(key==='reservationAmount') ev._actualReservation=pa(val);
     if(key==='balanceAmount') ev._actualBalance=pa(val);
+    if(key==='balanceAmount2') ev.balanceAmount2=pa(val);
+    if(key==='balanceDate2') ev.balanceDate2=val;
     // 총입금액/청소보증금/결제방법 → 실수입 연쇄
     if(key!=='netIn'){
       const _isCash=(ev.methods||[]).includes('현금');
       const _ra=key==='reservationAmount'?pa(val):(ev._actualReservation||0);
       const _ba=key==='balanceAmount'?pa(val):(key==='balanceDate'&&val&&val!=='입금 예정'?ev.balanceAmount:(ev._actualBalance||0));
+      const _ba2=key==='balanceAmount2'?pa(val):(ev.balanceAmount2||0);
       const _dep=key==='depText'||key==='dep'?pa(val):(ev.dep||0);
-      ev.netIn=Math.max(0,_isCash?(_ra+_ba)-_dep:(_ra+_ba));
+      ev.netIn=Math.max(0,_isCash?(_ra+_ba+_ba2)-_dep:(_ra+_ba+_ba2));
     }
     if(ev.manual)persistManualRow(ev);
   }
   saveOv();
 }
 function applyOverrides(row,o){
-  ['date','branch','title','payStatus','reservationDate','balanceDate','notes','depText'].forEach(k=>{
+  ['date','branch','title','payStatus','reservationDate','balanceDate','balanceDate2','notes','depText'].forEach(k=>{
     if(o[k]!==undefined)row[k]=k==='payStatus'?normStatus(o[k]):(k==='branch'?normalizeBranch(o[k]):o[k]);
   });
-  ['reservationAmount','balanceAmount','dep','totalIn','netIn'].forEach(k=>{
+  ['reservationAmount','balanceAmount','balanceAmount2','dep','totalIn','netIn'].forEach(k=>{
     if(o[k]!==undefined)row[k]=Number(o[k])||0;
   });
   if(o.methodsText!==undefined)row.methods=String(o.methodsText).split(/[,+/ ]+/).map(s=>s.trim()).filter(Boolean);
@@ -622,8 +631,8 @@ function applyOverrides(row,o){
   row.branch=normalizeBranch(row.branch);
 
   // 예약금/잔금 오버라이드 → 총입금액 재계산 + _actual* 동기
-  if(o.reservationAmount!==undefined||o.balanceAmount!==undefined)
-    row.totalIn=(row.reservationAmount||0)+(row.balanceAmount||0);
+  if(o.reservationAmount!==undefined||o.balanceAmount!==undefined||o.balanceAmount2!==undefined)
+    row.totalIn=(row.reservationAmount||0)+(row.balanceAmount||0)+(row.balanceAmount2||0);
   if(o.reservationAmount!==undefined) row._actualReservation=Number(o.reservationAmount)||0;
   if(o.balanceAmount!==undefined) row._actualBalance=Number(o.balanceAmount)||0;
 
@@ -631,7 +640,8 @@ function applyOverrides(row,o){
     const _isCash=(row.methods||[]).includes('현금');
     const _ra=o.reservationAmount!==undefined?Number(o.reservationAmount)||0:(row._actualReservation||0);
     const _ba=o.balanceAmount!==undefined?Number(o.balanceAmount)||0:(row._actualBalance||0);
-    const _g=_ra+_ba;
+    const _ba2=o.balanceAmount2!==undefined?Number(o.balanceAmount2)||0:(row.balanceAmount2||0);
+    const _g=_ra+_ba+_ba2;
     row.netIn=Math.max(0,_isCash?_g-(row.dep||0):_g);
   }
   return row;
@@ -1020,10 +1030,9 @@ function cell(id,key,val,type='text',cls=''){
   return`<span class="editcell ${type==='area'?'areacell':''} ${cls}" data-val="${esc(val||'')}" onclick="editCell(event,'${id}','${key}','${type}')">${shown?esc(shown):'<span class="dash">-</span>'}</span>`;
 }
 function payDateCell(id,key,dateVal,amountVal){
-  const isPending=!dateVal||(key==='balanceDate'&&dateVal==='입금 예정')||(key==='reservationDate'&&!dateVal);
+  const isPending=!dateVal||(dateVal==='입금 예정');
   if(isPending&&Number(amountVal)>0){
-    const label=key==='balanceDate'?'입금 예정':'입금 예정';
-    return`<span class="editcell waittxt" data-val="" onclick="editCell(event,'${id}','${key}','text')">${label}</span>`;
+    return`<span class="editcell waittxt" data-val="" onclick="editCell(event,'${id}','${key}','text')">입금 예정</span>`;
   }
   return cell(id,key,dateVal,'text');
 }
@@ -1037,6 +1046,7 @@ function editCell(e,id,key,type='text'){
   const ev=evById(id);if(!ev)return;
   let cur=key==='methodsText'?ev.methods.join('+'):(ev[key]??'');
   if(!cur&&key==='balanceDate'&&Number(ev.balanceAmount)>0)cur='입금 예정';
+  if(!cur&&key==='balanceDate2'&&Number(ev.balanceAmount2)>0)cur='입금 예정';
   let input;
   if(type==='select'){
     input=document.createElement('select');
@@ -1123,6 +1133,11 @@ function paymentParts(ev,year){
     const amount=sign*Math.max(0,gross-balDep-remainDep);
     parts.push({date:ev.balanceDate,amount,gross,depositOffset:Math.max(0,gross)-Math.max(0,amount),dateKey:'balanceDate',amountKey:'balanceAmount',kind:'잔금'});
   }
+  if(isCountablePayDate(ev.balanceDate2,year,!!ev.manual)){
+    const gross=Number(ev.balanceAmount2)||0;
+    const amount=sign*Math.max(0,gross);
+    parts.push({date:ev.balanceDate2,amount,gross,depositOffset:0,dateKey:'balanceDate2',amountKey:'balanceAmount2',kind:'잔금'});
+  }
   return parts;
 }
 function periodNetIn(ev){
@@ -1186,7 +1201,7 @@ function render(){
         ${statusSelect(ev,sCls)}
       </td>
       <td class="gcell" data-label="예약금 입금"><div class="date2">${payDateCell(ev.id,'reservationDate',ev.reservationDate,ev.reservationAmount)}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
-      <td class="gcell" data-label="잔금 입금"><div class="date2">${payDateCell(ev.id,'balanceDate',ev.balanceDate,ev.balanceAmount)}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span></div></td>
+      <td class="gcell" data-label="잔금 입금"><div class="date2">${payDateCell(ev.id,'balanceDate',ev.balanceDate,ev.balanceAmount)}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span>${ev.balanceDate2||ev.balanceAmount2?`<div class="bal2row"><span class="bal2lbl">+</span>${payDateCell(ev.id,'balanceDate2',ev.balanceDate2,ev.balanceAmount2)}<span class="sub">${cell(ev.id,'balanceAmount2',ev.balanceAmount2||0,'money')}</span><button class="bal2rm" onclick="clearBal2('${ev.id}',event)" title="분할잔금 삭제">×</button></div>`:`<button class="bal2add" onclick="addBal2('${ev.id}',event)" title="분할잔금 추가">+분할</button>`}</div></td>
       <td class="gcell r moneycell" data-label="청소보증금">${cell(ev.id,'depText',ev.depText,'text',ev.dep>0?'dep':'dep-label')}</td>
       <td class="gcell r moneycell" data-label="대관수익 (대관일 기준)">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
       <td class="gcell paycell" data-label="결제방법">
@@ -1239,6 +1254,20 @@ function deleteAll(){
   render();
 }
 
+function addBal2(id,e){
+  e?.stopPropagation();
+  setOv(id,'balanceDate2','입금 예정');
+  setOv(id,'balanceAmount2',0);
+  render();
+}
+function clearBal2(id,e){
+  e?.stopPropagation();
+  setOv(id,'balanceDate2','');
+  setOv(id,'balanceAmount2',0);
+  const ev=allData.find(x=>x.id===id);
+  if(ev){ev.balanceDate2='';ev.balanceAmount2=0;}
+  render();
+}
 function hideRow(id,e){
   e?.stopPropagation();
   setOv(id,'hidden',true);
