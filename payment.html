@@ -494,6 +494,8 @@ let showHidden=false;
 let selectedIds=new Set();
 let googleReady=null, tokenClient=null;
 let remoteOvReady=false;
+let remoteOvUpdatedAt=null;
+let saveConflictNotified=false;
 let lastOvSave=Promise.resolve();
 const open=new Set();
 try{ov=JSON.parse(localStorage.getItem('atm_ov')||'{}')}catch(e){}
@@ -551,11 +553,13 @@ async function loadRemoteOv(){
       const remoteEmpty=Object.keys(data.value).length===0;
       const localHasData=Object.keys(ov).length>0;
       if(remoteEmpty&&localHasData){
+        remoteOvUpdatedAt=data.updated_at||null;
         remoteOvReady=true;
         saveOv();
         await lastOvSave;
       }else{
         ov=data.value;
+        remoteOvUpdatedAt=data.updated_at||null;
       }
     }
     remoteOvReady=true;
@@ -599,10 +603,24 @@ function undoLast(){
 function saveOv(){
   try{localStorage.setItem('atm_ov',JSON.stringify(ov))}catch(e){}
   if(!remoteOvReady)return;
-  lastOvSave=fetch(OV_API,{
-    method:'PUT',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({key:OV_KEY,value:ov})
+  const payload=JSON.stringify({key:OV_KEY,value:ov,updated_at:remoteOvUpdatedAt});
+  lastOvSave=lastOvSave.then(async()=>{
+    const res=await fetch(OV_API,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:payload
+    });
+    if(res.status===409){
+      remoteOvReady=false;
+      if(!saveConflictNotified){
+        saveConflictNotified=true;
+        alert('다른 브라우저에서 먼저 저장한 변경사항이 있습니다. 새로고침 후 다시 수정하세요.');
+      }
+      throw new Error('Remote override conflict');
+    }
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json().catch(()=>null);
+    remoteOvUpdatedAt=data?.updated_at||remoteOvUpdatedAt;
   }).catch(e=>console.warn('D1 저장 실패. 이 브라우저에는 저장되었습니다.',e));
 }
 function cleanNum(v){return pa(String(v||'').replace(/[^\d,]/g,''))}
@@ -1474,13 +1492,19 @@ function closeRaw(e){
   document.getElementById('rawModal').classList.remove('show');
 }
 
+function csvCell(value){
+  let text=String(value??'');
+  if(/^[=+\-@]/.test(text.trimStart()))text=`'${text}`;
+  return`"${text.replace(/"/g,'""')}"`;
+}
+
 function doExport(){
   const data=getFiltered();
   const H=['대관일','지점','행사명','수납상태','예약금입금','예약금액','잔금입금','잔금액','총입금액','청소보증금','대관수익(대관일기준)','잔금수납액','결제방법','메모'];
   const rows=data.map(e=>[
-    e.date,e.branch,`"${e.title.replace(/"/g,'""')}"`,e.payStatus,
-    e.reservationDate,e.reservationAmount||0,e.balanceDate,e.balanceAmount||0,
-    e.totalIn||0,`"${(e.depText||e.dep||0)}"`,e.netIn,getNetBalance(e),e.methods.join('+'),`"${(e.notes||'').replace(/"/g,'""')}"`
+    csvCell(e.date),csvCell(e.branch),csvCell(e.title),csvCell(e.payStatus),
+    csvCell(e.reservationDate),e.reservationAmount||0,csvCell(e.balanceDate),e.balanceAmount||0,
+    e.totalIn||0,csvCell(e.depText||e.dep||0),e.netIn,getNetBalance(e),csvCell(e.methods.join('+')),csvCell(e.notes||'')
   ]);
   const csv='﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});

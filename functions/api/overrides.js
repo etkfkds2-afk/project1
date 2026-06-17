@@ -47,14 +47,21 @@ export async function onRequestPut(context){
   }
   const key=String(body.key||'payment_overrides');
   const value=JSON.stringify(body.value&&typeof body.value==='object'?body.value:{});
+  const expectedUpdatedAt=body.updated_at===undefined?undefined:body.updated_at;
+  const current=await db.prepare('SELECT updated_at FROM app_settings WHERE key = ?').bind(key).first();
+  const currentUpdatedAt=current?.updated_at||null;
+  if(expectedUpdatedAt!==undefined&&expectedUpdatedAt!==currentUpdatedAt){
+    return json({error:'Conflict',key,updated_at:currentUpdatedAt},409);
+  }
+  const updatedAt=new Date().toISOString();
   await db.prepare(`
     INSERT INTO app_settings (key, value, updated_at)
-    VALUES (?, ?, CURRENT_TIMESTAMP)
+    VALUES (?, ?, ?)
     ON CONFLICT(key) DO UPDATE SET
       value = excluded.value,
-      updated_at = CURRENT_TIMESTAMP
-  `).bind(key,value).run();
-  return json({ok:true,key});
+      updated_at = excluded.updated_at
+  `).bind(key,value,updatedAt).run();
+  return json({ok:true,key,updated_at:updatedAt});
 }
 
 export async function onRequestPost(context){

@@ -40,3 +40,9 @@ npm test
 ## 배포
 
 `main` 브랜치에 push되면 GitHub Actions가 Cloudflare Pages로 루트 디렉터리를 배포합니다.
+
+배포 워크플로는 Cloudflare Pages 업로드 전에 `npm ci`와 `npm test`를 실행합니다.
+
+## 운영 보안
+
+`payment.html`과 `/api/*`는 운영 환경에서 Cloudflare Access 같은 서버 측 접근 제어로 함께 보호해야 합니다. 정적 HTML 안의 화면 잠금은 편의 기능일 뿐이며, API 접근 제어를 대체하지 않습니다.
