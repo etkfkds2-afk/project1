@@ -68,6 +68,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .gcell.r{text-align:right}
 .hchip{display:inline-block;padding:2px 0}
 .gridmsg{padding:64px;text-align:center;color:#8b95a1;font-size:14px}
+.gfoot .gcell{font-weight:800;background:#f1f5f9;border-top:2px solid var(--line-strong);color:#111827;font-size:13px}
 .bdg{display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
 .s완납{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
 .s예약금입금{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
@@ -415,6 +416,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <tbody id="tb">
     <tr><td colspan="12" class="gridmsg"><div class="spin"></div>데이터 로딩 중...</td></tr>
   </tbody>
+  <tfoot id="tf"></tfoot>
 </table>
 </div>
 </div>
@@ -1216,12 +1218,9 @@ function render(){
   const data=getFiltered();
   const 완납=data.filter(e=>e.payStatus==='완납');
   const 예약금=data.filter(e=>e.payStatus==='예약금 입금');
-  const 취소=data.filter(e=>e.payStatus==='취소');
-  const 환불=data.filter(e=>e.payStatus==='환불');
-  const sumNet=rows=>rows.reduce((s,e)=>s+(Number(e.netIn)||0),0);
-  const statHtml=rows=>`<span class="count">${rows.length}건</span><span class="money">${fa(sumNet(rows))}</span>`;
   if(!data.length){
     document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg">해당 조건의 데이터가 없습니다.</td></tr>';
+    document.getElementById('tf').innerHTML='';
     if(currentView==='chart')renderChart();
     return;
   }
@@ -1255,6 +1254,24 @@ function render(){
     </tr>`);
   }
   document.getElementById('tb').innerHTML=rows.join('');
+  const sumRes=data.reduce((s,e)=>s+(Number(e.reservationAmount)||0),0);
+  const sumBal=data.reduce((s,e)=>s+(Number(e.balanceAmount)||0)+(Number(e.balanceAmount2)||0),0);
+  const sumDep=data.reduce((s,e)=>s+(Number(e.dep)||0),0);
+  const sumNetIn=data.reduce((s,e)=>s+(Number(e.netIn)||0),0);
+  document.getElementById('tf').innerHTML=`<tr class="gfoot">
+    <td class="gcell chkcell"></td>
+    <td class="gcell" style="color:#374151">합계</td>
+    <td class="gcell"></td>
+    <td class="gcell">${data.length}건</td>
+    <td class="gcell"></td>
+    <td class="gcell r moneycell">${sumRes?fa(sumRes):'-'}</td>
+    <td class="gcell r moneycell">${sumBal?fa(sumBal):'-'}</td>
+    <td class="gcell r moneycell">${sumDep?fa(sumDep):'-'}</td>
+    <td class="gcell r moneycell amt">${fa(sumNetIn)}</td>
+    <td class="gcell"></td>
+    <td class="gcell"></td>
+    <td class="gcell"></td>
+  </tr>`;
   const allChk=document.getElementById('allchk');
   if(allChk){
     allChk.checked=data.length>0&&data.every(e=>selectedIds.has(e.id));
@@ -1284,7 +1301,11 @@ function updateSelectionUI(){
 }
 function deleteSelected(){
   if(!selectedIds.size)return;
+  if(!confirm(`선택한 ${selectedIds.size}건을 숨기겠습니까?`))return;
+  pushHistory();
+  _undoing=true;
   selectedIds.forEach(id=>setOv(id,'hidden',true));
+  _undoing=false;
   selectedIds.clear();
   render();
 }
@@ -1292,7 +1313,10 @@ function deleteAll(){
   const data=getFiltered();
   if(!data.length)return;
   if(!confirm(`현재 보이는 ${data.length}건을 모두 삭제하겠습니까?`))return;
+  pushHistory();
+  _undoing=true;
   data.forEach(ev=>setOv(ev.id,'hidden',true));
+  _undoing=false;
   selectedIds.clear();
   render();
 }
