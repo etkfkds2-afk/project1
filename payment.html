@@ -1518,6 +1518,14 @@ function downloadCsv(csv,name){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+function downloadExcelWorkbook(html,name){
+  const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 function doExport(){
   if(currentView==='chart'){doCashflowExport();return;}
@@ -1561,39 +1569,42 @@ function cashflowByMonth(year){
 }
 
 function doCashflowExport(){
-  downloadCsv(buildCashflowCsv(),`올댓마인드_월별실입금_${document.getElementById('sy').value}.csv`);
+  downloadExcelWorkbook(buildCashflowWorkbook(),`올댓마인드_월별실입금_${document.getElementById('sy').value}.xls`);
 }
 
-function buildCashflowCsv(){
+function excelText(value){return esc(value)}
+function excelSheet(name,rows){
+  return `<Worksheet ss:Name="${excelText(name)}"><Table>${rows.map(row=>`<Row>${row.map(cell=>`<Cell><Data ss:Type="${typeof cell==='number'?'Number':'String'}">${excelText(cell)}</Data></Cell>`).join('')}</Row>`).join('')}</Table></Worksheet>`;
+}
+function cashflowExportRows(items){
+  const H=['입금날짜','행사명','대관일','구분','금액','결제방법','지점'];
+  const rows=[H];
+  items.forEach(p=>{
+    rows.push([
+      p.date,
+      p.e.title,
+      p.e.date,
+      p.kind,
+      Number(p.amount)||0,
+      p.e.methods.join('+')||'기타',
+      normalizeBranch(p.e.branch)
+    ]);
+  });
+  return rows;
+}
+function buildCashflowWorkbook(){
   const year=document.getElementById('sy').value;
   const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const {byMo,grandTotal}=cashflowByMonth(year);
-  const lines=[];
-  lines.push([csvCell('월별 전체'),'',csvCell(year),csvMoney(grandTotal)].join(','));
-  lines.push(['월','총액','건수'].join(','));
+  const {byMo}=cashflowByMonth(year);
+  const sheets=[];
+  const allItems=[];
+  for(let mo=0;mo<12;mo++)allItems.push(...(byMo[mo]||[]));
+  sheets.push(excelSheet('전체실입금내역',cashflowExportRows(allItems)));
   for(let mo=0;mo<12;mo++){
     const items=byMo[mo]||[];
-    lines.push([csvCell(LABELS[mo]),csvMoney(items.reduce((s,p)=>s+p.amount,0)),items.length].join(','));
+    if(items.length)sheets.push(excelSheet(LABELS[mo],cashflowExportRows(items)));
   }
-  lines.push('');
-  for(let mo=0;mo<12;mo++){
-    const items=byMo[mo]||[];
-    lines.push([csvCell(`${LABELS[mo]} 상세`),csvCell(items.length?`${items.length}건`:'입금 없음'),csvMoney(items.reduce((s,p)=>s+p.amount,0))].join(','));
-    lines.push(['입금날짜','행사명','대관일','구분','금액','결제방법','지점'].join(','));
-    items.forEach(p=>{
-      lines.push([
-        csvCell(p.date),
-        csvCell(p.e.title),
-        csvCell(p.e.date),
-        csvCell(p.kind),
-        csvMoney(p.amount),
-        csvCell(p.e.methods.join('+')||'기타'),
-        csvCell(normalizeBranch(p.e.branch))
-      ].join(','));
-    });
-    lines.push('');
-  }
-  return '﻿'+lines.join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheets.join('')}</Workbook>`;
 }
 
 let currentView='table';

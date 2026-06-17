@@ -127,8 +127,8 @@ test('테이블 CSV는 현재 화면 컬럼 기준으로 내보낸다', async ({
   expect(csv).not.toContain('잔금수납액');
 });
 
-test('분석 CSV는 월별 전체와 월별 상세를 함께 내보낸다', async ({ page }) => {
-  const csv = await page.evaluate(() => {
+test('분석 내보내기는 전체실입금내역 시트와 월별 시트를 만든다', async ({ page }) => {
+  const workbook = await page.evaluate(() => {
     allData = [
       {
         id: 'ev_chart_1',
@@ -168,18 +168,19 @@ test('분석 CSV는 월별 전체와 월별 상세를 함께 내보낸다', asyn
     document.getElementById('ss').value = '';
     document.getElementById('sq').value = '';
     switchView('chart');
-    return buildCashflowCsv();
+    return buildCashflowWorkbook();
   });
 
-  expect(csv).toContain('"월별 전체"');
-  expect(csv).toContain('월,총액,건수');
-  expect(csv).toContain('"1월",300000,1');
-  expect(csv).toContain('"2월",700000,1');
-  expect(csv).toContain('"1월 상세","1건",300000');
-  expect(csv).toContain('"2월 상세","1건",700000');
-  expect(csv).toContain('입금날짜,행사명,대관일,구분,금액,결제방법,지점');
-  expect(csv).toContain('"2026-01-05","분석 예약금","2026-03-01","예약금",300000,"현금","문래점"');
-  expect(csv).toContain('"2026-02-10","분석 잔금","2026-04-01","잔금",700000,"카드","신논현점"');
+  expect(workbook).toContain('<Worksheet ss:Name="전체실입금내역">');
+  expect(workbook).toContain('<Worksheet ss:Name="1월">');
+  expect(workbook).toContain('<Worksheet ss:Name="2월">');
+  expect(workbook).not.toContain('<Worksheet ss:Name="3월">');
+  expect(workbook).toContain('<Data ss:Type="String">입금날짜</Data>');
+  expect(workbook).toContain('<Data ss:Type="String">분석 예약금</Data>');
+  expect(workbook).toContain('<Data ss:Type="String">분석 잔금</Data>');
+  expect(workbook).toContain('<Data ss:Type="Number">300000</Data>');
+  expect(workbook).toContain('<Data ss:Type="Number">700000</Data>');
+  expect(workbook.indexOf('분석 예약금')).toBeLessThan(workbook.indexOf('분석 잔금'));
 });
 
 test('고객관리 총매출 카드는 문자열 금액도 합산한다', async ({ page }) => {
