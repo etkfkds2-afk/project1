@@ -1498,22 +1498,96 @@ function csvCell(value){
   if(/^[=+\-@]/.test(text.trimStart()))text=`'${text}`;
   return`"${text.replace(/"/g,'""')}"`;
 }
-
-function doExport(){
-  const data=getFiltered();
-  const H=['대관일','지점','행사명','수납상태','예약금입금','예약금액','잔금입금','잔금액','총입금액','청소보증금','대관수익(대관일기준)','잔금수납액','결제방법','메모'];
-  const rows=data.map(e=>[
-    csvCell(e.date),csvCell(e.branch),csvCell(e.title),csvCell(e.payStatus),
-    csvCell(e.reservationDate),e.reservationAmount||0,csvCell(e.balanceDate),e.balanceAmount||0,
-    e.totalIn||0,csvCell(e.depText||e.dep||0),e.netIn,getNetBalance(e),csvCell(e.methods.join('+')),csvCell(e.notes||'')
-  ]);
-  const csv='﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
+function csvMoney(n){return Number(n)||0}
+function csvDateMoney(date,amount){
+  const parts=[];
+  if(date)parts.push(date);
+  if(Number(amount))parts.push(fa(Number(amount)));
+  return parts.join(' / ');
+}
+function downloadCsv(csv,name){
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;
-  a.download=`올댓마인드_입금관리_${document.getElementById('sy').value}.csv`;
+  a.download=name;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+function doExport(){
+  if(currentView==='chart'){doCashflowExport();return;}
+  doTableExport();
+}
+
+function doTableExport(){
+  downloadCsv(buildTableCsv(),`올댓마인드_입금관리_${document.getElementById('sy').value}.csv`);
+}
+
+function buildTableCsv(){
+  const data=getFiltered();
+  const H=['대관일','지점','행사명','수납상태','예약금 입금','잔금 입금','청소보증금','대관수익 (대관일 기준)','결제방법','메모'];
+  const rows=data.map(e=>[
+    csvCell(e.date),csvCell(e.branch),csvCell(e.title),csvCell(e.payStatus),
+    csvCell(csvDateMoney(e.reservationDate,e.reservationAmount)),
+    csvCell([csvDateMoney(e.balanceDate,e.balanceAmount),csvDateMoney(e.balanceDate2,e.balanceAmount2)].filter(Boolean).join(' / ')),
+    csvCell(e.depText||e.dep||0),csvMoney(e.netIn),csvCell(e.methods.join('+')),csvCell(e.notes||'')
+  ]);
+  return '﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
+}
+
+function cashflowByMonth(year){
+  const byMo={};
+  let grandTotal=0;
+  getFilteredForChart().forEach(e=>{
+    if(e.payStatus==='환불')return;
+    paymentParts(e,year).forEach(p=>{
+      const mo=parseInt(p.date.slice(5,7),10)-1;
+      if(mo<0||mo>11)return;
+      if(!byMo[mo])byMo[mo]=[];
+      byMo[mo].push({...p,e,isRes:p.kind==='예약금'});
+      grandTotal+=p.amount;
+    });
+  });
+  Object.keys(byMo).forEach(mo=>{
+    byMo[mo].sort((a,b)=>a.date.localeCompare(b.date)||normalizeBranch(a.e.branch).localeCompare(normalizeBranch(b.e.branch),'ko')||a.e.title.localeCompare(b.e.title,'ko'));
+  });
+  return{byMo,grandTotal};
+}
+
+function doCashflowExport(){
+  downloadCsv(buildCashflowCsv(),`올댓마인드_월별실입금_${document.getElementById('sy').value}.csv`);
+}
+
+function buildCashflowCsv(){
+  const year=document.getElementById('sy').value;
+  const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const {byMo,grandTotal}=cashflowByMonth(year);
+  const lines=[];
+  lines.push([csvCell('월별 전체'),'',csvCell(year),csvMoney(grandTotal)].join(','));
+  lines.push(['월','총액','건수'].join(','));
+  for(let mo=0;mo<12;mo++){
+    const items=byMo[mo]||[];
+    lines.push([csvCell(LABELS[mo]),csvMoney(items.reduce((s,p)=>s+p.amount,0)),items.length].join(','));
+  }
+  lines.push('');
+  for(let mo=0;mo<12;mo++){
+    const items=byMo[mo]||[];
+    lines.push([csvCell(`${LABELS[mo]} 상세`),csvCell(items.length?`${items.length}건`:'입금 없음'),csvMoney(items.reduce((s,p)=>s+p.amount,0))].join(','));
+    lines.push(['입금날짜','행사명','대관일','구분','금액','결제방법','지점'].join(','));
+    items.forEach(p=>{
+      lines.push([
+        csvCell(p.date),
+        csvCell(p.e.title),
+        csvCell(p.e.date),
+        csvCell(p.kind),
+        csvMoney(p.amount),
+        csvCell(p.e.methods.join('+')||'기타'),
+        csvCell(normalizeBranch(p.e.branch))
+      ].join(','));
+    });
+    lines.push('');
+  }
+  return '﻿'+lines.join('\n');
 }
 
 let currentView='table';
@@ -1996,18 +2070,7 @@ function renderChart(){
   });
 
   // ── 실입금 테이블 ─────────────────────────────────
-  const byMo={};
-  let grandTotal=0;
-  chartRows.forEach(e=>{
-    if(e.payStatus==='환불')return;
-    paymentParts(e,year).forEach(p=>{
-      const mo=parseInt(p.date.slice(5,7),10)-1;
-      if(mo<0||mo>11)return;
-      if(!byMo[mo])byMo[mo]=[];
-      byMo[mo].push({...p,e,isRes:p.kind==='예약금'});
-      grandTotal+=p.amount;
-    });
-  });
+  const {byMo,grandTotal}=cashflowByMonth(year);
   document.getElementById('an-cf-total').textContent=fa(grandTotal);
 
   let html=`<table class="cf-table">

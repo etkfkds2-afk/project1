@@ -91,6 +91,97 @@ test('CSV 셀은 스프레드시트 수식 실행을 방어한다', async ({ pag
   expect(cells.quote).toBe('"따옴표 "" 포함"');
 });
 
+test('테이블 CSV는 현재 화면 컬럼 기준으로 내보낸다', async ({ page }) => {
+  const csv = await page.evaluate(() => {
+    allData = [{
+      id: 'ev_table',
+      date: '2026-03-01',
+      branch: '문래점',
+      title: '테이블 행사',
+      payStatus: '완납',
+      reservationDate: '2026-01-01',
+      reservationAmount: 300000,
+      balanceDate: '2026-02-01',
+      balanceAmount: 700000,
+      depText: '100,000원',
+      dep: 100000,
+      netIn: 900000,
+      totalIn: 1000000,
+      methods: ['현금'],
+      notes: '메모'
+    }];
+    showHidden = false;
+    document.getElementById('sy').value = '2026';
+    document.getElementById('sm').value = '';
+    document.getElementById('sb').value = '';
+    document.getElementById('ss').value = '';
+    document.getElementById('sq').value = '';
+    return buildTableCsv();
+  });
+
+  const header = csv.split('\n')[0].replace(/^\uFEFF/, '');
+  expect(header).toBe('대관일,지점,행사명,수납상태,예약금 입금,잔금 입금,청소보증금,대관수익 (대관일 기준),결제방법,메모');
+  expect(csv).toContain('"2026-01-01 / 300,000원"');
+  expect(csv).toContain('"2026-02-01 / 700,000원"');
+  expect(csv).not.toContain('총입금액');
+  expect(csv).not.toContain('잔금수납액');
+});
+
+test('분석 CSV는 월별 전체와 월별 상세를 함께 내보낸다', async ({ page }) => {
+  const csv = await page.evaluate(() => {
+    allData = [
+      {
+        id: 'ev_chart_1',
+        date: '2026-03-01',
+        branch: '문래점',
+        title: '분석 예약금',
+        payStatus: '완납',
+        reservationDate: '2026-01-05',
+        reservationAmount: 300000,
+        reservationDiAmt: 0,
+        balanceDate: '',
+        balanceAmount: 0,
+        dep: 0,
+        methods: ['현금'],
+        netIn: 300000
+      },
+      {
+        id: 'ev_chart_2',
+        date: '2026-04-01',
+        branch: '신논현점',
+        title: '분석 잔금',
+        payStatus: '완납',
+        reservationDate: '',
+        reservationAmount: 0,
+        reservationDiAmt: 0,
+        balanceDate: '2026-02-10',
+        balanceAmount: 700000,
+        balanceDiAmt: 0,
+        dep: 0,
+        methods: ['카드'],
+        netIn: 700000
+      }
+    ];
+    showHidden = false;
+    document.getElementById('sy').value = '2026';
+    document.getElementById('sb').value = '';
+    document.getElementById('ss').value = '';
+    document.getElementById('sq').value = '';
+    switchView('chart');
+    return buildCashflowCsv();
+  });
+
+  expect(csv).toContain('"월별 전체"');
+  expect(csv).toContain('월,총액,건수');
+  expect(csv).toContain('"1월",300000,1');
+  expect(csv).toContain('"2월",700000,1');
+  expect(csv).toContain('"1월 상세","1건",300000');
+  expect(csv).toContain('"2월 상세","1건",700000');
+  expect(csv).toContain('입금날짜,행사명,대관일,구분,금액,결제방법,지점');
+  expect(csv).toContain('"2026-01-05","분석 예약금","2026-03-01","예약금",300000,"현금","문래점"');
+  expect(csv).toContain('"2026-02-10","분석 잔금","2026-04-01","잔금",700000,"카드","신논현점"');
+});
+
 test('고객관리 총매출 카드는 문자열 금액도 합산한다', async ({ page }) => {
   const total = await page.evaluate(async () => {
     remoteContactsReady = true;
