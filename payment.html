@@ -1498,11 +1498,13 @@ function csvCell(value){
   if(/^[=+\-@]/.test(text.trimStart()))text=`'${text}`;
   return`"${text.replace(/"/g,'""')}"`;
 }
-function csvMoney(n){return Number(n)||0}
+function csvNum(n){const v=Number(n)||0;return v?`"${v.toLocaleString('ko-KR')}"`:0}
+function csvMoney(n){return csvNum(n)}
 function csvAmountCell(...values){
   const nums=values.filter(v=>Number(v)).map(v=>Number(v));
-  if(nums.length<=1)return nums[0]||0;
-  return csvCell(nums.join(' / '));
+  if(!nums.length)return 0;
+  if(nums.length===1)return csvNum(nums[0]);
+  return csvCell(nums.map(v=>v.toLocaleString('ko-KR')).join(' / '));
 }
 function csvDateMoney(date,amount){
   const parts=[];
@@ -1544,7 +1546,7 @@ function buildTableCsv(){
     csvCell(e.reservationDate),csvMoney(e.reservationAmount),
     csvCell([e.balanceDate,e.balanceDate2].filter(Boolean).join(' / ')),
     csvAmountCell(e.balanceAmount,e.balanceAmount2),
-    csvCell(e.depText||e.dep||0),csvMoney(e.netIn),csvCell(e.methods.join('+')),csvCell(e.notes||'')
+    csvNum(e.dep),csvMoney(e.netIn),csvCell(e.methods.join('+')),csvCell(e.notes||'')
   ]);
   return '﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
 }
@@ -1576,7 +1578,7 @@ function excelText(value){return esc(value)}
 function excelSheet(name,rows){
   return `<Worksheet ss:Name="${excelText(name)}"><Table>${rows.map(row=>`<Row>${row.map(cell=>`<Cell><Data ss:Type="${typeof cell==='number'?'Number':'String'}">${excelText(cell)}</Data></Cell>`).join('')}</Row>`).join('')}</Table></Worksheet>`;
 }
-function excelNumber(value){return Number(value)||0}
+function excelMoney(value){const v=Number(value)||0;return v?v.toLocaleString('ko-KR'):'0'}
 function cashflowExportRows(items){
   const H=['입금날짜','행사명','대관일','구분','금액','결제방법','지점'];
   const rows=[H];
@@ -1586,13 +1588,13 @@ function cashflowExportRows(items){
       p.e.title,
       p.e.date,
       p.kind,
-      excelNumber(p.amount),
+      excelMoney(p.amount),
       p.e.methods.join('+')||'기타',
       normalizeBranch(p.e.branch)
     ]);
   });
   rows.push(['합계','','','','', '', '']);
-  rows[rows.length-1][4]=excelNumber(items.reduce((s,p)=>s+(Number(p.amount)||0),0));
+  rows[rows.length-1][4]=excelMoney(items.reduce((s,p)=>s+(Number(p.amount)||0),0));
   return rows;
 }
 function buildCashflowWorkbook(){
