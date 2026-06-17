@@ -1576,6 +1576,7 @@ function excelText(value){return esc(value)}
 function excelSheet(name,rows){
   return `<Worksheet ss:Name="${excelText(name)}"><Table>${rows.map(row=>`<Row>${row.map(cell=>`<Cell><Data ss:Type="${typeof cell==='number'?'Number':'String'}">${excelText(cell)}</Data></Cell>`).join('')}</Row>`).join('')}</Table></Worksheet>`;
 }
+function excelNumber(value){return Number(value)||0}
 function cashflowExportRows(items){
   const H=['입금날짜','행사명','대관일','구분','금액','결제방법','지점'];
   const rows=[H];
@@ -1585,13 +1586,13 @@ function cashflowExportRows(items){
       p.e.title,
       p.e.date,
       p.kind,
-      Number(p.amount)||0,
+      excelNumber(p.amount),
       p.e.methods.join('+')||'기타',
       normalizeBranch(p.e.branch)
     ]);
   });
   rows.push(['합계','','','','', '', '']);
-  rows[rows.length-1][4]=items.reduce((s,p)=>s+(Number(p.amount)||0),0);
+  rows[rows.length-1][4]=excelNumber(items.reduce((s,p)=>s+(Number(p.amount)||0),0));
   return rows;
 }
 function buildCashflowWorkbook(){
@@ -1720,7 +1721,7 @@ async function renderCustomers(){
   const kpiEl=document.getElementById('cust-kpi');
   if(kpiEl)kpiEl.innerHTML=`
     <div class="cust-kpi-card"><div class="cust-kpi-label">등록 고객</div><div class="cust-kpi-val">${rows.length}<span style="font-size:14px;font-weight:600;color:var(--muted)">명</span></div></div>
-    <div class="cust-kpi-card"><div class="cust-kpi-label">총 방문</div><div class="cust-kpi-val"><span id="cust-kpi-visits">${totalVisits}</span><span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
+    <div class="cust-kpi-card"><div class="cust-kpi-label">총 대관횟수</div><div class="cust-kpi-val"><span id="cust-kpi-visits">${totalVisits}</span><span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
     <div class="cust-kpi-card"><div class="cust-kpi-label">총 매출</div><div class="cust-kpi-val" style="font-size:18px"><span id="cust-kpi-rev">${fa(totalRev)}</span></div></div>`;
   function sortTh(key,label,cls=''){
     const active=custSortKey===key;
@@ -1742,7 +1743,7 @@ async function renderCustomers(){
   <thead class="cust-thead"><tr>
     ${sortTh('name','이름')}
     <th></th>
-    ${sortTh('visits','방문횟수','r')}
+    ${sortTh('visits','대관횟수','r')}
     ${sortTh('last','최근 대관일')}
     ${sortTh('revenue','총매출','r')}
     ${sortTh('branch','지점')}
@@ -1763,7 +1764,7 @@ async function renderCustomers(){
     const memoDisplay=r.memo?esc(r.memo):'<span style="color:#d1d5db;font-size:11px">메모 입력</span>';
     html+=`<tr class="cust-row" id="cust-row-${r.phone}" data-search="${esc(searchData)}">
       <td class="cust-editable-cell" style="text-align:center" onclick="startCustNameEdit('${r.phone}',event)"><span class="cust-name-text" id="cust-name-txt-${r.phone}">${esc(r.displayName)}</span></td>
-      <td style="text-align:center"><button class="cust-hist-btn" onclick="toggleCustDetail('${r.phone}')">방문이력</button></td>
+      <td style="text-align:center"><button class="cust-hist-btn" onclick="toggleCustDetail('${r.phone}')">대관이력</button></td>
       <td class="cust-editable-cell" style="text-align:right" onclick="startCustFieldEdit('${r.phone}','visitCount','${visitCount}',event)"><span class="cust-cnt ${cntCls}" id="cust-f-visitCount-${r.phone}">${visitCount}회</span></td>
       <td class="cust-editable-cell" style="text-align:center" onclick="startCustFieldEdit('${r.phone}','lastVisit','${lastVisit}',event)"><span class="cust-last" id="cust-f-lastVisit-${r.phone}">${esc(lastVisit)}</span></td>
       <td class="cust-editable-cell" style="text-align:right" onclick="startCustFieldEdit('${r.phone}','totalRevenue','${totalRevenue}',event)"><span class="cust-revenue" id="cust-f-totalRevenue-${r.phone}">${fa(totalRevenue)}</span></td>
@@ -1773,7 +1774,7 @@ async function renderCustomers(){
     </tr>
     <tr class="cust-detail" id="${pid}"><td colspan="8"><div class="cust-detail-inner">
       <div class="cust-visits">
-        <div class="cust-visit-hdr">방문 이력 (${r.visits.length}건)</div>
+        <div class="cust-visit-hdr">대관 이력 (${r.visits.length}건)</div>
         ${r.visits.map(ev=>{
           const bc2=normalizeBranch(ev.branch)==='문래점'?'#0369a1':'#c2410c';
           const stStyle=ev.payStatus==='완납'?'color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0':ev.payStatus==='취소'?'color:#dc2626;background:#fef2f2;border:1px solid #fecaca':'color:#b45309;background:#fffbeb;border:1px solid #fde68a';
