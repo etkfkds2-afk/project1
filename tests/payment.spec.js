@@ -16,6 +16,12 @@ test.afterEach(async ({ page }) => {
   expect(page.errors).toEqual([]);
 });
 
+test('루트 페이지는 입금관리로 이동한다', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/payment(?:\.html)?$/);
+  await expect(page).toHaveTitle('올댓마인드 입금관리');
+});
+
 test('입금 설명에서 현금 보증금을 차감하고 예약금/잔금을 분리한다', async ({ page }) => {
   const parsed = await page.evaluate(() => parseDesc(`
     20260101 홍길동 개인계좌 300,000원 예약금
@@ -83,4 +89,43 @@ test('CSV 셀은 스프레드시트 수식 실행을 방어한다', async ({ pag
   expect(cells.plus).toBe('"\'+SUM(1,1)"');
   expect(cells.normal).toBe('"일반 메모"');
   expect(cells.quote).toBe('"따옴표 "" 포함"');
+});
+
+test('고객관리 총매출 카드는 문자열 금액도 합산한다', async ({ page }) => {
+  const total = await page.evaluate(async () => {
+    remoteContactsReady = true;
+    contacts = {
+      '01011112222': { totalRevenue: '1,000원' },
+      '01033334444': { totalRevenue: '2,500원' }
+    };
+    customerAllData = [
+      {
+        id: 'cust_1',
+        rawDesc: '010-1111-2222',
+        rawTitle: '[완납] 테스트 A',
+        title: '테스트 A',
+        txns: [],
+        date: '2026-01-01',
+        branch: '문래점',
+        payStatus: '완납',
+        netIn: 1000
+      },
+      {
+        id: 'cust_2',
+        rawDesc: '010-3333-4444',
+        rawTitle: '[완납] 테스트 B',
+        title: '테스트 B',
+        txns: [],
+        date: '2026-01-02',
+        branch: '신논현점',
+        payStatus: '완납',
+        netIn: 2500
+      }
+    ];
+
+    await renderCustomers();
+    return document.getElementById('cust-kpi-rev').textContent;
+  });
+
+  expect(total).toBe('3,500원');
 });
