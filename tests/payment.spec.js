@@ -123,6 +123,7 @@ test('테이블 CSV는 현재 화면 컬럼 기준으로 내보낸다', async ({
   expect(header).toBe('대관일,지점,행사명,수납상태,예약금 입금 날짜,예약금 입금 금액,잔금 입금 날짜,잔금 입금 금액,청소보증금,대관수익 (대관일 기준),결제방법,메모');
   expect(csv).toContain('"2026-01-01","300,000"');
   expect(csv).toContain('"2026-02-01","700,000"');
+  expect(csv).toContain('"합계"');
   expect(csv).not.toContain('총입금액');
   expect(csv).not.toContain('잔금수납액');
 });

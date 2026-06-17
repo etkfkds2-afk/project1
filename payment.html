@@ -1548,7 +1548,12 @@ function buildTableCsv(){
     csvAmountCell(e.balanceAmount,e.balanceAmount2),
     csvNum(e.dep),csvMoney(e.netIn),csvCell(e.methods.join('+')),csvCell(e.notes||'')
   ]);
-  return '﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const sumRes=data.reduce((s,e)=>s+(Number(e.reservationAmount)||0),0);
+  const sumBal=data.reduce((s,e)=>s+(Number(e.balanceAmount)||0)+(Number(e.balanceAmount2)||0),0);
+  const sumDep=data.reduce((s,e)=>s+(Number(e.dep)||0),0);
+  const sumNet=data.reduce((s,e)=>s+(Number(e.netIn)||0),0);
+  const totRow=[csvCell('합계'),'','','','',csvNum(sumRes),'',csvNum(sumBal),csvNum(sumDep),csvNum(sumNet),'',''];
+  return '﻿'+[H.join(','),...rows.map(r=>r.join(',')),totRow.join(',')].join('\n');
 }
 
 function cashflowByMonth(year){
