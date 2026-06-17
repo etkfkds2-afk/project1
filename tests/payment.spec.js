@@ -129,3 +129,37 @@ test('고객관리 총매출 카드는 문자열 금액도 합산한다', async 
 
   expect(total).toBe('3,500원');
 });
+
+test('분석과 고객관리에서는 월 필터를 숨기고 고객관리 라벨을 명확히 표시한다', async ({ page }) => {
+  await page.evaluate(() => {
+    document.body.classList.remove('locked');
+    document.getElementById('authScreen').style.display = 'none';
+  });
+  await page.locator('#sm').evaluate(select => { select.value = '06'; });
+
+  await page.getByRole('button', { name: '분석' }).click();
+  await expect(page.locator('#sm')).not.toBeVisible();
+  await expect(page.locator('#sm')).toHaveValue('');
+
+  await page.evaluate(async () => {
+    remoteContactsReady = true;
+    contacts = {};
+    customerAllData = [{
+      id: 'cust_1',
+      rawDesc: '010-1111-2222',
+      rawTitle: '[완납] 테스트 A',
+      title: '테스트 A',
+      txns: [],
+      date: '2026-01-01',
+      branch: '문래점',
+      payStatus: '완납',
+      netIn: 1000
+    }];
+  });
+
+  await page.getByRole('button', { name: '고객관리' }).click();
+  await expect(page.getByText('총 방문', { exact: true })).toBeVisible();
+  await expect(page.locator('.cust-thead')).toContainText('최근 대관일');
+  await expect(page.getByText('총 방문 (2025-27)')).toHaveCount(0);
+  await expect(page.getByText('마지막 방문')).toHaveCount(0);
+});
