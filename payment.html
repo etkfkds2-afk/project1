@@ -367,6 +367,12 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <button class="btn btn-export" onclick="doExport()">CSV 내보내기</button>
   </div>
   <div id="cust-toolbar-inner" style="display:none;contents">
+    <select id="cust-year" onchange="custYear=this.value;renderCustomers()" style="min-width:90px">
+      <option value="">전체</option>
+      <option value="2027">2027년</option>
+      <option value="2026">2026년</option>
+      <option value="2025">2025년</option>
+    </select>
     <input class="search" id="cust-search-inp" placeholder="이름·전화번호·메모 검색" oninput="filterCustomers(this.value)" style="width:180px">
     <div class="sp"></div>
     <button class="btn btn-undo undobtn" onclick="undoLast()" disabled>뒤로가기</button>
@@ -489,6 +495,7 @@ let ovHistory=[], contactsHistory=[], _undoing=false;
 let customerAllData=null;
 let remoteContactsReady=false;
 let custSortKey='visits', custSortAsc=false;
+let custYear='';
 let refreshTimer=null;
 let showHidden=false;
 let selectedIds=new Set();
@@ -1709,27 +1716,29 @@ async function renderCustomers(){
     const ct=contacts[c.phone]||{};
     const displayName=ct.name||c.autoName||'이름 없음';
     const memo=ct.memo||'';
-    const visits=c.visits.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    const allVisits=c.visits.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    const visits=custYear?allVisits.filter(e=>e.date.startsWith(custYear)):allVisits;
     const countableVisits=visits.filter(e=>!/\[취소\]/.test(e.rawTitle||''));
     const totalRevenue=visits.reduce((s,e)=>s+Number(e.netIn||0),0);
     const lastVisit=countableVisits[0]?.date||visits[0]?.date||'';
     const branches=[...new Set(countableVisits.map(e=>normalizeBranch(e.branch)))];
     return{phone:c.phone,displayName,autoName:c.autoName,memo,visits,countableVisits,totalRevenue,lastVisit,branches};
-  });
-  const effVisits=r=>Number((contacts[r.phone]||{}).visitCount??r.countableVisits.length);
-  const effRev=r=>{const ct=contacts[r.phone]||{};return moneyVal(ct.totalRevenue!=null?ct.totalRevenue:r.totalRevenue);};
+  }).filter(r=>r.visits.length>0);
+  const effVisits=r=>custYear?r.countableVisits.length:Number((contacts[r.phone]||{}).visitCount??r.countableVisits.length);
+  const effRev=r=>{if(custYear)return r.totalRevenue;const ct=contacts[r.phone]||{};return moneyVal(ct.totalRevenue!=null?ct.totalRevenue:r.totalRevenue);};
   if(custSortKey==='visits')rows.sort((a,b)=>custSortAsc?effVisits(a)-effVisits(b):effVisits(b)-effVisits(a));
   else if(custSortKey==='revenue')rows.sort((a,b)=>custSortAsc?effRev(a)-effRev(b):effRev(b)-effRev(a));
   else if(custSortKey==='last')rows.sort((a,b)=>custSortAsc?a.lastVisit.localeCompare(b.lastVisit):b.lastVisit.localeCompare(a.lastVisit));
   else if(custSortKey==='branch')rows.sort((a,b)=>{const ga=(contacts[a.phone]||{}).branch||a.branches.join('+');const gb=(contacts[b.phone]||{}).branch||b.branches.join('+');return custSortAsc?ga.localeCompare(gb,'ko'):gb.localeCompare(ga,'ko');});
   else if(custSortKey==='name')rows.sort((a,b)=>custSortAsc?a.displayName.localeCompare(b.displayName,'ko'):b.displayName.localeCompare(a.displayName,'ko'));
-  const totalVisits=rows.reduce((s,r)=>s+Number((contacts[r.phone]||{}).visitCount??r.countableVisits.length),0);
-  const totalRev=rows.reduce((s,r)=>{const ct=contacts[r.phone]||{};return s+moneyVal(ct.totalRevenue!=null?ct.totalRevenue:r.totalRevenue);},0);
+  const totalVisits=rows.reduce((s,r)=>s+effVisits(r),0);
+  const totalRev=rows.reduce((s,r)=>s+effRev(r),0);
+  const yrLabel=custYear?`${custYear}년`:'2025–2027';
   const kpiEl=document.getElementById('cust-kpi');
   if(kpiEl)kpiEl.innerHTML=`
-    <div class="cust-kpi-card"><div class="cust-kpi-label">등록 고객</div><div class="cust-kpi-val">${rows.length}<span style="font-size:14px;font-weight:600;color:var(--muted)">명</span></div></div>
-    <div class="cust-kpi-card"><div class="cust-kpi-label">총 대관횟수</div><div class="cust-kpi-val"><span id="cust-kpi-visits">${totalVisits}</span><span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
-    <div class="cust-kpi-card"><div class="cust-kpi-label">총 매출</div><div class="cust-kpi-val" style="font-size:18px"><span id="cust-kpi-rev">${fa(totalRev)}</span></div></div>`;
+    <div class="cust-kpi-card"><div class="cust-kpi-label">등록 고객 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div><div class="cust-kpi-val">${rows.length}<span style="font-size:14px;font-weight:600;color:var(--muted)">명</span></div></div>
+    <div class="cust-kpi-card"><div class="cust-kpi-label">총 대관횟수 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div><div class="cust-kpi-val"><span id="cust-kpi-visits">${totalVisits}</span><span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
+    <div class="cust-kpi-card"><div class="cust-kpi-label">총 매출 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div><div class="cust-kpi-val" style="font-size:18px"><span id="cust-kpi-rev">${fa(totalRev)}</span></div></div>`;
   function sortTh(key,label,cls=''){
     const active=custSortKey===key;
     const arrow=active?(custSortAsc?'↑':'↓'):'';
@@ -2039,7 +2048,7 @@ function renderChart(){
       <div class="ak-branches">${brRowsHtml('pay')}</div>
     </div>
     <div class="an-kpi-card">
-      <div class="ak-lbl">잔금 미수금</div>
+      <div class="ak-lbl">잔금 입금 예정</div>
       <div class="ak-val amber">${fa(totalOut)}</div>
       <div class="ak-sub">예약금 입금 건 잔여 잔금</div>
       <hr class="ak-divider">
