@@ -1590,6 +1590,8 @@ function cashflowExportRows(items){
       normalizeBranch(p.e.branch)
     ]);
   });
+  rows.push(['합계','','','','', '', '']);
+  rows[rows.length-1][4]=items.reduce((s,p)=>s+(Number(p.amount)||0),0);
   return rows;
 }
 function buildCashflowWorkbook(){
