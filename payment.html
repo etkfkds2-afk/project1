@@ -1499,6 +1499,11 @@ function csvCell(value){
   return`"${text.replace(/"/g,'""')}"`;
 }
 function csvMoney(n){return Number(n)||0}
+function csvAmountCell(...values){
+  const nums=values.filter(v=>Number(v)).map(v=>Number(v));
+  if(nums.length<=1)return nums[0]||0;
+  return csvCell(nums.join(' / '));
+}
 function csvDateMoney(date,amount){
   const parts=[];
   if(date)parts.push(date);
@@ -1525,11 +1530,12 @@ function doTableExport(){
 
 function buildTableCsv(){
   const data=getFiltered();
-  const H=['대관일','지점','행사명','수납상태','예약금 입금','잔금 입금','청소보증금','대관수익 (대관일 기준)','결제방법','메모'];
+  const H=['대관일','지점','행사명','수납상태','예약금 입금 날짜','예약금 입금 금액','잔금 입금 날짜','잔금 입금 금액','청소보증금','대관수익 (대관일 기준)','결제방법','메모'];
   const rows=data.map(e=>[
     csvCell(e.date),csvCell(e.branch),csvCell(e.title),csvCell(e.payStatus),
-    csvCell(csvDateMoney(e.reservationDate,e.reservationAmount)),
-    csvCell([csvDateMoney(e.balanceDate,e.balanceAmount),csvDateMoney(e.balanceDate2,e.balanceAmount2)].filter(Boolean).join(' / ')),
+    csvCell(e.reservationDate),csvMoney(e.reservationAmount),
+    csvCell([e.balanceDate,e.balanceDate2].filter(Boolean).join(' / ')),
+    csvAmountCell(e.balanceAmount,e.balanceAmount2),
     csvCell(e.depText||e.dep||0),csvMoney(e.netIn),csvCell(e.methods.join('+')),csvCell(e.notes||'')
   ]);
   return '﻿'+[H.join(','),...rows.map(r=>r.join(','))].join('\n');
