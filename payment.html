@@ -59,13 +59,14 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .card.bl .val{color:var(--blue)}.card.gr .val{color:var(--green)}.card.or .val{color:#ea580c}
 .card.pu .val{color:#6d28d9}.card.rd .val{color:#b91c1c}
 .table-alerts{padding:18px 28px 12px}
-.balance-alert-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:14px 16px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:grid;grid-template-columns:minmax(220px,.95fr) minmax(0,1.35fr);gap:18px;align-items:start}
+.balance-alert-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:14px 16px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:grid;grid-template-columns:minmax(210px,.9fr) minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.ba-head{min-width:0}
 .ba-title{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:4px}
 .ba-main{font-size:24px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;line-height:1.15}
 .ba-sub{font-size:12px;color:var(--muted);margin-top:5px}
 .ba-year{font-size:12px;color:#374151;margin-top:10px;font-weight:700;font-variant-numeric:tabular-nums}
-.ba-list{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.ba-block{min-width:0}
+.ba-list{display:contents}
+.ba-block{min-width:0;padding-left:16px;border-left:1px solid var(--line)}
 .ba-block-title{display:flex;align-items:baseline;gap:6px;font-size:12px;color:#4b5563;font-weight:850;margin-bottom:7px}
 .ba-count{font-size:12px;font-weight:850;font-variant-numeric:tabular-nums}.ba-count.bad{color:var(--red)}.ba-count.warn{color:var(--amber)}
 .ba-alert-row{border:1px solid var(--line);background:#fafafa;border-radius:7px;padding:8px 10px;width:100%;text-align:left;cursor:pointer;display:block;font:inherit;color:inherit}
@@ -197,7 +198,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   .table-alerts{padding:14px 20px 10px}
   .balance-alert-card{grid-template-columns:1fr;gap:13px;padding:13px 14px}
   .ba-main{font-size:21px}
-  .ba-list{grid-template-columns:1fr;gap:10px}
+  .ba-list{display:grid;grid-template-columns:1fr;gap:10px}
+  .ba-block{padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:10px}
   .ba-alert-top{flex-wrap:wrap;gap:4px 7px}
   .ba-alert-title{flex-basis:100%}
   .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px 20px}
