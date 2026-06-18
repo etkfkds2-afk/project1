@@ -68,7 +68,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ba-block{min-width:0}
 .ba-block-title{display:flex;align-items:baseline;gap:6px;font-size:12px;color:#4b5563;font-weight:850;margin-bottom:7px}
 .ba-count{font-size:12px;font-weight:850;font-variant-numeric:tabular-nums}.ba-count.bad{color:var(--red)}.ba-count.warn{color:var(--amber)}
-.ba-alert-row{border:1px solid var(--line);background:#fafafa;border-radius:7px;padding:8px 10px}
+.ba-alert-row{border:1px solid var(--line);background:#fafafa;border-radius:7px;padding:8px 10px;width:100%;text-align:left;cursor:pointer;display:block;font:inherit;color:inherit}
+.ba-alert-row:hover{background:#fff7ed;border-color:#fed7aa}
+.ba-alert-row:focus{outline:3px solid rgba(245,158,11,.25);outline-offset:1px}
 .ba-alert-row+.ba-alert-row{margin-top:6px}
 .ba-alert-top{display:flex;align-items:center;gap:8px;min-width:0}
 .ba-alert-branch{font-size:11px;font-weight:850;white-space:nowrap}
@@ -83,6 +85,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ghead{background:var(--panel-soft)}
 .grow{background:#fff}
 .grow:hover{background:#fbfdff}
+.grow.row-focus{outline:3px solid rgba(245,158,11,.35);outline-offset:-3px;background:#fffbeb}
 .gcell{padding:12px 12px;vertical-align:middle;border-bottom:1px solid #eef0f3;border-right:1px solid #eef0f3;white-space:nowrap;overflow:hidden;font-size:13px;color:var(--text)}
 .gcell:last-child{border-right:none}
 .ghead .gcell,.ghead .gcell.r{font-size:12px;font-weight:800;color:#4b5563;text-align:center;background:var(--panel-soft);border-bottom:1px solid var(--line-strong);height:44px}
@@ -1182,7 +1185,7 @@ function balanceAlertRows(items,type){
   const rows=items.slice(0,2).map(info=>{
     const ev=info.ev;
     const meta=type==='bad'?`기준일 ${info.due} 지남`:`기준일 ${info.due} · D-${info.diff}`;
-    return`<div class="ba-alert-row">
+    return`<button type="button" class="ba-alert-row" onclick="focusBalanceRow('${ev.id}')">
       <div class="ba-alert-top">
         <span class="ba-alert-branch" style="color:${brColor(ev.branch)}">${esc(normalizeBranch(ev.branch))}</span>
         <span class="ba-alert-date">${esc(ev.date)}</span>
@@ -1190,10 +1193,35 @@ function balanceAlertRows(items,type){
       </div>
       <div class="ba-alert-amt">${balanceMoney(info.amount)}</div>
       <div class="ba-alert-meta">${meta}</div>
-    </div>`;
+    </button>`;
   }).join('');
   const more=items.length>2?`<div class="ba-more">외 ${items.length-2}건</div>`:'';
   return rows+more;
+}
+function focusBalanceRow(id){
+  const ev=evById(id);
+  if(!ev)return;
+  const sy=document.getElementById('sy');
+  const sm=document.getElementById('sm');
+  const sb=document.getElementById('sb');
+  const ss=document.getElementById('ss');
+  const sq=document.getElementById('sq');
+  let changed=false;
+  if(sy&&sy.value!==ev.date.slice(0,4)){sy.value=ev.date.slice(0,4);changed=true;}
+  if(sm&&sm.value!==ev.date.slice(5,7)){sm.value=ev.date.slice(5,7);changed=true;}
+  if(sb&&sb.value&&sb.value!==ev.branch){sb.value='';changed=true;}
+  if(ss&&ss.value&&ss.value!==ev.payStatus){ss.value='';changed=true;}
+  if(sq&&sq.value){sq.value='';changed=true;}
+  if(currentView!=='table')switchView('table');
+  if(changed)render();
+  requestAnimationFrame(()=>{
+    const row=document.querySelector(`[data-row-id="${CSS.escape(id)}"]`);
+    if(!row)return;
+    document.querySelectorAll('.row-focus').forEach(el=>el.classList.remove('row-focus'));
+    row.scrollIntoView({block:'center',behavior:'smooth'});
+    row.classList.add('row-focus');
+    setTimeout(()=>row.classList.remove('row-focus'),1800);
+  });
 }
 function renderTableAlerts(){
   const el=document.getElementById('table-alerts');
@@ -1360,7 +1388,7 @@ function render(){
     const bc=normalizeBranch(ev.branch)==='문래점'?'brm':'brs';
     const methodText=ev.methods.join('+')||'기타';
     const sCls='s'+ev.payStatus.replace(/\s+/g,'');
-    rows.push(`<tr class="grow${ev.hidden?' hidden-row':''}">
+    rows.push(`<tr class="grow${ev.hidden?' hidden-row':''}" data-row-id="${esc(ev.id)}">
       <td class="gcell chkcell" data-label="선택"><input type="checkbox" class="rowchk" ${selectedIds.has(ev.id)?'checked':''} onclick="toggleSelect('${ev.id}',event)"></td>
       <td class="gcell datecell" data-label="대관일">${cell(ev.id,'date',ev.date,'date')}</td>
       <td class="gcell" data-label="지점"><span class="${bc}">${cell(ev.id,'branch',ev.branch,'select')}</span></td>
