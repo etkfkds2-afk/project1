@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:,">
 <title>올댓마인드 입금관리</title>
 <style>
 :root{
@@ -391,6 +392,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   </div>
   <div id="toolbar-controls" style="display:contents">
   <select id="sy" onchange="loadAll()">
+    <option value="">전체</option>
     <option value="2027">2027년</option>
     <option value="2026" selected>2026년</option>
     <option value="2025">2025년</option>
@@ -559,8 +561,14 @@ try{ov=JSON.parse(localStorage.getItem('atm_ov')||'{}')}catch(e){}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function manualRows(){return Array.isArray(ov[MANUAL_ROWS_KEY])?ov[MANUAL_ROWS_KEY]:[]}
 function setManualRows(rows){ov[MANUAL_ROWS_KEY]=rows}
+function selectedYear(){return document.getElementById('sy')?.value||''}
+function selectedYearLabel(){const y=selectedYear();return y?`${y}년`:'전체'}
+function selectableYears(){
+  const sy=document.getElementById('sy');
+  return sy?[...sy.options].map(o=>o.value).filter(v=>/^\d{4}$/.test(v)):[String(new Date().getFullYear())];
+}
 function makeManualRow(src={}){
-  const year=document.getElementById('sy')?.value||String(new Date().getFullYear());
+  const year=selectedYear()||String(new Date().getFullYear());
   const date=src.date||`${year}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
   const branch=normalizeBranch(src.branch||document.getElementById('sb')?.value||'문래점');
   const reservationAmount=Number(src.reservationAmount??src.amount)||0;
@@ -1095,19 +1103,18 @@ async function loadAll(){
   const btn=document.getElementById('rb');
   btn.disabled=true;btn.textContent='로딩 중...';selectedIds.clear();
   document.getElementById('tb').innerHTML='<tr><td colspan="12" class="gridmsg"><div class="spin"></div>캘린더 데이터 불러오는 중...</td></tr>';
-  const year=document.getElementById('sy').value;
-  const nextYear=String(parseInt(year)+1);
+  const year=selectedYear();
+  const yearsToLoad=year?[year,String(parseInt(year,10)+1)]:selectableYears();
   try{
     await loadRemoteOv();
     if(!hasCowork()&&!getGoogleClientId())await loadRemoteGC();
     if(!hasCowork()&&!getGoogleClientId()){showGoogleSetup();return}
     allData=[];
     for(const cal of CALS){
-      const evs=await fetchEvs(cal.id,year);
-      evs.filter(isRel).forEach(ev=>allData.push(parseEv(ev,cal.name)));
-      // 다음 연도 이벤트도 로드 — 선납 예약금이 현재 연도 실입금에 잡히도록
-      const nextEvs=await fetchEvs(cal.id,nextYear);
-      nextEvs.filter(isRel).forEach(ev=>allData.push(parseEv(ev,cal.name)));
+      for(const y of [...new Set(yearsToLoad)]){
+        const evs=await fetchEvs(cal.id,y);
+        evs.filter(isRel).forEach(ev=>allData.push(parseEv(ev,cal.name)));
+      }
     }
     addManualRowsToData();
     allData.sort((a,b)=>a.date.localeCompare(b.date));
@@ -1119,12 +1126,12 @@ async function loadAll(){
 }
 
 function getFiltered(){
-  const yr=document.getElementById('sy').value;
+  const yr=selectedYear();
   const mo=document.getElementById('sm').value,br=document.getElementById('sb').value,st=document.getElementById('ss').value;
   const q=(document.getElementById('sq')?.value||'').trim().toLowerCase();
   return allData.filter(e=>{
     if(!showHidden&&e.hidden)return false;
-    if(e.date.slice(0,4)!==yr)return false; // 메인 테이블은 선택 연도 이벤트만
+    if(yr&&e.date.slice(0,4)!==yr)return false; // 메인 테이블은 선택 연도 이벤트만
     const hay=[e.date,e.branch,e.title,e.payStatus,e.reservationDate,e.balanceDate,e.netIn,e.dep,e.methods.join(' '),e.notes,e.rawTitle,e.rawDesc].join(' ').toLowerCase();
     return(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
   });
@@ -1184,13 +1191,13 @@ function balanceDueInfo(ev){
   return{ev,due,diff,level,label,amount:pendingBalanceAmount(ev)};
 }
 function tableFilterBase(ignoreMonth=false){
-  const yr=document.getElementById('sy').value;
+  const yr=selectedYear();
   const mo=ignoreMonth?'':document.getElementById('sm').value;
   const br=document.getElementById('sb').value,st=document.getElementById('ss').value;
   const q=(document.getElementById('sq')?.value||'').trim().toLowerCase();
   return allData.filter(e=>{
     if(!showHidden&&e.hidden)return false;
-    if(e.date.slice(0,4)!==yr)return false;
+    if(yr&&e.date.slice(0,4)!==yr)return false;
     const hay=[e.date,e.branch,e.title,e.payStatus,e.reservationDate,e.balanceDate,e.netIn,e.dep,e.methods.join(' '),e.notes,e.rawTitle,e.rawDesc].join(' ').toLowerCase();
     return(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
   });
@@ -1243,7 +1250,7 @@ function renderTableAlerts(){
   const el=document.getElementById('table-alerts');
   if(!el)return;
   const month=document.getElementById('sm').value;
-  const year=document.getElementById('sy').value;
+  const yearLabel=selectedYearLabel();
   const visiblePending=tableFilterBase(false).filter(e=>e.payStatus==='예약금 입금');
   const yearPending=tableFilterBase(true).filter(e=>e.payStatus==='예약금 입금');
   const monthTotal=visiblePending.reduce((s,e)=>s+pendingBalanceAmount(e),0);
@@ -1252,7 +1259,7 @@ function renderTableAlerts(){
   const overdueItems=dueInfos.filter(x=>x.level==='bad').sort((a,b)=>a.due.localeCompare(b.due)||b.amount-a.amount);
   const soonItems=dueInfos.filter(x=>x.level==='warn').sort((a,b)=>a.diff-b.diff||b.amount-a.amount);
   const title=month?`${Number(month)}월 잔금 입금 예정`:'잔금 입금 예정';
-  const yearLine=month?`<div class="ba-year">${year}년 전체 ${balanceMoney(yearTotal)} · ${yearPending.length}건</div>`:'';
+  const yearLine=month?`<div class="ba-year">${yearLabel} 전체 ${balanceMoney(yearTotal)} · ${yearPending.length}건</div>`:'';
   el.innerHTML=`<div class="balance-alert-card">
     <div class="ba-head">
       <div class="ba-title">${title}</div>
@@ -1346,7 +1353,7 @@ function todayYmd(){
   return`${y}-${m}-${day}`;
 }
 function isCountablePayDate(date,year,allowFuture=false){
-  if(!date||date==='입금 예정'||date==='미입금'||date.slice(0,4)!==year)return false;
+  if(!date||date==='입금 예정'||date==='미입금'||(year&&date.slice(0,4)!==year))return false;
   const mo=parseInt(date.slice(5,7),10);
   if(mo<1||mo>12)return false;
   return allowFuture||date<=todayYmd();
@@ -1377,7 +1384,7 @@ function paymentParts(ev,year){
   return parts;
 }
 function periodNetIn(ev){
-  const year=document.getElementById('sy').value;
+  const year=selectedYear();
   return paymentParts(ev,year).reduce((s,p)=>s+p.amount,0);
 }
 function effectiveNetIn(ev){
@@ -1557,7 +1564,7 @@ function toggleHidden(){
 }
 
 function defaultManualDate(mo){
-  const year=document.getElementById('sy').value;
+  const year=selectedYear()||String(new Date().getFullYear());
   const month=mo||document.getElementById('sm').value||String(new Date().getMonth()+1).padStart(2,'0');
   return`${year}-${month}-01`;
 }
@@ -1718,7 +1725,7 @@ function doExport(){
 }
 
 function doTableExport(){
-  downloadCsv(buildTableCsv(),`올댓마인드_입금관리_${document.getElementById('sy').value}.csv`);
+  downloadCsv(buildTableCsv(),`올댓마인드_입금관리_${selectedYearLabel()}.csv`);
 }
 
 function buildTableCsv(){
@@ -1759,7 +1766,7 @@ function cashflowByMonth(year){
 }
 
 function doCashflowExport(){
-  downloadExcelWorkbook(buildCashflowWorkbook(),`올댓마인드_월별실입금_${document.getElementById('sy').value}.xls`);
+  downloadExcelWorkbook(buildCashflowWorkbook(),`올댓마인드_월별실입금_${selectedYearLabel()}.xls`);
 }
 
 function excelText(value){return esc(value)}
@@ -1786,7 +1793,7 @@ function cashflowExportRows(items){
   return rows;
 }
 function buildCashflowWorkbook(){
-  const year=document.getElementById('sy').value;
+  const year=selectedYear();
   const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const {byMo}=cashflowByMonth(year);
   const sheets=[];
@@ -2159,7 +2166,8 @@ function switchView(v){
 }
 
 function renderChart(){
-  const year=document.getElementById('sy').value;
+  const year=selectedYear();
+  const yearLabel=selectedYearLabel();
   const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const chartRows=getFilteredForChart();
 
@@ -2188,7 +2196,7 @@ function renderChart(){
       if(pMo>=0&&pMo<12){payByMo[pMo]+=p.amount;brMap[b].pay+=p.amount;brPayByMo[b][pMo]+=p.amount;}
     });
 
-    if(e.payStatus==='예약금 입금'&&e.date.slice(0,4)===year)brMap[b].out+=Number(e.balanceAmount)||0;
+    if(e.payStatus==='예약금 입금'&&(!year||e.date.slice(0,4)===year))brMap[b].out+=Number(e.balanceAmount)||0;
   });
 
   const totalPay=payByMo.reduce((s,v)=>s+v,0);
@@ -2215,7 +2223,7 @@ function renderChart(){
     :'<div style="font-size:12px;color:#b0b8c4">없음</div>';
 
   // 대관 건수 집계
-  const allChartRows=chartRows.filter(e=>e.date.slice(0,4)===year);
+  const allChartRows=year?chartRows.filter(e=>e.date.slice(0,4)===year):chartRows;
   const cntTotal=allChartRows.length;
   const cntByBr={};
   allChartRows.forEach(e=>{const b=normalizeBranch(e.branch);cntByBr[b]=(cntByBr[b]||0)+1;});
@@ -2228,10 +2236,10 @@ function renderChart(){
   ).join('');
 
   document.getElementById('an-kpi').innerHTML=`
-    <div class="an-kpi-card">
+      <div class="an-kpi-card">
       <div class="ak-lbl">연간 실입금</div>
       <div class="ak-val green">${fa(totalPay)}</div>
-      <div class="ak-sub">${year}년 실제 수령액 (입금날짜 기준)</div>
+      <div class="ak-sub">${yearLabel} 실제 수령액 (입금날짜 기준)</div>
       <hr class="ak-divider">
       <div class="ak-branches">${brRowsHtml('pay')}</div>
     </div>
