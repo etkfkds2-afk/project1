@@ -67,7 +67,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ba-sub{font-size:12px;color:var(--muted);margin-top:5px}
 .ba-year{font-size:12px;color:#374151;margin-top:10px;font-weight:700;font-variant-numeric:tabular-nums}
 .ba-list{display:contents}
-.ba-block{min-width:0;padding-left:16px;border-left:1px solid var(--line)}
+.ba-block{min-width:0;padding-left:16px;border-left:1px solid var(--line);display:flex;flex-direction:column}
+.ba-rows{display:flex;flex-direction:column;flex:1;min-height:0}
 .ba-block-title{display:flex;align-items:baseline;gap:6px;font-size:12px;color:#4b5563;font-weight:850;margin-bottom:7px}
 .ba-count{font-size:12px;font-weight:850;font-variant-numeric:tabular-nums}.ba-count.bad{color:var(--red)}.ba-count.warn{color:var(--amber)}
 .ba-alert-row{border:1px solid var(--line);background:#fafafa;border-radius:7px;padding:8px 10px;width:100%;text-align:left;cursor:pointer;display:block;font:inherit;color:inherit}
@@ -80,7 +81,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ba-alert-title{font-size:12px;font-weight:750;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .ba-alert-amt{font-size:13px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;margin-top:3px}
 .ba-alert-meta{font-size:11px;color:#6b7280;margin-top:2px;font-variant-numeric:tabular-nums}
-.ba-empty{font-size:12px;color:#9ca3af;background:#fafafa;border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-height:74px;display:flex;align-items:center}
+.ba-empty{font-size:12px;color:#9ca3af;background:#fafafa;border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-height:74px;display:flex;align-items:center;flex:1}
 .ba-more{font-size:11px;color:#6b7280;margin-top:6px}
 .tw{padding:0 28px 44px;overflow-x:auto}
 .paygrid{width:100%;min-width:1450px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
@@ -258,7 +259,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .an-kpi{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:22px}
 .an-kpi-card{background:var(--panel);border-radius:10px;border:1px solid var(--line);padding:18px 20px;box-shadow:var(--shadow)}
 .an-kpi-card .ak-lbl{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:6px}
-.an-kpi-card .ak-val{font-size:26px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1}
+.an-kpi-card .ak-val{font-size:26px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1;min-height:29px}
 .ak-val.green{color:var(--green)}.ak-val.amber{color:var(--amber)}.ak-val.red{color:var(--red)}
 .an-kpi-card .ak-sub{font-size:11px;color:var(--muted);margin-top:5px;margin-bottom:10px}
 .an-kpi-card .ak-divider{border:none;border-top:1px solid var(--line);margin:0}
@@ -1283,11 +1284,11 @@ function renderTableAlerts(){
     <div class="ba-list">
       <div class="ba-block">
         <div class="ba-block-title">확인 필요 <span class="ba-count bad">${overdueItems.length}건</span></div>
-        ${balanceAlertRows(overdueItems,'bad')}
+        <div class="ba-rows">${balanceAlertRows(overdueItems,'bad')}</div>
       </div>
       <div class="ba-block">
         <div class="ba-block-title">임박 <span class="ba-count warn">${soonItems.length}건</span></div>
-        ${balanceAlertRows(soonItems,'warn')}
+        <div class="ba-rows">${balanceAlertRows(soonItems,'warn')}</div>
       </div>
     </div>
   </div>`;
