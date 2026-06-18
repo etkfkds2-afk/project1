@@ -1193,7 +1193,9 @@ function balanceDueInfo(ev){
   if(!due)return null;
   const diff=dayDiff(todayYmd(),due);
   const level=diff<0?'bad':diff<=7?'warn':'ok';
-  return{ev,due,diff,level,amount:pendingBalanceAmount(ev)};
+  // 다음 잔금 리스트는 보증금 차감 없이 입금예정금액 그대로 표시
+  const amount=(Number(ev.balanceAmount)||0)+(Number(ev.balanceAmount2)||0);
+  return{ev,due,diff,level,amount};
 }
 function tableFilterBase(ignoreMonth=false){
   const yr=selectedYear();
@@ -1255,7 +1257,7 @@ function renderTableAlerts(){
   const monthTotal=visiblePending.reduce((s,e)=>s+pendingBalanceAmount(e),0);
   const dueInfos=visiblePending.map(balanceDueInfo).filter(Boolean)
     .sort((a,b)=>a.due.localeCompare(b.due)||b.amount-a.amount);
-  const title=month?`${Number(month)}월 잔금 입금 예정`:'잔금 입금 예정';
+  const title=month?`${Number(month)}월 잔금 입금 예정(실수익)`:'잔금 입금 예정(실수익)';
   const brColor=n=>normalizeBranch(n)==='문래점'?'#2563eb':'#7c3aed';
   const BR_LIST=['문래점','신논현점'];
   const brMap={};
@@ -1275,7 +1277,7 @@ function renderTableAlerts(){
       <div class="ak-branches">${brHtml}</div>
     </div>
     <div class="ba-next">
-      <div class="ba-block-title">다음 잔금 <span class="ba-count">${dueInfos.length}건</span></div>
+      <div class="ba-block-title">다음 잔금 <span class="ba-count">${dueInfos.length}건</span>(청소보증금 포함)</div>
       <div class="ba-next-list">${nextBalanceRows(dueInfos)}</div>
     </div>
   </div>`;
