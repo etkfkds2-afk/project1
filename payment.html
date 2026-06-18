@@ -227,6 +227,16 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   .paygrid .gfoot .sumcell{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:center;width:100%;min-height:40px;padding:9px 12px;border-right:0;border-bottom:1px solid #eef0f3;background:#fff;white-space:normal;text-align:right}
   .paygrid .gfoot .sumcell::before{content:attr(data-label);font-size:11px;color:var(--muted);font-weight:800;text-align:left}
   .paygrid .gfoot .sumcell:last-child{border-bottom:0}
+  .cf-table{display:block;width:100%;table-layout:fixed}
+  .cf-table thead{display:none}
+  .cf-table tbody,.cf-table tr,.cf-table td{display:block;width:100%;max-width:100%}
+  .cf-body{display:none}.cf-body.open{display:block}
+  .cf-mrow td{padding:9px 12px}
+  .cf-row{padding:9px 12px;border-bottom:1px solid #f1f3f6}
+  .cf-row td{padding:3px 0;border-bottom:0;white-space:normal}
+  .cf-td-date,.cf-td-evdate,.cf-td-lbl,.cf-td-amt,.cf-td-method,.cf-td-br,.cf-td-action{width:auto;text-align:left}
+  .cf-td-title{min-width:0}
+  .cf-td-amt{text-align:left}
   .titlecell{min-width:0;white-space:normal}
   .titletext{max-width:none;white-space:normal}
   .editcell{white-space:normal;min-width:0}
@@ -303,6 +313,10 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cf-br-hdr td{padding:5px 14px;background:#f8fafc;border-top:1px solid var(--line);border-bottom:1px solid #e5e7eb}
 .cf-br-hdr td>span:first-child{display:inline-flex;align-items:center;gap:6px}
 .cf-br-hdr td>span:first-child::before{content:'';display:inline-block;width:3px;height:13px;border-radius:2px;background:currentColor}
+@media (max-width:760px){
+  #view-chart{padding:20px 20px 36px}
+  .an-kpi{grid-template-columns:1fr}
+}
 /* ── 고객관리 ── */
 #view-customer{padding:20px 28px 48px;display:none}
 .cust-kpi{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
@@ -1116,7 +1130,7 @@ function getFiltered(){
   });
 }
 function getFilteredForChart(){
-  // 차트는 입금일 기준 월별 집계이므로 월 필터 제외, 나머지(지점/상태/검색)는 유지
+  // 실입금 차트는 다음 연도 대관의 선입금도 잡아야 하므로 대관 연도/월 필터 제외
   const br=document.getElementById('sb').value,st=document.getElementById('ss').value;
   const q=(document.getElementById('sq')?.value||'').trim().toLowerCase();
   return allData.filter(e=>{
@@ -2201,7 +2215,7 @@ function renderChart(){
     :'<div style="font-size:12px;color:#b0b8c4">없음</div>';
 
   // 대관 건수 집계
-  const allChartRows=getFilteredForChart();
+  const allChartRows=chartRows.filter(e=>e.date.slice(0,4)===year);
   const cntTotal=allChartRows.length;
   const cntByBr={};
   allChartRows.forEach(e=>{const b=normalizeBranch(e.branch);cntByBr[b]=(cntByBr[b]||0)+1;});
