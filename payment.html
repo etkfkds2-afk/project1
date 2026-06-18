@@ -1353,7 +1353,9 @@ function todayYmd(){
   return`${y}-${m}-${day}`;
 }
 function isCountablePayDate(date,year,allowFuture=false){
-  if(!date||date==='입금 예정'||date==='미입금'||(year&&date.slice(0,4)!==year))return false;
+  if(!date||date==='입금 예정'||date==='미입금')return false;
+  if(year){if(date.slice(0,4)!==year)return false}
+  else if(date.slice(0,4)<'2025')return false; // 전체 선택 시에도 2025년 이전 입금은 제외
   const mo=parseInt(date.slice(5,7),10);
   if(mo<1||mo>12)return false;
   return allowFuture||date<=todayYmd();
@@ -1586,10 +1588,12 @@ function addManualRow(src={}){
   render();
   return row.id;
 }
-function addCashflowRow(mo,e){
+function addCashflowRow(mo,e,year){
   e?.stopPropagation();
-  const id=addManualRow({mo:String(mo+1).padStart(2,'0')});
-  open.add(`cfb${mo}`);
+  const y=year||selectedYear()||String(new Date().getFullYear());
+  const mm=String(mo+1).padStart(2,'0');
+  const id=addManualRow({mo:mm,date:`${y}-${mm}-01`});
+  open.add(`cfb${y}-${mo}`);
   switchView('chart');
   setTimeout(()=>{
     const row=document.querySelector(`[data-cf-id="${id}"]`);
@@ -1747,22 +1751,36 @@ function buildTableCsv(){
 }
 
 function cashflowByMonth(year){
-  const byMo={};
+  // key는 항상 "YYYY-M"(월은 0~11). 연도 선택 시엔 해당 연도만, 전체 선택 시엔 실제 입금 연도별로 분리됨.
+  const byMonth={};
   let grandTotal=0;
   getFilteredForChart().forEach(e=>{
     if(e.payStatus==='환불')return;
     paymentParts(e,year).forEach(p=>{
       const mo=parseInt(p.date.slice(5,7),10)-1;
       if(mo<0||mo>11)return;
-      if(!byMo[mo])byMo[mo]=[];
-      byMo[mo].push({...p,e,isRes:p.kind==='예약금'});
+      const y=p.date.slice(0,4);
+      const key=`${y}-${mo}`;
+      if(!byMonth[key])byMonth[key]=[];
+      byMonth[key].push({...p,e,isRes:p.kind==='예약금'});
       grandTotal+=p.amount;
     });
   });
-  Object.keys(byMo).forEach(mo=>{
-    byMo[mo].sort((a,b)=>a.date.localeCompare(b.date)||normalizeBranch(a.e.branch).localeCompare(normalizeBranch(b.e.branch),'ko')||a.e.title.localeCompare(b.e.title,'ko'));
+  Object.keys(byMonth).forEach(k=>{
+    byMonth[k].sort((a,b)=>a.date.localeCompare(b.date)||normalizeBranch(a.e.branch).localeCompare(normalizeBranch(b.e.branch),'ko')||a.e.title.localeCompare(b.e.title,'ko'));
   });
-  return{byMo,grandTotal};
+  let order;
+  if(year){
+    order=Array.from({length:12},(_,mo)=>({key:`${year}-${mo}`,year,mo,label:`${mo+1}월`}));
+  }else{
+    const years=Object.keys(byMonth).map(k=>parseInt(k.split('-')[0],10));
+    const thisYear=new Date().getFullYear();
+    const minY=years.length?Math.min(...years):thisYear;
+    const maxY=years.length?Math.max(...years):thisYear;
+    order=[];
+    for(let y=minY;y<=maxY;y++)for(let mo=0;mo<12;mo++)order.push({key:`${y}-${mo}`,year:String(y),mo,label:`${y}년 ${mo+1}월`});
+  }
+  return{byMonth,order,grandTotal};
 }
 
 function doCashflowExport(){
@@ -1794,16 +1812,15 @@ function cashflowExportRows(items){
 }
 function buildCashflowWorkbook(){
   const year=selectedYear();
-  const LABELS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const {byMo}=cashflowByMonth(year);
+  const {byMonth,order}=cashflowByMonth(year);
   const sheets=[];
   const allItems=[];
-  for(let mo=0;mo<12;mo++)allItems.push(...(byMo[mo]||[]));
+  order.forEach(({key})=>allItems.push(...(byMonth[key]||[])));
   sheets.push(excelSheet('전체실입금내역',cashflowExportRows(allItems)));
-  for(let mo=0;mo<12;mo++){
-    const items=byMo[mo]||[];
-    if(items.length)sheets.push(excelSheet(LABELS[mo],cashflowExportRows(items)));
-  }
+  order.forEach(({key,label})=>{
+    const items=byMonth[key]||[];
+    if(items.length)sheets.push(excelSheet(label,cashflowExportRows(items)));
+  });
   return `<?xml version="1.0" encoding="UTF-8"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheets.join('')}</Workbook>`;
 }
 
@@ -2309,7 +2326,7 @@ function renderChart(){
   });
 
   // ── 실입금 테이블 ─────────────────────────────────
-  const {byMo,grandTotal}=cashflowByMonth(year);
+  const {byMonth,order:cfOrder,grandTotal}=cashflowByMonth(year);
   document.getElementById('an-cf-total').textContent=fa(grandTotal);
 
   let html=`<table class="cf-table">
@@ -2321,15 +2338,15 @@ function renderChart(){
 
   const BR_ORDER=['문래점','신논현점'];
   const BR_COLOR={'문래점':'#2563eb','신논현점':'#7c3aed'};
-  for(let mo=0;mo<12;mo++){
-    const all=(byMo[mo]||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+  cfOrder.forEach(({key,mo,year:secYear,label})=>{
+    const all=(byMonth[key]||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
     const moTotal=all.reduce((s,p)=>s+p.amount,0);
-    const bid=`cfb${mo}`;
+    const bid=`cfb${key}`;
     html+=`<tbody><tr class="cf-mrow ${open.has(bid)?'open':''}" onclick="toggleCfMo('${bid}',this)">
-      <td colspan="8">${LABELS[mo]}${all.length
+      <td colspan="8">${label}${all.length
         ?`<span class="cf-mtotal">${fa(moTotal)}</span><span class="cf-mcnt">${all.length}건</span>`
         :'<span class="cf-mempty">입금 없음</span>'}
-        <button class="cf-add" onclick="addCashflowRow(${mo},event)" title="행 추가">🖊️</button>
+        <button class="cf-add" onclick="addCashflowRow(${mo},event,'${secYear}')" title="행 추가">🖊️</button>
         <span class="cf-arrow">▼</span>
       </td></tr></tbody>
     <tbody class="cf-body ${open.has(bid)?'open':''}" id="${bid}">`;
@@ -2359,7 +2376,7 @@ function renderChart(){
       });
     });
     html+=`</tbody>`;
-  }
+  });
   html+=`</table>`;
   document.getElementById('cashflow-content').innerHTML=html;
   updateClearManualBtn();

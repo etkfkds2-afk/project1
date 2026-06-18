@@ -186,6 +186,80 @@ test('분석 내보내기는 전체실입금내역 시트와 월별 시트를 �
   expect(workbook.indexOf('분석 예약금')).toBeLessThan(workbook.indexOf('분석 잔금'));
 });
 
+test('전체 연도 선택 시 월별 실입금은 연도별로 분리되고 2024년 이전은 제외된다', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    allData = [
+      {
+        id: 'ev_2024',
+        date: '2024-01-10',
+        branch: '문래점',
+        title: '2024년 입금',
+        payStatus: '완납',
+        reservationDate: '2024-01-10',
+        reservationAmount: 100000,
+        reservationDiAmt: 0,
+        balanceDate: '',
+        balanceAmount: 0,
+        dep: 0,
+        methods: ['현금'],
+        netIn: 100000
+      },
+      {
+        id: 'ev_2025_jan',
+        date: '2025-01-15',
+        branch: '문래점',
+        title: '2025년 1월 입금',
+        payStatus: '완납',
+        reservationDate: '2025-01-15',
+        reservationAmount: 200000,
+        reservationDiAmt: 0,
+        balanceDate: '',
+        balanceAmount: 0,
+        dep: 0,
+        methods: ['현금'],
+        netIn: 200000
+      },
+      {
+        id: 'ev_2026_jan',
+        date: '2026-01-20',
+        branch: '신논현점',
+        title: '2026년 1월 입금',
+        payStatus: '완납',
+        reservationDate: '2026-01-20',
+        reservationAmount: 300000,
+        reservationDiAmt: 0,
+        balanceDate: '',
+        balanceAmount: 0,
+        dep: 0,
+        methods: ['카드'],
+        netIn: 300000
+      }
+    ];
+    showHidden = false;
+    document.getElementById('sy').value = '';
+    document.getElementById('sb').value = '';
+    document.getElementById('ss').value = '';
+    document.getElementById('sq').value = '';
+    switchView('chart');
+    const workbook = buildCashflowWorkbook();
+    const { byMonth, order, grandTotal } = cashflowByMonth('');
+    return { workbook, order, grandTotal };
+  });
+
+  expect(result.grandTotal).toBe(500000);
+  expect(result.workbook).not.toContain('2024년');
+  expect(result.workbook).not.toContain('2024년 입금');
+  expect(result.workbook).toContain('<Worksheet ss:Name="2025년 1월">');
+  expect(result.workbook).toContain('<Worksheet ss:Name="2026년 1월">');
+  expect(result.workbook.indexOf('2025년 1월 입금')).toBeLessThan(result.workbook.indexOf('2026년 1월 입금'));
+
+  const jan2025Index = result.order.findIndex(o => o.key === '2025-0');
+  const jan2026Index = result.order.findIndex(o => o.key === '2026-0');
+  expect(jan2025Index).toBeGreaterThanOrEqual(0);
+  expect(jan2026Index).toBeGreaterThan(jan2025Index);
+  expect(result.order.some(o => o.year === '2024')).toBe(false);
+});
+
 test('고객관리 총매출 카드는 문자열 금액도 합산한다', async ({ page }) => {
   const total = await page.evaluate(async () => {
     remoteContactsReady = true;
