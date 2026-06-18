@@ -393,6 +393,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div id="toolbar-controls" style="display:contents">
   <select id="sy" onchange="loadAll()">
     <option value="">전체</option>
+    <option value="2028">2028년</option>
     <option value="2027">2027년</option>
     <option value="2026" selected>2026년</option>
     <option value="2025">2025년</option>
@@ -2195,6 +2196,7 @@ function renderChart(){
   const payByMo=Array(12).fill(0);
   const brMap={}; // {branch:{ev,pay,outstanding}}
   const brPayByMo={}; // {branch: Array(12)}
+  const payYears=new Set();
 
   chartRows.forEach(e=>{
     const b=normalizeBranch(e.branch);
@@ -2210,12 +2212,18 @@ function renderChart(){
 
     paymentParts(e,year).forEach(p=>{
       const pMo=parseInt(p.date.slice(5,7),10)-1;
-      if(pMo>=0&&pMo<12){payByMo[pMo]+=p.amount;brMap[b].pay+=p.amount;brPayByMo[b][pMo]+=p.amount;}
+      if(pMo>=0&&pMo<12){payByMo[pMo]+=p.amount;brMap[b].pay+=p.amount;brPayByMo[b][pMo]+=p.amount;payYears.add(p.date.slice(0,4));}
     });
 
     if(e.payStatus==='예약금 입금'&&(!year||e.date.slice(0,4)===year))brMap[b].out+=Number(e.balanceAmount)||0;
   });
 
+  const payYearLabel=(()=>{
+    if(year)return'연간 실입금';
+    const yrs=[...payYears].sort();
+    if(!yrs.length)return'전체 실입금';
+    return yrs.length===1?`${yrs[0]} 실입금`:`${yrs[0]}-${yrs[yrs.length-1]} 실입금`;
+  })();
   const totalPay=payByMo.reduce((s,v)=>s+v,0);
   const totalOut=Object.values(brMap).reduce((s,v)=>s+v.out,0);
   // 취소/환불 ev.netIn 기준 집계 (테이블 카드와 동일 기준)
@@ -2254,7 +2262,7 @@ function renderChart(){
 
   document.getElementById('an-kpi').innerHTML=`
       <div class="an-kpi-card">
-      <div class="ak-lbl">연간 실입금</div>
+      <div class="ak-lbl">${payYearLabel}</div>
       <div class="ak-val green">${fa(totalPay)}</div>
       <div class="ak-sub">${yearLabel} 실제 수령액 (입금날짜 기준)</div>
       <hr class="ak-divider">
@@ -2294,7 +2302,7 @@ function renderChart(){
     </div>`;
 
   // ── 차트 ─────────────────────────────────────────
-  document.getElementById('an-chart-title').textContent=`${year}년 월별 실입금`;
+  document.getElementById('an-chart-title').textContent=year?`${year}년 월별 실입금`:'월별 실입금';
   const ctx=document.getElementById('revenueChart').getContext('2d');
   if(revenueChartInst)revenueChartInst.destroy();
   const selectedBr=document.getElementById('sb').value;
