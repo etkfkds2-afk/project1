@@ -262,10 +262,11 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ak-val.green{color:var(--green)}.ak-val.amber{color:var(--amber)}.ak-val.red{color:var(--red)}
 .an-kpi-card .ak-sub{font-size:11px;color:var(--muted);margin-top:5px;margin-bottom:10px}
 .an-kpi-card .ak-divider{border:none;border-top:1px solid var(--line);margin:0}
-.an-kpi-card .ak-branches{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.an-kpi-card .ak-branches,.balance-alert-card .ak-branches{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
 .ak-br-row{display:flex;flex-direction:column;gap:2px;background:var(--bg);border-radius:7px;padding:8px 10px}
 .ak-br-name{font-size:11px;font-weight:700;letter-spacing:.3px}
 .ak-br-val{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.ak-br-cnt{font-size:11px;font-weight:600;color:var(--muted);margin-left:4px}
 /* 섹션 공통 */
 .an-section{background:var(--panel);border-radius:10px;border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
 .an-section:last-child{margin-bottom:0}
@@ -393,7 +394,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div id="toolbar-controls" style="display:contents">
   <select id="sy" onchange="loadAll()">
     <option value="">전체</option>
-    <option value="2028">2028년</option>
     <option value="2027">2027년</option>
     <option value="2026" selected>2026년</option>
     <option value="2025">2025년</option>
@@ -1261,12 +1261,24 @@ function renderTableAlerts(){
   const soonItems=dueInfos.filter(x=>x.level==='warn').sort((a,b)=>a.diff-b.diff||b.amount-a.amount);
   const title=month?`${Number(month)}월 잔금 입금 예정`:'잔금 입금 예정';
   const yearLine=month?`<div class="ba-year">${yearLabel} 전체 ${balanceMoney(yearTotal)} · ${yearPending.length}건</div>`:'';
+  const brColor=n=>normalizeBranch(n)==='문래점'?'#2563eb':'#7c3aed';
+  const brMap={};
+  visiblePending.forEach(e=>{
+    const b=normalizeBranch(e.branch);
+    if(!brMap[b])brMap[b]={amt:0,cnt:0};
+    brMap[b].amt+=pendingBalanceAmount(e);
+    brMap[b].cnt++;
+  });
+  const brHtml=Object.entries(brMap).length
+    ?Object.entries(brMap).map(([n,v])=>`<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${balanceMoney(v.amt)}<span class="ak-br-cnt">${v.cnt}건</span></span></div>`).join('')
+    :'<div style="font-size:12px;color:#b0b8c4">없음</div>';
   el.innerHTML=`<div class="balance-alert-card">
     <div class="ba-head">
       <div class="ba-title">${title}</div>
       <div class="ba-main">${balanceMoney(monthTotal)}</div>
       <div class="ba-sub">${visiblePending.length}건</div>
       ${yearLine}
+      <div class="ak-branches">${brHtml}</div>
     </div>
     <div class="ba-list">
       <div class="ba-block">
@@ -2200,7 +2212,7 @@ function renderChart(){
 
   chartRows.forEach(e=>{
     const b=normalizeBranch(e.branch);
-    if(!brMap[b])brMap[b]={ev:0,pay:0,out:0};
+    if(!brMap[b])brMap[b]={ev:0,pay:0,out:0,outCnt:0};
     if(!brPayByMo[b])brPayByMo[b]=Array(12).fill(0);
     if(e.payStatus==='환불')return;
 
@@ -2215,7 +2227,7 @@ function renderChart(){
       if(pMo>=0&&pMo<12){payByMo[pMo]+=p.amount;brMap[b].pay+=p.amount;brPayByMo[b][pMo]+=p.amount;payYears.add(p.date.slice(0,4));}
     });
 
-    if(e.payStatus==='예약금 입금'&&(!year||e.date.slice(0,4)===year))brMap[b].out+=Number(e.balanceAmount)||0;
+    if(e.payStatus==='예약금 입금'&&(!year||e.date.slice(0,4)===year)){brMap[b].out+=pendingBalanceAmount(e);brMap[b].outCnt++;}
   });
 
   const payYearLabel=(()=>{
@@ -2278,10 +2290,9 @@ function renderChart(){
     <div class="an-kpi-card">
       <div class="ak-lbl">잔금 입금 예정</div>
       <div class="ak-val amber">${fa(totalOut)}</div>
-      <div class="ak-sub">예약금 입금 건 잔여 잔금</div>
-      <hr class="ak-divider">
+      <hr class="ak-divider" style="margin-top:10px">
       <div class="ak-branches">${brEntries.map(([n,v])=>
-        `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v.out)}</span></div>`
+        `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v.out)}<span class="ak-br-cnt">${v.outCnt}건</span></span></div>`
       ).join('')}</div>
     </div>
     <div class="an-kpi-card" style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
