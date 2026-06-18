@@ -60,27 +60,27 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .card.bl .val{color:var(--blue)}.card.gr .val{color:var(--green)}.card.or .val{color:#ea580c}
 .card.pu .val{color:#6d28d9}.card.rd .val{color:#b91c1c}
 .table-alerts{padding:18px 28px 12px}
-.balance-alert-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:14px 16px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:grid;grid-template-columns:minmax(210px,.9fr) minmax(0,1fr) minmax(0,1fr);gap:16px}
+.balance-alert-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:14px 16px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:grid;grid-template-columns:minmax(210px,.9fr) minmax(0,1.4fr);gap:16px}
 .ba-head{min-width:0}
 .ba-title{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:4px}
 .ba-main{font-size:24px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;line-height:1.15}
-.ba-list{display:contents}
-.ba-block{min-width:0;padding-left:16px;border-left:1px solid var(--line);display:flex;flex-direction:column}
-.ba-rows{display:flex;flex-direction:column;min-height:92px;border:1px solid var(--line);background:#fafafa;border-radius:7px;padding:10px 12px}
+.ba-next{min-width:0;padding-left:16px;border-left:1px solid var(--line);display:flex;flex-direction:column}
 .ba-block-title{display:flex;align-items:baseline;gap:6px;font-size:12px;color:#4b5563;font-weight:850;margin-bottom:7px}
-.ba-count{font-size:12px;font-weight:850;font-variant-numeric:tabular-nums}.ba-count.bad{color:var(--red)}.ba-count.warn{color:var(--amber)}
-.ba-alert-row{border:0;background:transparent;border-radius:6px;padding:0;width:100%;text-align:left;cursor:pointer;display:block;font:inherit;color:inherit}
-.ba-alert-row:hover{background:#fff7ed}
-.ba-alert-row:focus{outline:3px solid rgba(245,158,11,.25);outline-offset:1px}
-.ba-alert-row+.ba-alert-row{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
-.ba-alert-top{display:flex;align-items:center;gap:8px;min-width:0}
-.ba-alert-branch{font-size:12px;font-weight:850;white-space:nowrap}
-.ba-alert-date{font-size:13px;color:#6b7280;white-space:nowrap;font-variant-numeric:tabular-nums}
-.ba-alert-title{font-size:13px;font-weight:750;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.ba-alert-amt{font-size:16px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;margin-top:4px}
-.ba-alert-meta{font-size:12px;color:#6b7280;margin-top:3px;font-variant-numeric:tabular-nums}
-.ba-empty{font-size:13px;color:#9ca3af;display:flex;align-items:center;justify-content:center;flex:1}
-.ba-more{font-size:12px;color:#6b7280;margin-top:7px}
+.ba-count{font-size:12px;font-weight:850;font-variant-numeric:tabular-nums}
+.ba-next-list{display:flex;flex-direction:column;gap:4px;max-height:230px;overflow-y:auto;padding-right:4px}
+.ba-next-row{border:0;background:transparent;border-radius:6px;padding:6px 4px;width:100%;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;font:inherit;color:inherit}
+.ba-next-row:hover{background:#fff7ed}
+.ba-next-row:focus{outline:3px solid rgba(245,158,11,.25);outline-offset:1px}
+.ba-next-row+.ba-next-row{border-top:1px dashed var(--line)}
+.ba-next-dday{font-size:11px;font-weight:850;border-radius:5px;padding:3px 7px;min-width:48px;text-align:center;flex:none;font-variant-numeric:tabular-nums}
+.ba-next-dday.bad{background:#fee2e2;color:var(--red)}
+.ba-next-dday.warn{background:#fef3c7;color:var(--amber)}
+.ba-next-dday.ok{background:#f1f5f9;color:#475569}
+.ba-next-branch{font-size:12px;font-weight:850;white-space:nowrap;flex:none}
+.ba-next-date{font-size:12px;color:#6b7280;white-space:nowrap;font-variant-numeric:tabular-nums;flex:none}
+.ba-next-title{font-size:13px;font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+.ba-next-amt{font-size:14px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;flex:none;white-space:nowrap}
+.ba-empty{font-size:13px;color:#9ca3af;display:flex;align-items:center;min-height:92px}
 .tw{padding:0 28px 44px;overflow-x:auto}
 .paygrid{width:100%;min-width:1450px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
 .ghead{background:var(--panel-soft)}
@@ -198,10 +198,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   .table-alerts{padding:14px 20px 10px}
   .balance-alert-card{grid-template-columns:1fr;gap:13px;padding:13px 14px}
   .ba-main{font-size:21px}
-  .ba-list{display:grid;grid-template-columns:1fr;gap:10px}
-  .ba-block{padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:10px}
-  .ba-alert-top{flex-wrap:wrap;gap:4px 7px}
-  .ba-alert-title{flex-basis:100%}
+  .ba-next{padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:10px}
+  .ba-next-row{flex-wrap:wrap;gap:4px 7px}
+  .ba-next-title{flex-basis:100%}
   .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px 20px}
   .card{padding:12px;border-radius:8px}
   .card .lbl{font-size:11px;margin-bottom:5px}
@@ -1187,8 +1186,7 @@ function balanceDueInfo(ev){
   if(!due)return null;
   const diff=dayDiff(todayYmd(),due);
   const level=diff<0?'bad':diff<=7?'warn':'ok';
-  const label=diff<0?'확인 필요':diff<=7?`임박 D-${diff}`:`D-${diff}`;
-  return{ev,due,diff,level,label,amount:pendingBalanceAmount(ev)};
+  return{ev,due,diff,level,amount:pendingBalanceAmount(ev)};
 }
 function tableFilterBase(ignoreMonth=false){
   const yr=selectedYear();
@@ -1202,24 +1200,20 @@ function tableFilterBase(ignoreMonth=false){
     return(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
   });
 }
-function balanceAlertRows(items,type){
+function nextBalanceRows(items){
   if(!items.length)return'<div class="ba-empty">없음</div>';
   const brColor=n=>normalizeBranch(n)==='문래점'?'#2563eb':'#7c3aed';
-  const rows=items.slice(0,2).map(info=>{
+  return items.map(info=>{
     const ev=info.ev;
-    const meta=type==='bad'?`기준일 ${info.due} 지남`:`기준일 ${info.due} · D-${info.diff}`;
-    return`<button type="button" class="ba-alert-row" onclick="focusBalanceRow('${ev.id}')">
-      <div class="ba-alert-top">
-        <span class="ba-alert-branch" style="color:${brColor(ev.branch)}">${esc(normalizeBranch(ev.branch))}</span>
-        <span class="ba-alert-date">${esc(ev.date)}</span>
-        <span class="ba-alert-title" title="${esc(ev.title)}">${esc(ev.title||'-')}</span>
-      </div>
-      <div class="ba-alert-amt">${balanceMoney(info.amount)}</div>
-      <div class="ba-alert-meta">${meta}</div>
+    const dday=info.diff<0?`${-info.diff}일 지남`:info.diff===0?'오늘':`D-${info.diff}`;
+    return`<button type="button" class="ba-next-row" onclick="focusBalanceRow('${ev.id}')">
+      <span class="ba-next-dday ${info.level}">${dday}</span>
+      <span class="ba-next-branch" style="color:${brColor(ev.branch)}">${esc(normalizeBranch(ev.branch))}</span>
+      <span class="ba-next-date">${esc(ev.date)}</span>
+      <span class="ba-next-title" title="${esc(ev.title)}">${esc(ev.title||'-')}</span>
+      <span class="ba-next-amt">${balanceMoney(info.amount)}</span>
     </button>`;
   }).join('');
-  const more=items.length>2?`<div class="ba-more">외 ${items.length-2}건</div>`:'';
-  return rows+more;
 }
 function focusBalanceRow(id){
   const ev=evById(id);
@@ -1252,9 +1246,8 @@ function renderTableAlerts(){
   const month=document.getElementById('sm').value;
   const visiblePending=tableFilterBase(false).filter(e=>e.payStatus==='예약금 입금');
   const monthTotal=visiblePending.reduce((s,e)=>s+pendingBalanceAmount(e),0);
-  const dueInfos=visiblePending.map(balanceDueInfo).filter(Boolean);
-  const overdueItems=dueInfos.filter(x=>x.level==='bad').sort((a,b)=>a.due.localeCompare(b.due)||b.amount-a.amount);
-  const soonItems=dueInfos.filter(x=>x.level==='warn').sort((a,b)=>a.diff-b.diff||b.amount-a.amount);
+  const dueInfos=visiblePending.map(balanceDueInfo).filter(Boolean)
+    .sort((a,b)=>a.due.localeCompare(b.due)||b.amount-a.amount);
   const title=month?`${Number(month)}월 잔금 입금 예정`:'잔금 입금 예정';
   const brColor=n=>normalizeBranch(n)==='문래점'?'#2563eb':'#7c3aed';
   const BR_LIST=['문래점','신논현점'];
@@ -1273,15 +1266,9 @@ function renderTableAlerts(){
       <div class="ba-main">${balanceMoney(monthTotal)}</div>
       <div class="ak-branches">${brHtml}</div>
     </div>
-    <div class="ba-list">
-      <div class="ba-block">
-        <div class="ba-block-title">확인 필요 <span class="ba-count bad">${overdueItems.length}건</span></div>
-        <div class="ba-rows">${balanceAlertRows(overdueItems,'bad')}</div>
-      </div>
-      <div class="ba-block">
-        <div class="ba-block-title">임박 <span class="ba-count warn">${soonItems.length}건</span></div>
-        <div class="ba-rows">${balanceAlertRows(soonItems,'warn')}</div>
-      </div>
+    <div class="ba-next">
+      <div class="ba-block-title">다음 잔금 <span class="ba-count">${dueInfos.length}건</span></div>
+      <div class="ba-next-list">${nextBalanceRows(dueInfos)}</div>
     </div>
   </div>`;
 }
