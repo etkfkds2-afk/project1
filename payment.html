@@ -60,7 +60,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .card.bl .val{color:var(--blue)}.card.gr .val{color:var(--green)}.card.or .val{color:#ea580c}
 .card.pu .val{color:#6d28d9}.card.rd .val{color:#b91c1c}
 .table-alerts{padding:18px 28px 12px}
-.balance-alert-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:14px 16px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:grid;grid-template-columns:minmax(210px,.9fr) minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.balance-alert-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:14px 16px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:grid;grid-template-columns:minmax(210px,.9fr) minmax(0,1fr) minmax(0,1fr);gap:16px}
 .ba-head{min-width:0}
 .ba-title{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:4px}
 .ba-main{font-size:24px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;line-height:1.15}
@@ -2238,6 +2238,7 @@ function renderChart(){
   })();
   const totalPay=payByMo.reduce((s,v)=>s+v,0);
   const totalOut=Object.values(brMap).reduce((s,v)=>s+v.out,0);
+  const totalOutCnt=Object.values(brMap).reduce((s,v)=>s+v.outCnt,0);
   // 취소/환불 ev.netIn 기준 집계 (테이블 카드와 동일 기준)
   const cancelMap={},refundMap={};
   chartRows.forEach(e=>{
@@ -2290,7 +2291,8 @@ function renderChart(){
     <div class="an-kpi-card">
       <div class="ak-lbl">잔금 입금 예정</div>
       <div class="ak-val amber">${fa(totalOut)}</div>
-      <hr class="ak-divider" style="margin-top:10px">
+      <div class="ak-sub">${totalOutCnt}건</div>
+      <hr class="ak-divider">
       <div class="ak-branches">${brEntries.map(([n,v])=>
         `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v.out)}<span class="ak-br-cnt">${v.outCnt}건</span></span></div>`
       ).join('')}</div>
