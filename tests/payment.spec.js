@@ -19,7 +19,7 @@ test.afterEach(async ({ page }) => {
 test('루트 페이지는 입금관리로 이동한다', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/\/payment(?:\.html)?$/);
-  await expect(page).toHaveTitle('올댓마인드 입금관리');
+  await expect(page).toHaveTitle('올댓마인드 대관 관리 프로그램');
 });
 
 test('입금 설명에서 현금 보증금을 차감하고 예약금/잔금을 분리한다', async ({ page }) => {
@@ -120,7 +120,7 @@ test('테이블 CSV는 현재 화면 컬럼 기준으로 내보낸다', async ({
   });
 
   const header = csv.split('\n')[0].replace(/^\uFEFF/, '');
-  expect(header).toBe('대관일,지점,행사명,수납상태,예약금 입금 날짜,예약금 입금 금액,잔금 입금 날짜,잔금 입금 금액,청소보증금,대관수익 (대관일 기준),결제방법,메모');
+  expect(header).toBe('대관일,지점,행사명,수납상태,예약금 입금 날짜,예약금 입금 금액,잔금 입금 날짜,잔금 입금 금액,청소보증금,실수익,결제방법,메모');
   expect(csv).toContain('"2026-01-01","300,000"');
   expect(csv).toContain('"2026-02-01","700,000"');
   expect(csv).toContain('"합계"');

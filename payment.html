@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="data:,">
-<title>올댓마인드 입금관리</title>
+<title>올댓마인드 대관 관리 프로그램</title>
 <style>
 :root{
   color-scheme:light;
@@ -371,7 +371,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <body class="locked">
 <div id="authScreen" class="auth">
   <form class="auth-box" onsubmit="unlockApp(event)">
-    <h1>올댓마인드 입금관리</h1>
+    <h1>올댓마인드 대관 관리 프로그램</h1>
     <p>입장 아이디와 비밀번호를 입력하세요. Google 클라이언트 ID는 다음 화면에서 입력합니다.</p>
     <input id="accessUser" type="text" autocomplete="username" placeholder="아이디" autofocus>
     <input id="accessPass" type="password" autocomplete="current-password" placeholder="비밀번호">
@@ -381,8 +381,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 </div>
 <div id="app" class="app">
 <div class="hdr">
-  <div class="sub">올댓마인드 • 입금 관리 시스템</div>
-  <h1>입금 현황</h1>
+  <div class="sub">올댓마인드 대관 관리 프로그램</div>
+  <h1>홈</h1>
 </div>
 <div class="toolbar">
   <div class="view-tabs">
@@ -463,7 +463,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
       <th class="gcell"><span class="hchip">예약금 입금</span></th>
       <th class="gcell"><span class="hchip">잔금 입금</span></th>
       <th class="gcell r"><span class="hchip">청소보증금</span></th>
-      <th class="gcell r"><span class="hchip">대관수익 (대관일 기준)</span></th>
+      <th class="gcell r"><span class="hchip">실수익</span></th>
       <th class="gcell"><span class="hchip">결제방법</span></th>
       <th class="gcell"><span class="hchip">메모</span></th>
       <th class="gcell"></th>
@@ -546,7 +546,7 @@ let ovHistory=[], contactsHistory=[], _undoing=false;
 let customerAllData=null;
 let remoteContactsReady=false;
 let custSortKey='visits', custSortAsc=false;
-let custYear='';
+let custYear=String(new Date().getFullYear());
 let refreshTimer=null;
 let showHidden=false;
 let selectedIds=new Set();
@@ -1432,7 +1432,7 @@ function render(){
       <td class="gcell" data-label="예약금 입금"><div class="date2">${payDateCell(ev.id,'reservationDate',ev.reservationDate,ev.reservationAmount)}<span class="sub">${cell(ev.id,'reservationAmount',ev.reservationAmount,'money')}</span></div></td>
       <td class="gcell" data-label="잔금 입금"><div class="date2">${payDateCell(ev.id,'balanceDate',ev.balanceDate,ev.balanceAmount)}<span class="sub">${cell(ev.id,'balanceAmount',ev.balanceAmount,'money')}</span>${ev.balanceDate2||ev.balanceAmount2?`<div class="bal2row"><span class="bal2lbl">+</span>${payDateCell(ev.id,'balanceDate2',ev.balanceDate2,ev.balanceAmount2)}<span class="sub">${cell(ev.id,'balanceAmount2',ev.balanceAmount2||0,'money')}</span><button class="bal2rm" onclick="clearBal2('${ev.id}',event)" title="분할잔금 삭제">×</button></div>`:`<button class="bal2add" onclick="addBal2('${ev.id}',event)" title="분할잔금 추가">+분할</button>`}</div></td>
       <td class="gcell r moneycell" data-label="청소보증금">${cell(ev.id,'depText',ev.depText,'text',ev.dep>0?'dep':'dep-label')}</td>
-      <td class="gcell r moneycell" data-label="대관수익 (대관일 기준)">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
+      <td class="gcell r moneycell" data-label="실수익">${cell(ev.id,'netIn',ev.netIn,'money','amt')}</td>
       <td class="gcell paycell" data-label="결제방법">
         <span class="bdg m${methodText.split('+')[0]}">${cell(ev.id,'methodsText',methodText,'text')}</span>
       </td>
@@ -1454,7 +1454,7 @@ function render(){
     <td class="gcell r moneycell sumcell" data-label="예약금">${sumRes?fa(sumRes):'-'}</td>
     <td class="gcell r moneycell sumcell" data-label="잔금">${sumBal?fa(sumBal):'-'}</td>
     <td class="gcell r moneycell sumcell" data-label="청소보증금">${sumDep?fa(sumDep):'-'}</td>
-    <td class="gcell r moneycell amt sumcell" data-label="대관수익">${fa(sumNetIn)}</td>
+    <td class="gcell r moneycell amt sumcell" data-label="실수익">${fa(sumNetIn)}</td>
     <td class="gcell"></td>
     <td class="gcell"></td>
     <td class="gcell"></td>
@@ -1737,7 +1737,7 @@ function doTableExport(){
 
 function buildTableCsv(){
   const data=getFiltered();
-  const H=['대관일','지점','행사명','수납상태','예약금 입금 날짜','예약금 입금 금액','잔금 입금 날짜','잔금 입금 금액','청소보증금','대관수익 (대관일 기준)','결제방법','메모'];
+  const H=['대관일','지점','행사명','수납상태','예약금 입금 날짜','예약금 입금 금액','잔금 입금 날짜','잔금 입금 금액','청소보증금','실수익','결제방법','메모'];
   const rows=data.map(e=>[
     csvCell(e.date),csvCell(e.branch),csvCell(e.title),csvCell(e.payStatus),
     csvCell(e.reservationDate),csvMoney(e.reservationAmount),
@@ -2171,6 +2171,12 @@ function saveContactField(phone,key,val){
 
 function switchView(v){
   currentView=v;
+  if(v==='customer'){
+    const custYearSelect=document.getElementById('cust-year');
+    const currentYear=String(new Date().getFullYear());
+    if(!custYear)custYear=currentYear;
+    if(custYearSelect&&custYearSelect.value!==custYear)custYearSelect.value=custYear;
+  }
   document.getElementById('view-table').style.display=v==='table'?'block':'none';
   document.getElementById('view-chart').style.display=v==='chart'?'block':'none';
   document.getElementById('view-customer').style.display=v==='customer'?'block':'none';
