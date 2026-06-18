@@ -64,8 +64,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ba-head{min-width:0}
 .ba-title{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:4px}
 .ba-main{font-size:24px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;line-height:1.15}
-.ba-sub{font-size:12px;color:var(--muted);margin-top:5px}
-.ba-year{font-size:12px;color:#374151;margin-top:10px;font-weight:700;font-variant-numeric:tabular-nums}
 .ba-list{display:contents}
 .ba-block{min-width:0;padding-left:16px;border-left:1px solid var(--line);display:flex;flex-direction:column}
 .ba-rows{display:flex;flex-direction:column;flex:1;min-height:0}
@@ -1252,33 +1250,27 @@ function renderTableAlerts(){
   const el=document.getElementById('table-alerts');
   if(!el)return;
   const month=document.getElementById('sm').value;
-  const yearLabel=selectedYearLabel();
   const visiblePending=tableFilterBase(false).filter(e=>e.payStatus==='예약금 입금');
-  const yearPending=tableFilterBase(true).filter(e=>e.payStatus==='예약금 입금');
   const monthTotal=visiblePending.reduce((s,e)=>s+pendingBalanceAmount(e),0);
-  const yearTotal=yearPending.reduce((s,e)=>s+pendingBalanceAmount(e),0);
   const dueInfos=visiblePending.map(balanceDueInfo).filter(Boolean);
   const overdueItems=dueInfos.filter(x=>x.level==='bad').sort((a,b)=>a.due.localeCompare(b.due)||b.amount-a.amount);
   const soonItems=dueInfos.filter(x=>x.level==='warn').sort((a,b)=>a.diff-b.diff||b.amount-a.amount);
   const title=month?`${Number(month)}월 잔금 입금 예정`:'잔금 입금 예정';
-  const yearLine=month?`<div class="ba-year">${yearLabel} 전체 ${balanceMoney(yearTotal)} · ${yearPending.length}건</div>`:'';
   const brColor=n=>normalizeBranch(n)==='문래점'?'#2563eb':'#7c3aed';
+  const BR_LIST=['문래점','신논현점'];
   const brMap={};
+  BR_LIST.forEach(b=>{brMap[b]={amt:0,cnt:0}});
   visiblePending.forEach(e=>{
     const b=normalizeBranch(e.branch);
     if(!brMap[b])brMap[b]={amt:0,cnt:0};
     brMap[b].amt+=pendingBalanceAmount(e);
     brMap[b].cnt++;
   });
-  const brHtml=Object.entries(brMap).length
-    ?Object.entries(brMap).map(([n,v])=>`<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${balanceMoney(v.amt)}<span class="ak-br-cnt">${v.cnt}건</span></span></div>`).join('')
-    :'<div style="font-size:12px;color:#b0b8c4">없음</div>';
+  const brHtml=Object.entries(brMap).map(([n,v])=>`<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${balanceMoney(v.amt)}<span class="ak-br-cnt">${v.cnt}건</span></span></div>`).join('');
   el.innerHTML=`<div class="balance-alert-card">
     <div class="ba-head">
       <div class="ba-title">${title}</div>
       <div class="ba-main">${balanceMoney(monthTotal)}</div>
-      <div class="ba-sub">${visiblePending.length}건</div>
-      ${yearLine}
       <div class="ak-branches">${brHtml}</div>
     </div>
     <div class="ba-list">
