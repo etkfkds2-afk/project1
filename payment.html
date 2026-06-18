@@ -490,7 +490,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <div class="an-sec-hdr">
       <div class="an-sec-hdr-row">
         <div>
-          <div class="an-sec-title">월별 실입금 내역</div>
+          <div class="an-sec-title">월별 실수익 내역</div>
           <div class="an-sec-sub">입금날짜 기준 · 월 클릭으로 펼치기</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
@@ -1176,7 +1176,13 @@ function dayDiff(fromYmd,toYmd){
   return Math.round((b-a)/86400000);
 }
 function pendingBalanceAmount(ev){
-  return (Number(ev.balanceAmount)||0)+(Number(ev.balanceAmount2)||0);
+  // 실입금 계산(paymentParts)과 동일하게 현금 결제일 때만 청소보증금을 차감
+  const isCash=(ev.methods||[]).includes('현금');
+  const resDep=isCash?(Number(ev.reservationDiAmt)||0):0;
+  const balDep=isCash?(Number(ev.balanceDiAmt)||0):0;
+  const remainDep=isCash?Math.max(0,(Number(ev.dep)||0)-resDep-balDep):0;
+  const bal=Math.max(0,(Number(ev.balanceAmount)||0)-balDep-remainDep);
+  return bal+(Number(ev.balanceAmount2)||0);
 }
 function balanceMoney(n){
   return `${(Number(n)||0).toLocaleString('ko-KR')}원`;
@@ -1779,7 +1785,7 @@ function cashflowByMonth(year){
 }
 
 function doCashflowExport(){
-  downloadExcelWorkbook(buildCashflowWorkbook(),`올댓마인드_월별실입금_${selectedYearLabel()}.xls`);
+  downloadExcelWorkbook(buildCashflowWorkbook(),`올댓마인드_월별실수익_${selectedYearLabel()}.xls`);
 }
 
 function excelText(value){return esc(value)}
@@ -1811,7 +1817,7 @@ function buildCashflowWorkbook(){
   const sheets=[];
   const allItems=[];
   order.forEach(({key})=>allItems.push(...(byMonth[key]||[])));
-  sheets.push(excelSheet('전체실입금내역',cashflowExportRows(allItems)));
+  sheets.push(excelSheet('전체실수익내역',cashflowExportRows(allItems)));
   order.forEach(({key,label})=>{
     const items=byMonth[key]||[];
     if(items.length)sheets.push(excelSheet(label,cashflowExportRows(items)));
@@ -2213,10 +2219,10 @@ function renderChart(){
   });
 
   const payYearLabel=(()=>{
-    if(year)return'연간 실입금';
+    if(year)return'연간 실수익';
     const yrs=[...payYears].sort();
-    if(!yrs.length)return'전체 실입금';
-    return yrs.length===1?`${yrs[0]} 실입금`:`${yrs[0]}-${yrs[yrs.length-1]} 실입금`;
+    if(!yrs.length)return'전체 실수익';
+    return yrs.length===1?`${yrs[0]} 실수익`:`${yrs[0]}-${yrs[yrs.length-1]} 실수익`;
   })();
   const totalPay=payByMo.reduce((s,v)=>s+v,0);
   const totalOut=Object.values(brMap).reduce((s,v)=>s+v.out,0);
@@ -2297,13 +2303,13 @@ function renderChart(){
     </div>`;
 
   // ── 차트 ─────────────────────────────────────────
-  document.getElementById('an-chart-title').textContent=year?`${year}년 월별 실입금`:'월별 실입금';
+  document.getElementById('an-chart-title').textContent=year?`${year}년 월별 실수익`:'월별 실수익';
   const ctx=document.getElementById('revenueChart').getContext('2d');
   if(revenueChartInst)revenueChartInst.destroy();
   const selectedBr=document.getElementById('sb').value;
   const brChartColors={'문래점':['#2563eb55','#2563eb'],'신논현점':['#7c3aed55','#7c3aed']};
   const chartDatasets=selectedBr
-    ?[{label:`실입금 (${selectedBr})`,data:payByMo,backgroundColor:'#05966999',borderColor:'#059669',borderWidth:1.5,borderRadius:5}]
+    ?[{label:`실수익 (${selectedBr})`,data:payByMo,backgroundColor:'#05966999',borderColor:'#059669',borderWidth:1.5,borderRadius:5}]
     :Object.entries(brPayByMo).map(([br,data])=>{
         const [bg,border]=brChartColors[br]||['#05966999','#059669'];
         return{label:br,data,backgroundColor:bg,borderColor:border,borderWidth:1.5,borderRadius:5};
