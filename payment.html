@@ -28,10 +28,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .hdr-title{min-width:0}
 .hdr h1{font-size:24px;font-weight:800;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hdr .sub{font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:700}
-.homebtn{width:42px;height:42px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:#374151;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
-.homebtn:hover{background:#f9fafb;border-color:#9ca3af;color:#111827;box-shadow:0 3px 10px rgba(15,23,42,.08)}
-.homebtn:focus{outline:3px solid rgba(37,99,235,.18);outline-offset:2px}
-.homebtn svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.homeico{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 .toolbar{background:rgba(255,255,255,.96);padding:14px 28px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}
 select,.search{height:38px;border:1px solid var(--line-strong);border-radius:6px;padding:0 12px;font-size:13px;background:#fff;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
 select{cursor:pointer;min-width:112px;padding-right:24px}
@@ -194,7 +191,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   body{font-size:13px;background:#f3f4f6}
   .hdr{padding:18px 20px 14px;gap:12px}
   .hdr h1{font-size:22px}
-  .homebtn{width:40px;height:40px}
   .toolbar{position:static;padding:12px 20px;gap:8px}
   .toolbar select{flex:1 1 calc(50% - 4px);min-width:0}
   .toolbar .search{width:100%;flex:1 1 100%}
@@ -388,19 +384,20 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <div id="app" class="app">
 <div class="hdr">
   <div class="hdr-title">
-    <div class="sub">올댓마인드 대관 관리</div>
+    <div class="sub">캘린더 연동 · 입금 현황 · 분석 · 고객관리</div>
     <h1>올댓마인드 대관 관리</h1>
   </div>
-  <button class="homebtn" type="button" onclick="goHome()" title="홈" aria-label="홈">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 11.5 12 4l9 7.5"></path>
-      <path d="M5.5 10.5V20h13v-9.5"></path>
-      <path d="M9.5 20v-5h5v5"></path>
-    </svg>
-  </button>
 </div>
 <div class="toolbar">
   <div class="view-tabs">
+    <button class="vtab active" id="tab-home" onclick="goHome()" title="홈" aria-label="홈">
+      <svg class="homeico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 11.5 12 4l9 7.5"></path>
+        <path d="M5.5 10.5V20h13v-9.5"></path>
+        <path d="M9.5 20v-5h5v5"></path>
+      </svg>
+      <span>홈</span>
+    </button>
     <button class="vtab active" id="tab-table" onclick="switchView('table')">테이블</button>
     <button class="vtab" id="tab-chart" onclick="switchView('chart')">분석</button>
     <button class="vtab" id="tab-customer" onclick="switchView('customer')">고객관리</button>
@@ -2199,6 +2196,7 @@ function switchView(v){
   document.getElementById('cust-toolbar-inner').style.display=v==='customer'?'contents':'none';
   document.querySelectorAll('.table-only-filter').forEach(el=>{el.style.display=v==='table'?'':'none';});
   document.getElementById('tab-table').classList.toggle('active',v==='table');
+  document.getElementById('tab-home').classList.toggle('active',v==='table');
   document.getElementById('tab-chart').classList.toggle('active',v==='chart');
   document.getElementById('tab-customer').classList.toggle('active',v==='customer');
   if(v==='chart')renderChart();
