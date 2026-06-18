@@ -64,6 +64,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ba-head{min-width:0}
 .ba-title{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:4px}
 .ba-main{font-size:24px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;line-height:1.15}
+.ba-sub{font-size:12px;color:var(--muted);margin-top:5px}
 .ba-next{min-width:0;padding-left:16px;border-left:1px solid var(--line);display:flex;flex-direction:column}
 .ba-block-title{display:flex;align-items:baseline;gap:6px;font-size:12px;color:#4b5563;font-weight:850;margin-bottom:7px}
 .ba-count{font-size:12px;font-weight:850;font-variant-numeric:tabular-nums}
@@ -262,7 +263,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .an-kpi-card .ak-divider{border:none;border-top:1px solid var(--line);margin:0}
 .an-kpi-card .ak-branches,.balance-alert-card .ak-branches{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
 .ak-br-row{display:flex;flex-direction:column;gap:2px;background:var(--bg);border-radius:7px;padding:8px 10px}
-.balance-alert-card .ak-br-row{padding:21px 10px}
 .ak-br-name{font-size:11px;font-weight:700;letter-spacing:.3px}
 .ak-br-val{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
 .ak-br-cnt{font-size:11px;font-weight:600;color:var(--muted);margin-left:4px}
@@ -1265,6 +1265,7 @@ function renderTableAlerts(){
     <div class="ba-head">
       <div class="ba-title">${title}</div>
       <div class="ba-main">${balanceMoney(monthTotal)}</div>
+      <div class="ba-sub">${visiblePending.length}건</div>
       <div class="ak-branches">${brHtml}</div>
     </div>
     <div class="ba-next">
