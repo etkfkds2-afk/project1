@@ -59,13 +59,25 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .card.bl .val{color:var(--blue)}.card.gr .val{color:var(--green)}.card.or .val{color:#ea580c}
 .card.pu .val{color:#6d28d9}.card.rd .val{color:#b91c1c}
 .table-alerts{padding:18px 28px 12px}
-.balance-alert-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:14px 16px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:grid;grid-template-columns:minmax(170px,1.1fr) repeat(3,minmax(120px,1fr));gap:12px;align-items:center}
-.balance-alert-card .ba-title{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:4px}
-.balance-alert-card .ba-main{font-size:21px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;line-height:1.2}
-.balance-alert-card .ba-sub{font-size:12px;color:var(--muted);margin-top:3px}
-.balance-alert-card .ba-item{padding-left:12px;border-left:1px solid var(--line)}
-.balance-alert-card .ba-val{font-size:17px;font-weight:850;font-variant-numeric:tabular-nums;color:#111827;line-height:1.25}
-.balance-alert-card .ba-val.warn{color:var(--amber)}.balance-alert-card .ba-val.bad{color:var(--red)}
+.balance-alert-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:14px 16px;box-shadow:0 4px 14px rgba(15,23,42,.04);display:grid;grid-template-columns:minmax(220px,.95fr) minmax(0,1.35fr);gap:18px;align-items:start}
+.ba-title{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:4px}
+.ba-main{font-size:24px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;line-height:1.15}
+.ba-sub{font-size:12px;color:var(--muted);margin-top:5px}
+.ba-year{font-size:12px;color:#374151;margin-top:10px;font-weight:700;font-variant-numeric:tabular-nums}
+.ba-list{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ba-block{min-width:0}
+.ba-block-title{display:flex;align-items:baseline;gap:6px;font-size:12px;color:#4b5563;font-weight:850;margin-bottom:7px}
+.ba-count{font-size:12px;font-weight:850;font-variant-numeric:tabular-nums}.ba-count.bad{color:var(--red)}.ba-count.warn{color:var(--amber)}
+.ba-alert-row{border:1px solid var(--line);background:#fafafa;border-radius:7px;padding:8px 10px}
+.ba-alert-row+.ba-alert-row{margin-top:6px}
+.ba-alert-top{display:flex;align-items:center;gap:8px;min-width:0}
+.ba-alert-branch{font-size:11px;font-weight:850;white-space:nowrap}
+.ba-alert-date{font-size:12px;color:#6b7280;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ba-alert-title{font-size:12px;font-weight:750;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ba-alert-amt{font-size:13px;font-weight:850;color:#111827;font-variant-numeric:tabular-nums;margin-top:3px}
+.ba-alert-meta{font-size:11px;color:#6b7280;margin-top:2px;font-variant-numeric:tabular-nums}
+.ba-empty{font-size:12px;color:#9ca3af;background:#f8fafc;border:1px dashed #e5e7eb;border-radius:7px;padding:10px}
+.ba-more{font-size:11px;color:#6b7280;margin-top:6px}
 .tw{padding:0 28px 44px;overflow-x:auto}
 .paygrid{width:100%;min-width:1450px;background:var(--panel);border-radius:8px;box-shadow:var(--shadow);border-collapse:separate;border-spacing:0;border:1px solid var(--line);table-layout:fixed;overflow:hidden}
 .ghead{background:var(--panel-soft)}
@@ -180,11 +192,11 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   .btn-add{flex-basis:100%}
   .btn-export{flex-basis:100%}
   .table-alerts{padding:14px 20px 10px}
-  .balance-alert-card{grid-template-columns:1fr 1fr;gap:10px;padding:13px 14px}
-  .balance-alert-card .ba-head{grid-column:1/-1}
-  .balance-alert-card .ba-item{padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:9px}
-  .balance-alert-card .ba-main{font-size:20px}
-  .balance-alert-card .ba-val{font-size:15px}
+  .balance-alert-card{grid-template-columns:1fr;gap:13px;padding:13px 14px}
+  .ba-main{font-size:21px}
+  .ba-list{grid-template-columns:1fr;gap:10px}
+  .ba-alert-top{flex-wrap:wrap;gap:4px 7px}
+  .ba-alert-title{flex-basis:100%}
   .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px 20px}
   .card{padding:12px;border-radius:8px}
   .card .lbl{font-size:11px;margin-bottom:5px}
@@ -1140,6 +1152,9 @@ function dayDiff(fromYmd,toYmd){
 function pendingBalanceAmount(ev){
   return (Number(ev.balanceAmount)||0)+(Number(ev.balanceAmount2)||0);
 }
+function balanceMoney(n){
+  return `${(Number(n)||0).toLocaleString('ko-KR')}원`;
+}
 function balanceDueInfo(ev){
   if(ev.payStatus!=='예약금 입금')return null;
   const due=addMonthsClamped(ev.date,-1);
@@ -1147,7 +1162,7 @@ function balanceDueInfo(ev){
   const diff=dayDiff(todayYmd(),due);
   const level=diff<0?'bad':diff<=7?'warn':'ok';
   const label=diff<0?'확인 필요':diff<=7?`임박 D-${diff}`:`D-${diff}`;
-  return{due,diff,level,label,amount:pendingBalanceAmount(ev)};
+  return{ev,due,diff,level,label,amount:pendingBalanceAmount(ev)};
 }
 function tableFilterBase(ignoreMonth=false){
   const yr=document.getElementById('sy').value;
@@ -1161,6 +1176,25 @@ function tableFilterBase(ignoreMonth=false){
     return(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
   });
 }
+function balanceAlertRows(items,type){
+  if(!items.length)return'<div class="ba-empty">없음</div>';
+  const brColor=n=>normalizeBranch(n)==='문래점'?'#2563eb':'#7c3aed';
+  const rows=items.slice(0,2).map(info=>{
+    const ev=info.ev;
+    const meta=type==='bad'?`기준일 ${info.due} 지남`:`기준일 ${info.due} · D-${info.diff}`;
+    return`<div class="ba-alert-row">
+      <div class="ba-alert-top">
+        <span class="ba-alert-branch" style="color:${brColor(ev.branch)}">${esc(normalizeBranch(ev.branch))}</span>
+        <span class="ba-alert-date">${esc(ev.date)}</span>
+        <span class="ba-alert-title" title="${esc(ev.title)}">${esc(ev.title||'-')}</span>
+      </div>
+      <div class="ba-alert-amt">${balanceMoney(info.amount)}</div>
+      <div class="ba-alert-meta">${meta}</div>
+    </div>`;
+  }).join('');
+  const more=items.length>2?`<div class="ba-more">외 ${items.length-2}건</div>`:'';
+  return rows+more;
+}
 function renderTableAlerts(){
   const el=document.getElementById('table-alerts');
   if(!el)return;
@@ -1171,29 +1205,26 @@ function renderTableAlerts(){
   const monthTotal=visiblePending.reduce((s,e)=>s+pendingBalanceAmount(e),0);
   const yearTotal=yearPending.reduce((s,e)=>s+pendingBalanceAmount(e),0);
   const dueInfos=visiblePending.map(balanceDueInfo).filter(Boolean);
-  const overdue=dueInfos.filter(x=>x.level==='bad').length;
-  const soon=dueInfos.filter(x=>x.level==='warn').length;
-  const monthLabel=month?`${Number(month)}월`:'전체 월';
+  const overdueItems=dueInfos.filter(x=>x.level==='bad').sort((a,b)=>a.due.localeCompare(b.due)||b.amount-a.amount);
+  const soonItems=dueInfos.filter(x=>x.level==='warn').sort((a,b)=>a.diff-b.diff||b.amount-a.amount);
+  const title=month?`${Number(month)}월 잔금 입금 예정`:'잔금 입금 예정';
+  const yearLine=month?`<div class="ba-year">${year}년 전체 ${balanceMoney(yearTotal)} · ${yearPending.length}건</div>`:'';
   el.innerHTML=`<div class="balance-alert-card">
     <div class="ba-head">
-      <div class="ba-title">잔금 입금 예정</div>
-      <div class="ba-main">${monthLabel} ${fa(monthTotal)}</div>
-      <div class="ba-sub">${visiblePending.length}건 · 대관일 한 달 전 기준</div>
+      <div class="ba-title">${title}</div>
+      <div class="ba-main">${balanceMoney(monthTotal)}</div>
+      <div class="ba-sub">${visiblePending.length}건</div>
+      ${yearLine}
     </div>
-    <div class="ba-item">
-      <div class="ba-title">${year}년 남은 잔금</div>
-      <div class="ba-val">${fa(yearTotal)}</div>
-      <div class="ba-sub">${yearPending.length}건</div>
-    </div>
-    <div class="ba-item">
-      <div class="ba-title">확인 필요</div>
-      <div class="ba-val bad">${overdue}건</div>
-      <div class="ba-sub">기준일 지남</div>
-    </div>
-    <div class="ba-item">
-      <div class="ba-title">임박</div>
-      <div class="ba-val warn">${soon}건</div>
-      <div class="ba-sub">7일 이내</div>
+    <div class="ba-list">
+      <div class="ba-block">
+        <div class="ba-block-title">확인 필요 <span class="ba-count bad">${overdueItems.length}건</span></div>
+        ${balanceAlertRows(overdueItems,'bad')}
+      </div>
+      <div class="ba-block">
+        <div class="ba-block-title">임박 <span class="ba-count warn">${soonItems.length}건</span></div>
+        ${balanceAlertRows(soonItems,'warn')}
+      </div>
     </div>
   </div>`;
 }
