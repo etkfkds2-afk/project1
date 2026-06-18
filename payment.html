@@ -26,13 +26,16 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 .hdr{background:var(--panel);color:var(--text);padding:22px 28px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px}
 .hdr-title{min-width:0}
-.brandline{display:flex;align-items:center;gap:9px;min-width:0}
+.brandline{display:flex;align-items:center;gap:10px;min-width:0}
 .hdr h1{font-size:24px;font-weight:800;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hdr .sub{font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:700}
-.homebtn{width:26px;height:26px;border:0;background:transparent;color:#6b7280;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;border-radius:6px;transition:background .15s,color .15s}
-.homebtn:hover{background:#f3f4f6;color:#111827}
+.homebtn{width:32px;height:32px;border:1px solid var(--blue);background:#fff;color:var(--blue);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;border-radius:7px;transition:background .15s,color .15s,box-shadow .15s}
+.homebtn:hover{background:#eff6ff;box-shadow:0 3px 10px rgba(37,99,235,.12)}
 .homebtn:focus{outline:3px solid rgba(37,99,235,.18);outline-offset:2px}
-.homeico{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.homeico{width:21px;height:21px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.brandhome{border:0;background:transparent;color:var(--text);padding:0;margin:0;font:inherit;text-align:left;min-width:0;cursor:pointer;display:block;border-radius:6px}
+.brandhome:hover h1{color:var(--blue)}
+.brandhome:focus{outline:3px solid rgba(37,99,235,.18);outline-offset:2px}
 .toolbar{background:rgba(255,255,255,.96);padding:14px 28px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}
 select,.search{height:38px;border:1px solid var(--line-strong);border-radius:6px;padding:0 12px;font-size:13px;background:#fff;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
 select{cursor:pointer;min-width:112px;padding-right:24px}
@@ -195,7 +198,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   body{font-size:13px;background:#f3f4f6}
   .hdr{padding:18px 20px 14px;gap:12px}
   .hdr h1{font-size:22px}
-  .brandline{gap:8px}
+  .brandline{gap:9px}
   .toolbar{position:static;padding:12px 20px;gap:8px}
   .toolbar select{flex:1 1 calc(50% - 4px);min-width:0}
   .toolbar .search{width:100%;flex:1 1 100%}
@@ -398,7 +401,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
           <path d="M9.5 20v-5h5v5"></path>
         </svg>
       </button>
-      <h1>올댓마인드 대관 관리</h1>
+      <button class="brandhome" type="button" onclick="goHome()" title="홈으로 이동">
+        <h1>올댓마인드 대관 관리</h1>
+      </button>
     </div>
   </div>
 </div>
