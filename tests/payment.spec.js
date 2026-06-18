@@ -19,7 +19,7 @@ test.afterEach(async ({ page }) => {
 test('루트 페이지는 입금관리로 이동한다', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/\/payment(?:\.html)?$/);
-  await expect(page).toHaveTitle('올댓마인드 대관 관리 프로그램');
+  await expect(page).toHaveTitle('올댓마인드 대관 관리');
 });
 
 test('입금 설명에서 현금 보증금을 차감하고 예약금/잔금을 분리한다', async ({ page }) => {
