@@ -1886,14 +1886,13 @@ function canonicalEventType(t){
   return t;
 }
 function nameFromTitle(title){
-  const t=(title||'')
+  return(title||'')
     .replace(/^\[.*?\]\s*/,'')
     .replace(/\[.*?\]\s*$/,'')
     .replace(/^\d+(?:[,~\-]\d+)*\s*층\s*/,'')
     .replace(/[\[(][^)\]]*\/[^)\]]*[\])]$/,'')
     .replace(/\([^)]*\)$/,'')
     .trim();
-  return canonicalEventType(t);
 }
 const FORBIDDEN_NAME_WORDS=['개인계좌','법인계좌','개인','법인'];
 function stripForbiddenWords(s){
@@ -1907,11 +1906,8 @@ function autoNameFor(ev){
   if(evType&&depositor)return`${evType}(${depositor})`;
   return evType||depositor||'';
 }
-function clientTypeFor(ev){
-  const methods=ev.methods||[];
-  if(methods.includes('세금계산서'))return'법인';
-  if(methods.includes('현금'))return'개인';
-  return'기타';
+function paymentMethodFor(ev){
+  return(ev.methods&&ev.methods[0])||'기타';
 }
 async function loadRemoteContacts(){
   try{
@@ -1994,7 +1990,7 @@ async function renderCustomers(){
   const evCntTotal=allCountableVisits.length;
   const typeCounts={};
   allCountableVisits.forEach(ev=>{
-    const t=nameFromTitle(ev.rawTitle)||'기타';
+    const t=canonicalEventType(nameFromTitle(ev.rawTitle))||'기타';
     typeCounts[t]=(typeCounts[t]||0)+1;
   });
   const typeTop=Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
@@ -2002,11 +1998,11 @@ async function renderCustomers(){
     ?typeTop.map(([t,c])=>`<div class="ak-br-row"><span class="ak-br-name">${esc(t)}</span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${evCntTotal?Math.round(c/evCntTotal*100):0}%</span></span></div>`).join('')
     :'<div style="font-size:12px;color:#b0b8c4">데이터 없음</div>';
 
-  const clientCounts={법인:0,개인:0,기타:0};
-  allCountableVisits.forEach(ev=>{clientCounts[clientTypeFor(ev)]++;});
-  const clientColor={법인:'#2563eb',개인:'#16a34a',기타:'#6b7280'};
-  const clientListHtml=Object.entries(clientCounts).map(([k,c])=>
-    `<div class="ak-br-row"><span class="ak-br-name" style="color:${clientColor[k]}">${k}</span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${evCntTotal?Math.round(c/evCntTotal*100):0}%</span></span></div>`
+  const methodCounts={세금계산서:0,현금:0,카드:0,기타:0};
+  allCountableVisits.forEach(ev=>{methodCounts[paymentMethodFor(ev)]++;});
+  const methodColor={세금계산서:'#6d28d9',현금:'#16a34a',카드:'#1d4ed8',기타:'#6b7280'};
+  const methodListHtml=Object.entries(methodCounts).map(([k,c])=>
+    `<div class="ak-br-row"><span class="ak-br-name" style="color:${methodColor[k]}">${k}</span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${evCntTotal?Math.round(c/evCntTotal*100):0}%</span></span></div>`
   ).join('');
 
   const kpiEl=document.getElementById('cust-kpi');
@@ -2015,9 +2011,9 @@ async function renderCustomers(){
     <div class="cust-kpi-card"><div class="cust-kpi-label">총 대관횟수 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div><div class="cust-kpi-val"><span id="cust-kpi-visits">${totalVisits}</span><span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
     <div class="cust-kpi-card"><div class="cust-kpi-label">총매출 · 대관일 기준 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div><div class="cust-kpi-val" style="font-size:18px"><span id="cust-kpi-rev">${fa(totalRev)}</span></div></div>
     <div class="cust-kpi-card" style="flex:1 1 260px">
-      <div class="cust-kpi-label">법인/개인 비율 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div>
+      <div class="cust-kpi-label">결제방식 비율 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div>
       <hr class="ak-divider" style="margin:8px 0">
-      <div class="ak-branches">${clientListHtml}</div>
+      <div class="ak-branches">${methodListHtml}</div>
     </div>
     <div class="cust-kpi-card" style="flex:1 1 320px">
       <div class="cust-kpi-label">행사 종류 TOP ${typeTop.length} <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div>
