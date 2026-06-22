@@ -2266,12 +2266,13 @@ function renderChart(){
   });
 
   const payYearLabel=(()=>{
-    if(year)return'연간 실수익';
+    if(year)return`${year}년 실수익(입금날짜 기준)`;
     const yrs=[...payYears].sort();
     if(!yrs.length)return'전체 실수익';
     return yrs.length===1?`${yrs[0]} 실수익`:`${yrs[0]}-${yrs[yrs.length-1]} 실수익`;
   })();
   const totalPay=payByMo.reduce((s,v)=>s+v,0);
+  const totalPayCnt=Object.values(brMap).reduce((s,v)=>s+v.cnt,0);
   const totalOut=Object.values(brMap).reduce((s,v)=>s+v.out,0);
   const totalOutCnt=Object.values(brMap).reduce((s,v)=>s+v.outCnt,0);
   // 취소/환불 ev.netIn 기준 집계 (테이블 카드와 동일 기준)
@@ -2312,7 +2313,7 @@ function renderChart(){
       <div class="an-kpi-card">
       <div class="ak-lbl">${payYearLabel}</div>
       <div class="ak-val green">${fa(totalPay)}</div>
-      <div class="ak-sub">${yearLabel} 실제 수령액 (입금날짜 기준)</div>
+      <div class="ak-sub">${totalPayCnt}건</div>
       <hr class="ak-divider">
       <div class="ak-branches">${brRowsHtml('pay')}</div>
     </div>
