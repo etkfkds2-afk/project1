@@ -270,8 +270,8 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .an-kpi-card .ak-val{font-size:26px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1;min-height:29px}
 .ak-val.green{color:var(--green)}.ak-val.amber{color:var(--amber)}.ak-val.red{color:var(--red)}
 .an-kpi-card .ak-sub{font-size:11px;color:var(--muted);margin-top:5px;margin-bottom:10px}
-.an-kpi-card .ak-divider{border:none;border-top:1px solid var(--line);margin:0}
-.an-kpi-card .ak-branches,.balance-alert-card .ak-branches{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.an-kpi-card .ak-divider,.cust-kpi-card .ak-divider{border:none;border-top:1px solid var(--line);margin:0}
+.an-kpi-card .ak-branches,.balance-alert-card .ak-branches,.cust-kpi-card .ak-branches{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
 .ak-br-row{display:flex;flex-direction:column;gap:2px;background:var(--bg);border-radius:7px;padding:8px 10px}
 .ak-br-name{font-size:11px;font-weight:700;letter-spacing:.3px}
 .ak-br-val{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
@@ -1883,6 +1883,18 @@ function nameFromTitle(title){
     .replace(/\([^)]*\)$/,'')
     .trim();
 }
+function autoNameFor(ev){
+  const evType=nameFromTitle(ev.rawTitle);
+  const depositor=nameFromTxns(ev.txns);
+  if(evType&&depositor)return`${evType}(${depositor})`;
+  return evType||depositor||'';
+}
+function clientTypeFor(ev){
+  const methods=ev.methods||[];
+  if(methods.includes('세금계산서'))return'법인';
+  if(methods.includes('현금'))return'개인';
+  return'기타';
+}
 async function loadRemoteContacts(){
   try{
     const res=await fetch(`${OV_API}?key=${encodeURIComponent(CONTACTS_KEY)}`,{cache:'no-store'});
@@ -1903,10 +1915,9 @@ function buildCustomerMap(data){
     const phone=parsePhone(ev.rawDesc);
     if(!phone)return;
     if(!map[phone]){
-      const autoName=nameFromTxns(ev.txns)||nameFromTitle(ev.rawTitle);
-      map[phone]={phone,autoName,visits:[]};
+      map[phone]={phone,autoName:autoNameFor(ev),visits:[]};
     }
-    if(!map[phone].autoName)map[phone].autoName=nameFromTxns(ev.txns)||nameFromTitle(ev.rawTitle);
+    if(!map[phone].autoName)map[phone].autoName=autoNameFor(ev);
     map[phone].visits.push(ev);
   });
   return map;
@@ -1960,11 +1971,41 @@ async function renderCustomers(){
   const totalVisits=rows.reduce((s,r)=>s+effVisits(r),0);
   const totalRev=rows.reduce((s,r)=>s+effRev(r),0);
   const yrLabel=custYear?`${custYear}년`:'2025–2027';
+
+  const allCountableVisits=rows.flatMap(r=>r.countableVisits);
+  const evCntTotal=allCountableVisits.length;
+  const typeCounts={};
+  allCountableVisits.forEach(ev=>{
+    const t=nameFromTitle(ev.rawTitle)||'기타';
+    typeCounts[t]=(typeCounts[t]||0)+1;
+  });
+  const typeTop=Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const typeListHtml=typeTop.length
+    ?typeTop.map(([t,c])=>`<div class="ak-br-row"><span class="ak-br-name">${esc(t)}</span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${evCntTotal?Math.round(c/evCntTotal*100):0}%</span></span></div>`).join('')
+    :'<div style="font-size:12px;color:#b0b8c4">데이터 없음</div>';
+
+  const clientCounts={법인:0,개인:0,기타:0};
+  allCountableVisits.forEach(ev=>{clientCounts[clientTypeFor(ev)]++;});
+  const clientColor={법인:'#2563eb',개인:'#16a34a',기타:'#6b7280'};
+  const clientListHtml=Object.entries(clientCounts).map(([k,c])=>
+    `<div class="ak-br-row"><span class="ak-br-name" style="color:${clientColor[k]}">${k}</span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${evCntTotal?Math.round(c/evCntTotal*100):0}%</span></span></div>`
+  ).join('');
+
   const kpiEl=document.getElementById('cust-kpi');
   if(kpiEl)kpiEl.innerHTML=`
     <div class="cust-kpi-card"><div class="cust-kpi-label">등록 고객 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div><div class="cust-kpi-val">${rows.length}<span style="font-size:14px;font-weight:600;color:var(--muted)">명</span></div></div>
     <div class="cust-kpi-card"><div class="cust-kpi-label">총 대관횟수 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div><div class="cust-kpi-val"><span id="cust-kpi-visits">${totalVisits}</span><span style="font-size:14px;font-weight:600;color:var(--muted)">회</span></div></div>
-    <div class="cust-kpi-card"><div class="cust-kpi-label">총매출 · 대관일 기준 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div><div class="cust-kpi-val" style="font-size:18px"><span id="cust-kpi-rev">${fa(totalRev)}</span></div></div>`;
+    <div class="cust-kpi-card"><div class="cust-kpi-label">총매출 · 대관일 기준 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div><div class="cust-kpi-val" style="font-size:18px"><span id="cust-kpi-rev">${fa(totalRev)}</span></div></div>
+    <div class="cust-kpi-card" style="flex:1 1 260px">
+      <div class="cust-kpi-label">법인/개인 비율 <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div>
+      <hr class="ak-divider" style="margin:8px 0">
+      <div class="ak-branches">${clientListHtml}</div>
+    </div>
+    <div class="cust-kpi-card" style="flex:1 1 320px">
+      <div class="cust-kpi-label">행사 종류 TOP ${typeTop.length} <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div>
+      <hr class="ak-divider" style="margin:8px 0">
+      <div class="ak-branches">${typeListHtml}</div>
+    </div>`;
   function sortTh(key,label,cls=''){
     const active=custSortKey===key;
     const arrow=active?(custSortAsc?'↑':'↓'):'';
@@ -1999,7 +2040,8 @@ async function renderCustomers(){
     const lastVisit=ct.lastVisit||r.lastVisit||'-';
     const totalRevenue=ct.totalRevenue!=null?moneyVal(ct.totalRevenue):r.totalRevenue;
     const brText=ct.branch||(r.branches.map(b=>b.replace('점','')).join('+'));
-    const brColor=r.branches.length>1?'#7c3aed':r.branches[0]==='문래점'?'#0369a1':'#c2410c';
+    const brHasMoorae=/문래/.test(brText),brHasSinnon=/신논현/.test(brText);
+    const brColor=brHasMoorae&&brHasSinnon?'#7c3aed':brHasMoorae?'#0369a1':'#c2410c';
     const fmtPhone=ct.phoneDisplay||(r.phone.replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3'));
     const pid=`cp_${r.phone}`;
     const searchData=`${r.displayName} ${r.phone} ${r.memo}`.toLowerCase();
