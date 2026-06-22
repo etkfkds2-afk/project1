@@ -2280,34 +2280,31 @@ function renderChart(){
   chartRows.forEach(e=>{
     const b=normalizeBranch(e.branch);
     const v=Number(e.netIn)||0;
-    if(e.payStatus==='취소'){if(!cancelMap[b])cancelMap[b]=0;cancelMap[b]+=v;}
-    if(e.payStatus==='환불'){if(!refundMap[b])refundMap[b]=0;refundMap[b]+=v;}
+    if(e.payStatus==='취소'){if(!cancelMap[b])cancelMap[b]={amt:0,cnt:0};cancelMap[b].amt+=v;cancelMap[b].cnt++;}
+    if(e.payStatus==='환불'){if(!refundMap[b])refundMap[b]={amt:0,cnt:0};refundMap[b].amt+=v;refundMap[b].cnt++;}
   });
-  const totalCancelAmt=Object.values(cancelMap).reduce((s,v)=>s+v,0);
-  const totalRefundAmt=Object.values(refundMap).reduce((s,v)=>s+v,0);
+  const totalCancelAmt=Object.values(cancelMap).reduce((s,v)=>s+v.amt,0);
+  const totalCancelCnt=Object.values(cancelMap).reduce((s,v)=>s+v.cnt,0);
+  const totalRefundAmt=Object.values(refundMap).reduce((s,v)=>s+v.amt,0);
+  const totalRefundCnt=Object.values(refundMap).reduce((s,v)=>s+v.cnt,0);
 
   // ── KPI 카드 ──────────────────────────────────────
   const brEntries=Object.entries(brMap).sort((a,b)=>b[1].pay-a[1].pay);
   const brColor=n=>normalizeBranch(n)==='문래점'?'#2563eb':'#7c3aed';
+  const branchOrder=['문래점','신논현점'];
+  const sortBranches=(entries)=>entries.slice().sort((a,b)=>{
+    const ia=branchOrder.indexOf(a[0]),ib=branchOrder.indexOf(b[0]);
+    return(ia<0?99:ia)-(ib<0?99:ib);
+  });
   const brRowsHtml=(key)=>brEntries.map(([n,v])=>
     `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v[key])}<span class="ak-br-cnt">${v.cnt}건</span></span></div>`
   ).join('');
-  const brMapRows=(map)=>Object.entries(map).length
-    ?Object.entries(map).map(([n,v])=>`<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v)}</span></div>`).join('')
-    :'<div style="font-size:12px;color:#b0b8c4">없음</div>';
-
-  // 대관 건수 집계
-  const allChartRows=year?chartRows.filter(e=>e.date.slice(0,4)===year):chartRows;
-  const cntTotal=allChartRows.length;
-  const cntByBr={};
-  allChartRows.forEach(e=>{const b=normalizeBranch(e.branch);cntByBr[b]=(cntByBr[b]||0)+1;});
-  const cntWan=allChartRows.filter(e=>e.payStatus==='완납').length;
-  const cntRes=allChartRows.filter(e=>e.payStatus==='예약금 입금').length;
-  const cntCan=allChartRows.filter(e=>e.payStatus==='취소').length;
-  const cntRef=allChartRows.filter(e=>e.payStatus==='환불').length;
-  const cntBrHtml=Object.entries(cntByBr).sort((a,b)=>b[1]-a[1]).map(([n,v])=>
-    `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${v}건</span></div>`
-  ).join('');
+  const brMapRows=(map)=>{
+    const entries=sortBranches(Object.entries(map));
+    return entries.length
+      ?entries.map(([n,v])=>`<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v.amt)}<span class="ak-br-cnt">${v.cnt}건</span></span></div>`).join('')
+      :'<div style="font-size:12px;color:#b0b8c4">없음</div>';
+  };
 
   document.getElementById('an-kpi').innerHTML=`
       <div class="an-kpi-card">
@@ -2318,11 +2315,11 @@ function renderChart(){
       <div class="ak-branches">${brRowsHtml('pay')}</div>
     </div>
     <div class="an-kpi-card">
-      <div class="ak-lbl">대관 건수</div>
-      <div class="ak-val" style="color:#111827">${cntTotal}<span style="font-size:16px;font-weight:700">건</span></div>
-      <div class="ak-sub">완납 ${cntWan} · 예약금 ${cntRes} · 취소 ${cntCan} · 환불 ${cntRef}</div>
+      <div class="ak-lbl">취소 수익</div>
+      <div class="ak-val" style="color:#d97706">${fa(totalCancelAmt)}</div>
+      <div class="ak-sub">받고 안 돌려준 금액 · ${totalCancelCnt}건</div>
       <hr class="ak-divider">
-      <div class="ak-branches">${cntBrHtml}</div>
+      <div class="ak-branches">${brMapRows(cancelMap)}</div>
     </div>
     <div class="an-kpi-card">
       <div class="ak-lbl">잔금 입금 예정(청소보증금 제외/실수익)</div>
@@ -2333,21 +2330,12 @@ function renderChart(){
         `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v.out)}<span class="ak-br-cnt">${v.outCnt}건</span></span></div>`
       ).join('')}</div>
     </div>
-    <div class="an-kpi-card" style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
-      <div>
-        <div class="ak-lbl">취소 수익</div>
-        <div class="ak-val" style="color:#d97706;font-size:20px">${fa(totalCancelAmt)}</div>
-        <div class="ak-sub">받고 안 돌려준 금액</div>
-        <hr class="ak-divider" style="margin:8px 0">
-        <div class="ak-branches">${brMapRows(cancelMap)}</div>
-      </div>
-      <div>
-        <div class="ak-lbl">환불</div>
-        <div class="ak-val red" style="font-size:20px">-${fa(totalRefundAmt)}</div>
-        <div class="ak-sub">돌려준 금액</div>
-        <hr class="ak-divider" style="margin:8px 0">
-        <div class="ak-branches">${brMapRows(refundMap)}</div>
-      </div>
+    <div class="an-kpi-card">
+      <div class="ak-lbl">환불</div>
+      <div class="ak-val red">-${fa(totalRefundAmt)}</div>
+      <div class="ak-sub">돌려준 금액 · ${totalRefundCnt}건</div>
+      <hr class="ak-divider">
+      <div class="ak-branches">${brMapRows(refundMap)}</div>
     </div>`;
 
   // ── 차트 ─────────────────────────────────────────
