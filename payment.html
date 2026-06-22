@@ -2215,7 +2215,17 @@ function switchView(v){
 }
 
 function goHome(){
+  const sm=document.getElementById('sm');
+  const sb=document.getElementById('sb');
+  const ss=document.getElementById('ss');
+  const sq=document.getElementById('sq');
+  let changed=false;
+  if(sm&&sm.value){sm.value='';changed=true;}
+  if(sb&&sb.value){sb.value='';changed=true;}
+  if(ss&&ss.value){ss.value='';changed=true;}
+  if(sq&&sq.value){sq.value='';changed=true;}
   switchView('table');
+  if(changed)render();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -2236,10 +2246,11 @@ function renderChart(){
 
   chartRows.forEach(e=>{
     const b=normalizeBranch(e.branch);
-    if(!brMap[b])brMap[b]={ev:0,pay:0,out:0,outCnt:0};
+    if(!brMap[b])brMap[b]={ev:0,pay:0,out:0,outCnt:0,cnt:0};
     if(!brPayByMo[b])brPayByMo[b]=Array(12).fill(0);
     if(e.payStatus==='환불')return;
 
+    brMap[b].cnt++;
     const evMo=parseInt(e.date.slice(5,7),10)-1;
     const net=Number(e.netIn)||0;
     brMap[b].ev+=net;
@@ -2278,7 +2289,7 @@ function renderChart(){
   const brEntries=Object.entries(brMap).sort((a,b)=>b[1].pay-a[1].pay);
   const brColor=n=>normalizeBranch(n)==='문래점'?'#2563eb':'#7c3aed';
   const brRowsHtml=(key)=>brEntries.map(([n,v])=>
-    `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v[key])}</span></div>`
+    `<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v[key])}<span class="ak-br-cnt">${v.cnt}건</span></span></div>`
   ).join('');
   const brMapRows=(map)=>Object.entries(map).length
     ?Object.entries(map).map(([n,v])=>`<div class="ak-br-row"><span class="ak-br-name" style="color:${brColor(n)}">${n}</span><span class="ak-br-val">${fa(v)}</span></div>`).join('')
