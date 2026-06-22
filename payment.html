@@ -1875,18 +1875,35 @@ function nameFromTxns(txns){
   }
   return'';
 }
+const EVENT_TYPE_GROUPS=[
+  {canon:'온리전',keys:['온리전']},
+  {canon:'워크샵',keys:['워크샵','워크숍']}
+];
+function canonicalEventType(t){
+  for(const{canon,keys}of EVENT_TYPE_GROUPS){
+    if(keys.some(k=>t.includes(k)))return canon;
+  }
+  return t;
+}
 function nameFromTitle(title){
-  return(title||'')
+  const t=(title||'')
     .replace(/^\[.*?\]\s*/,'')
     .replace(/\[.*?\]\s*$/,'')
-    .replace(/^\d+층\s*/,'')
+    .replace(/^\d+(?:[,~\-]\d+)*\s*층\s*/,'')
     .replace(/[\[(][^)\]]*\/[^)\]]*[\])]$/,'')
     .replace(/\([^)]*\)$/,'')
     .trim();
+  return canonicalEventType(t);
+}
+const FORBIDDEN_NAME_WORDS=['개인계좌','법인계좌','개인','법인'];
+function stripForbiddenWords(s){
+  let out=s||'';
+  for(const w of FORBIDDEN_NAME_WORDS)out=out.split(w).join('');
+  return out.replace(/\s{2,}/g,' ').trim();
 }
 function autoNameFor(ev){
   const evType=nameFromTitle(ev.rawTitle);
-  const depositor=nameFromTxns(ev.txns);
+  const depositor=stripForbiddenWords(nameFromTxns(ev.txns));
   if(evType&&depositor)return`${evType}(${depositor})`;
   return evType||depositor||'';
 }
