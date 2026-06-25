@@ -390,6 +390,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-visit-br{font-size:11px;font-weight:700;width:60px;flex-shrink:0}
 .cust-visit-amt{font-weight:800;font-size:13px;font-variant-numeric:tabular-nums;color:#111827;text-align:right;width:100px;flex-shrink:0}
 .cust-visit-status{font-size:11px;font-weight:700;border-radius:4px;padding:2px 5px;white-space:nowrap;flex-shrink:0;width:62px;text-align:center;box-sizing:border-box}
+.type-override-select{font-size:11px;color:#4b5563;border:1px solid var(--line);border-radius:6px;padding:2px 4px;max-width:110px;flex-shrink:0;background:#fff}
 .cust-loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px}
 .cust-row.filtered-out{display:none!important}
 .cust-detail.filtered-out{display:none!important}
@@ -1932,6 +1933,45 @@ function saveRemoteTypeGroups(){
     body:JSON.stringify({key:TYPE_GROUPS_KEY,value:customTypeGroups})
   }).catch(e=>console.warn('행사 종류 분류 저장 실패',e));
 }
+const TYPE_OVERRIDES_KEY='event_type_overrides';
+let eventTypeOverrides={}; // {eventId: '사용자가 지정한 분류명'} — 제목 키워드와 무관하게 강제 지정
+let remoteTypeOverridesReady=false;
+async function loadRemoteTypeOverrides(){
+  try{
+    const res=await fetch(`${OV_API}?key=${encodeURIComponent(TYPE_OVERRIDES_KEY)}`,{cache:'no-store'});
+    if(res.ok){
+      const data=await res.json();
+      if(data?.value&&typeof data.value==='object')eventTypeOverrides=data.value;
+    }
+  }catch(e){}
+  remoteTypeOverridesReady=true;
+}
+function saveRemoteTypeOverrides(){
+  fetch(OV_API,{method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({key:TYPE_OVERRIDES_KEY,value:eventTypeOverrides})
+  }).catch(e=>console.warn('행사 분류 지정 저장 실패',e));
+}
+function setEventTypeOverride(id,value){
+  if(value==='__new__'){
+    const name=(window.prompt('이 행사를 어떤 분류로 지정할까요?')||'').trim();
+    if(!name){renderCustomers();return;}
+    eventTypeOverrides[id]=name;
+  }else if(!value){
+    delete eventTypeOverrides[id];
+  }else{
+    eventTypeOverrides[id]=value;
+  }
+  saveRemoteTypeOverrides();
+  renderCustomers();
+}
+function typeOverrideSelectHtml(ev,typeNames){
+  const current=eventTypeOverrides[ev.id]||'';
+  return`<select class="type-override-select" onclick="event.stopPropagation()" onchange="setEventTypeOverride('${ev.id}',this.value)" title="이 행사의 분류를 직접 지정">
+    <option value=""${current?'':' selected'}>분류: 자동</option>
+    ${typeNames.map(n=>`<option value="${esc(n)}"${current===n?' selected':''}>${esc(n)}</option>`).join('')}
+    <option value="__new__">+ 새 분류로 지정</option>
+  </select>`;
+}
 function addTypeGroup(){
   const nameInp=document.getElementById('type-group-add-name');
   const keysInp=document.getElementById('type-group-add-keys');
@@ -2047,7 +2087,7 @@ async function loadCustomerData(){
   customerAllData=all;
   return all;
 }
-function custVisitRowHtml(ev){
+function custVisitRowHtml(ev,typeNames){
   const bc2=normalizeBranch(ev.branch)==='문래점'?'#0369a1':'#c2410c';
   const stStyle=ev.payStatus==='완납'?'color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0':ev.payStatus==='취소'?'color:#dc2626;background:#fef2f2;border:1px solid #fecaca':'color:#b45309;background:#fffbeb;border:1px solid #fde68a';
   return`<div class="cust-visit-row">
@@ -2056,6 +2096,7 @@ function custVisitRowHtml(ev){
     <span class="cust-visit-br" style="color:${bc2}">${esc(normalizeBranch(ev.branch))}</span>
     <span class="cust-visit-status" style="${stStyle}">${ev.payStatus}</span>
     <span class="cust-visit-amt">${fa(Number(ev.netIn)||0)}</span>
+    ${typeNames?typeOverrideSelectHtml(ev,typeNames):''}
     <button class="rawbtn" onclick="event.stopPropagation();openRaw('${ev.id}',event)">원문</button>
   </div>`;
 }
@@ -2065,6 +2106,7 @@ async function renderCustomers(){
   el.innerHTML='<div class="cust-loading"><div class="spin"></div>캘린더 데이터 불러오는 중...</div>';
   if(!remoteContactsReady)await loadRemoteContacts();
   if(!remoteTypeGroupsReady)await loadRemoteTypeGroups();
+  if(!remoteTypeOverridesReady)await loadRemoteTypeOverrides();
   const data=await loadCustomerData();
   const map=buildCustomerMap(data);
   let rows=Object.values(map).map(c=>{
@@ -2094,17 +2136,22 @@ async function renderCustomers(){
   const evCntTotal=allCountableVisits.length;
   const typeGroups={};
   allCountableVisits.forEach(ev=>{
-    const t=canonicalEventType(nameFromTitle(ev.rawTitle))||'기타';
+    const t=eventTypeOverrides[ev.id]||canonicalEventType(nameFromTitle(ev.rawTitle))||'기타';
     if(!typeGroups[t])typeGroups[t]={count:0,evs:[]};
     typeGroups[t].count++;
     typeGroups[t].evs.push(ev);
   });
-  // 1건뿐인 행사 종류(+원래 '기타'로 분류된 것)는 모아서 '기타'로 묶는다
+  const typeNames=[...new Set([...activeTypeGroups().map(g=>g.canon),...Object.keys(typeGroups)])]
+    .filter(t=>t!=='기타').sort((a,b)=>a.localeCompare(b,'ko'));
+  typeNames.push('기타');
+  // 1건뿐인 행사 종류(+원래 '기타'로 분류된 것)는 모아서 '기타'로 묶는다.
+  // 단, 사용자가 직접 이 분류로 지정한 건이 있으면(수동 지정) 1건이어도 묶지 않는다
   let etcCount=0,etcEvs=[];
   const mainGroups=[];
   Object.entries(typeGroups).forEach(([t,v])=>{
-    if(t==='기타'||v.count<=1){etcCount+=v.count;etcEvs=etcEvs.concat(v.evs);}
-    else mainGroups.push([t,v]);
+    const manuallyAssigned=v.evs.some(ev=>eventTypeOverrides[ev.id]===t);
+    if(t!=='기타'&&(v.count>1||manuallyAssigned))mainGroups.push([t,v]);
+    else{etcCount+=v.count;etcEvs=etcEvs.concat(v.evs);}
   });
   if(etcCount>0)mainGroups.push(['기타',{count:etcCount,evs:etcEvs}]);
   const typeTop=mainGroups.sort((a,b)=>b[1].count-a[1].count).slice(0,6);
@@ -2116,7 +2163,7 @@ async function renderCustomers(){
     }).join('')
     :'<div style="font-size:12px;color:#b0b8c4">데이터 없음</div>';
   const typeDetailHtml=typeTop.map(([t,v],i)=>
-    `<div class="type-etc-detail" id="type-detail-${i}"><div class="cust-visit-hdr">${esc(t)} 내역 (${v.count}건)</div>${v.evs.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(custVisitRowHtml).join('')}</div>`
+    `<div class="type-etc-detail" id="type-detail-${i}"><div class="cust-visit-hdr">${esc(t)} 내역 (${v.count}건)</div>${v.evs.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(ev=>custVisitRowHtml(ev,typeNames)).join('')}</div>`
   ).join('');
 
   const methodCounts={세금계산서:0,현금:0,카드:0,기타:0};
@@ -2196,7 +2243,7 @@ async function renderCustomers(){
     <tr class="cust-detail" id="${pid}"><td colspan="8"><div class="cust-detail-inner">
       <div class="cust-visits">
         <div class="cust-visit-hdr">대관 이력 (${r.visits.length}건)</div>
-        ${r.visits.map(custVisitRowHtml).join('')}
+        ${r.visits.map(ev=>custVisitRowHtml(ev,typeNames)).join('')}
       </div>
     </div></td></tr>`;
   });
