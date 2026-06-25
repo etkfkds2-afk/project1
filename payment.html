@@ -279,14 +279,12 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ak-br-row-btn{width:100%;border:none;cursor:pointer;font:inherit;text-align:left}
 .ak-br-toggle{font-size:9px;color:var(--muted)}
 .type-top-grid{grid-template-columns:repeat(3,1fr)!important}
-.type-top-row{padding:5px 28px 5px 7px;gap:1px;position:relative;overflow:hidden}
-.type-top-row .ak-br-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
-.type-top-row .ak-br-name{font-size:10px}
+.type-top-row{padding:5px 7px;gap:1px}
+.type-top-row .ak-br-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;font-size:10px;border-radius:3px}
+.type-top-row .ak-br-name.type-canon-editable:hover{background:#e5e7eb;cursor:text}
 .type-top-row .ak-br-val{font-size:12px}
 .type-top-row .ak-br-cnt{font-size:9px}
-.ak-br-actions{position:absolute;top:3px;right:4px;display:flex;gap:2px}
-.ak-br-act{border:none;background:none;cursor:pointer;font-size:10px;line-height:1;padding:1px 3px;color:var(--muted);border-radius:4px}
-.ak-br-act:hover{background:#e5e7eb;color:#111827}
+.type-top-row .cust-inline-inp{height:18px;font-size:10px;padding:0 4px}
 .type-etc-detail{display:none;margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);max-height:260px;overflow-y:auto}
 .type-etc-detail.open{display:block}
 .type-group-edit-btn{margin-left:8px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer}
@@ -1982,23 +1980,41 @@ function typeOverrideSelectHtml(ev,typeNames){
     <option value="__new__">+ 새 분류로 지정</option>
   </select>`;
 }
-function renameTypeCanon(name){
-  const next=(window.prompt('분류명을 수정하세요',name)||'').trim();
-  if(!next||next===name)return;
-  if(Array.isArray(customTypeGroups)){
-    customTypeGroups.forEach(g=>{if(g.canon===name)g.canon=next;});
-    saveRemoteTypeGroups();
-  }
-  Object.keys(eventTypeOverrides).forEach(id=>{if(eventTypeOverrides[id]===name)eventTypeOverrides[id]=next;});
-  saveRemoteTypeOverrides();
-  renderCustomers();
+function startTypeCanonEdit(i,name,e){
+  e.stopPropagation();
+  const span=document.getElementById(`type-canon-${i}`);
+  if(!span||span.querySelector('input'))return;
+  const inp=document.createElement('input');
+  inp.className='cust-inline-inp';
+  inp.value=name;
+  span.textContent='';
+  span.appendChild(inp);
+  inp.focus();inp.select();
+  const commit=()=>commitTypeCanonEdit(name,inp.value);
+  inp.onblur=commit;
+  inp.onkeydown=ev=>{
+    ev.stopPropagation();
+    if(ev.key==='Enter'){ev.preventDefault();inp.blur();}
+    if(ev.key==='Escape'){inp.onblur=null;span.textContent=name;}
+  };
 }
-function deleteTypeCanon(name){
-  if(!confirm(`'${name}' 분류를 삭제할까요?\n이 분류에 속한 행사는 자동 분류(키워드 매칭 또는 기타)로 돌아갑니다.`))return;
-  if(Array.isArray(customTypeGroups))customTypeGroups=customTypeGroups.filter(g=>g.canon!==name);
-  saveRemoteTypeGroups();
-  Object.keys(eventTypeOverrides).forEach(id=>{if(eventTypeOverrides[id]===name)delete eventTypeOverrides[id];});
-  saveRemoteTypeOverrides();
+function commitTypeCanonEdit(oldName,newNameRaw){
+  const newName=(newNameRaw||'').trim();
+  if(newName===oldName)return;
+  if(!newName){
+    // 빈 값으로 지우면 분류 자체를 삭제(소속 행사는 자동 분류로 복귀)
+    if(Array.isArray(customTypeGroups))customTypeGroups=customTypeGroups.filter(g=>g.canon!==oldName);
+    saveRemoteTypeGroups();
+    Object.keys(eventTypeOverrides).forEach(id=>{if(eventTypeOverrides[id]===oldName)delete eventTypeOverrides[id];});
+    saveRemoteTypeOverrides();
+  }else{
+    if(Array.isArray(customTypeGroups)){
+      customTypeGroups.forEach(g=>{if(g.canon===oldName)g.canon=newName;});
+      saveRemoteTypeGroups();
+    }
+    Object.keys(eventTypeOverrides).forEach(id=>{if(eventTypeOverrides[id]===oldName)eventTypeOverrides[id]=newName;});
+    saveRemoteTypeOverrides();
+  }
   renderCustomers();
 }
 function addTypeGroup(){
@@ -2184,16 +2200,15 @@ async function renderCustomers(){
   });
   if(etcCount>0)mainGroups.push(['기타',{count:etcCount,evs:etcEvs}]);
   const typeTop=mainGroups.sort((a,b)=>b[1].count-a[1].count).slice(0,10);
-  // 모든 행사 종류 행을 클릭하면 해당 내역이 대관이력처럼 펼쳐지고, 기타가 아니면 분류명을 수정/삭제할 수 있다
+  // 행 클릭 시 내역이 대관이력처럼 펼쳐지고, 기타가 아니면 분류명 글자를 클릭해 바로 수정(비우면 삭제)할 수 있다
   const typeListHtml=typeTop.length
     ?typeTop.map(([t,v],i)=>{
       const pct=evCntTotal?Math.round(v.count/evCntTotal*100):0;
       const nameJs=escJsAttr(t);
-      const actions=t==='기타'?'':`<span class="ak-br-actions">
-        <button type="button" class="ak-br-act" onclick="event.stopPropagation();renameTypeCanon('${nameJs}')" title="분류명 수정">✎</button>
-        <button type="button" class="ak-br-act" onclick="event.stopPropagation();deleteTypeCanon('${nameJs}')" title="분류 삭제">×</button>
-      </span>`;
-      return`<div class="ak-br-row ak-br-row-btn type-top-row" onclick="toggleTypeDetail(${i})" role="button" tabindex="0"><span class="ak-br-name">${esc(t)} <span class="ak-br-toggle">▾</span></span><span class="ak-br-val">${v.count}건<span class="ak-br-cnt">${pct}%</span></span>${actions}</div>`;
+      const nameSpan=t==='기타'
+        ?`<span class="ak-br-name">${esc(t)}</span>`
+        :`<span class="ak-br-name type-canon-editable" id="type-canon-${i}" title="클릭해서 분류명 수정(비우면 삭제)" onclick="event.stopPropagation();startTypeCanonEdit(${i},'${nameJs}',event)">${esc(t)}</span>`;
+      return`<div class="ak-br-row ak-br-row-btn type-top-row" onclick="toggleTypeDetail(${i})" role="button" tabindex="0">${nameSpan}<span class="ak-br-val">${v.count}건<span class="ak-br-cnt">${pct}%</span> <span class="ak-br-toggle">▾</span></span></div>`;
     }).join('')
     :'<div style="font-size:12px;color:#b0b8c4">데이터 없음</div>';
   const typeDetailHtml=typeTop.map(([t,v],i)=>
