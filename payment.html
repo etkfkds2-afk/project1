@@ -287,13 +287,13 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .type-top-row .cust-inline-inp{height:18px;font-size:10px;padding:0 4px}
 .type-etc-detail{display:none;margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);max-height:260px;overflow-y:auto}
 .type-etc-detail.open{display:block}
-.cv-compact{flex-wrap:nowrap;align-items:center;gap:4px;padding:4px 0;font-size:11px}
-.cv-compact .cust-visit-date{width:30px;font-size:9px;white-space:nowrap;flex-shrink:0}
-.cv-compact .cust-visit-title{flex:0 1 56px;min-width:20px;font-size:11px}
-.cv-compact .cust-visit-br{width:26px;font-size:9px;white-space:nowrap;flex-shrink:0}
-.cv-compact .cust-visit-status{width:28px;font-size:8px;padding:1px 2px;white-space:nowrap;flex-shrink:0}
-.cv-compact .cust-visit-amt{width:58px;font-size:10px;white-space:nowrap;flex-shrink:0}
-.cv-compact .rawbtn{height:18px;padding:0 4px;font-size:9px;flex-shrink:0}
+.cust-visit-row.cv-compact{flex-wrap:nowrap;align-items:center;gap:5px;padding:5px 0;font-size:12px}
+.cv-compact .cust-visit-date{width:34px;font-size:10px;white-space:nowrap;flex-shrink:0}
+.cv-compact .cust-visit-title{flex:1 1 56px;min-width:20px;font-size:12px}
+.cv-compact .cust-visit-br{width:30px;font-size:10px;white-space:nowrap;flex-shrink:0}
+.cv-compact .cust-visit-status{width:32px;font-size:9px;padding:1px 3px;white-space:nowrap;flex-shrink:0}
+.cv-compact .cust-visit-amt{width:64px;font-size:11px;white-space:nowrap;flex-shrink:0}
+.cv-compact .rawbtn{height:19px;padding:0 5px;font-size:10px;flex-shrink:0}
 .type-group-edit-btn{margin-left:8px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer}
 .type-group-edit-btn:hover{color:var(--blue);border-color:var(--blue)}
 .type-group-editor{display:none;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
@@ -2029,7 +2029,7 @@ function setEventTypeOverride(id,value){
 }
 function typeOverrideSelectHtml(ev,typeNames,compact){
   const current=eventTypeOverrides[ev.id]||'';
-  const style=compact?' style="width:56px;min-width:0;height:18px;font-size:9px;padding:0 2px"':'';
+  const style=compact?' style="width:60px;min-width:0;height:19px;font-size:10px;padding:0 2px"':'';
   return`<select class="type-override-select"${style} onclick="event.stopPropagation()" onchange="setEventTypeOverride('${ev.id}',this.value)" title="이 행사의 분류를 직접 지정">
     <option value=""${current?'':' selected'}>${compact?'자동':'분류: 자동'}</option>
     ${typeNames.map(n=>`<option value="${esc(n)}"${current===n?' selected':''}>${esc(n)}</option>`).join('')}
@@ -2308,7 +2308,7 @@ async function renderCustomers(){
       <hr class="ak-divider" style="margin:8px 0">
       <div class="ak-branches">${methodListHtml}</div>
     </div>
-    <div class="cust-kpi-card" style="flex:1 1 320px">
+    <div class="cust-kpi-card" style="flex:1 1 360px">
       <div class="cust-kpi-label">행사 종류 TOP ${typeTop.length} <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span><button type="button" class="type-group-edit-btn" onclick="toggleTypeGroupEditor()" title="분류 규칙 관리">⚙ 분류관리</button></div>
       <hr class="ak-divider" style="margin:8px 0">
       <div class="ak-branches type-top-grid">${typeListHtml}</div>
@@ -2718,7 +2718,20 @@ function renderChart(){
       labels:LABELS,
       datasets:chartDatasets
     },
-    plugins:typeof ChartDataLabels!=='undefined'?[ChartDataLabels]:[],
+    plugins:[
+      ...(typeof ChartDataLabels!=='undefined'?[ChartDataLabels]:[]),
+      {
+        // 범례(문래점/신논현점)와 막대 영역 사이에 살짝 여유 공간을 띄움
+        id:'legendGap',
+        afterInit(chart){
+          const fitFn=chart.legend.fit;
+          chart.legend.fit=function(){
+            fitFn.bind(chart.legend)();
+            this.height+=8;
+          };
+        }
+      }
+    ],
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{
