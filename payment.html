@@ -591,6 +591,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2/dist/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
 <script>
 const ACCESS_USER='boss';
@@ -2717,12 +2718,19 @@ function renderChart(){
       labels:LABELS,
       datasets:chartDatasets
     },
+    plugins:typeof ChartDataLabels!=='undefined'?[ChartDataLabels]:[],
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{
         legend:{position:'top',labels:{font:{size:13,weight:'bold'},padding:16}},
         tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fa(c.parsed.y)}`}},
-        annotation:{annotations:{rentLine:{type:'line',yMin:7000000,yMax:7000000,borderColor:'#ef4444',borderWidth:1.5,borderDash:[6,4],label:{display:true,content:'월세 700만',position:'end',xAdjust:-8,backgroundColor:'transparent',color:'#ef4444',font:{size:11,weight:'bold'}}}}}
+        annotation:{annotations:{rentLine:{type:'line',yMin:7000000,yMax:7000000,borderColor:'#ef4444',borderWidth:1.5,borderDash:[6,4],label:{display:true,content:'월세 700만',position:'end',xAdjust:-8,backgroundColor:'transparent',color:'#ef4444',font:{size:11,weight:'bold'}}}}},
+        datalabels:{
+          anchor:'end',align:'top',offset:2,clamp:true,
+          font:{size:10,weight:'bold'},
+          color:c=>c.dataset.borderColor||'#374151',
+          formatter:v=>v>0?(v>=10000?Math.round(v/10000)+'만':String(v)):''
+        }
       },
       scales:{
         x:{grid:{display:false},ticks:{font:{size:12}}},
