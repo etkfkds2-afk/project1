@@ -276,6 +276,10 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ak-br-name{font-size:11px;font-weight:700;letter-spacing:.3px}
 .ak-br-val{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
 .ak-br-cnt{font-size:11px;font-weight:600;color:var(--muted);margin-left:4px}
+.ak-br-row-btn{width:100%;border:none;cursor:pointer;font:inherit;text-align:left}
+.ak-br-toggle{font-size:9px;color:var(--muted)}
+.type-etc-detail{display:none;margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);max-height:260px;overflow-y:auto}
+.type-etc-detail.open{display:block}
 /* 섹션 공통 */
 .an-section{background:var(--panel);border-radius:10px;border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
 .an-section:last-child{margin-bottom:0}
@@ -1221,16 +1225,23 @@ function balanceDueInfo(ev){
   const amount=(Number(ev.balanceAmount)||0)+(Number(ev.balanceAmount2)||0);
   return{ev,due,diff,level,amount};
 }
-function tableFilterBase(ignoreMonth=false){
+function tableFilterByDue(){
+  // 잔금은 행사일 1개월 전까지 받으므로, 입금예정 집계는 행사일이 아니라 잔금기한(행사일-1개월) 기준으로 연/월을 매칭한다
   const yr=selectedYear();
-  const mo=ignoreMonth?'':document.getElementById('sm').value;
+  const mo=document.getElementById('sm').value;
   const br=document.getElementById('sb').value,st=document.getElementById('ss').value;
   const q=(document.getElementById('sq')?.value||'').trim().toLowerCase();
   return allData.filter(e=>{
     if(!showHidden&&e.hidden)return false;
-    if(yr&&e.date.slice(0,4)!==yr)return false;
+    if(e.payStatus!=='예약금 입금')return false;
+    const due=addMonthsClamped(e.date,-1);
+    if(!due)return false;
+    if(yr&&due.slice(0,4)!==yr)return false;
+    if(mo&&due.slice(5,7)!==mo)return false;
+    if(br&&e.branch!==br)return false;
+    if(st&&e.payStatus!==st)return false;
     const hay=[e.date,e.branch,e.title,e.payStatus,e.reservationDate,e.balanceDate,e.netIn,e.dep,e.methods.join(' '),e.notes,e.rawTitle,e.rawDesc].join(' ').toLowerCase();
-    return(!mo||e.date.slice(5,7)===mo)&&(!br||e.branch===br)&&(!st||e.payStatus===st)&&(!q||hay.includes(q));
+    return!q||hay.includes(q);
   });
 }
 function nextBalanceRows(items){
@@ -1277,7 +1288,7 @@ function renderTableAlerts(){
   const el=document.getElementById('table-alerts');
   if(!el)return;
   const month=document.getElementById('sm').value;
-  const visiblePending=tableFilterBase(false).filter(e=>e.payStatus==='예약금 입금');
+  const visiblePending=tableFilterByDue();
   const monthTotal=visiblePending.reduce((s,e)=>s+pendingBalanceAmount(e),0);
   const dueInfos=visiblePending.map(balanceDueInfo).filter(Boolean)
     .sort((a,b)=>a.due.localeCompare(b.due)||b.amount-a.amount);
@@ -1877,7 +1888,12 @@ function nameFromTxns(txns){
 }
 const EVENT_TYPE_GROUPS=[
   {canon:'온리전',keys:['온리전']},
-  {canon:'워크샵',keys:['워크샵','워크숍']}
+  {canon:'워크샵',keys:['워크샵','워크숍']},
+  {canon:'배포전',keys:['배포전']},
+  {canon:'동문회',keys:['동문회']},
+  {canon:'북토크',keys:['북토크']},
+  {canon:'청년 미팅 행사',keys:['청년 미팅 행사']},
+  {canon:'해커톤',keys:['해커톤']}
 ];
 function canonicalEventType(t){
   for(const{canon,keys}of EVENT_TYPE_GROUPS){
@@ -1956,6 +1972,18 @@ async function loadCustomerData(){
   customerAllData=all;
   return all;
 }
+function custVisitRowHtml(ev){
+  const bc2=normalizeBranch(ev.branch)==='문래점'?'#0369a1':'#c2410c';
+  const stStyle=ev.payStatus==='완납'?'color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0':ev.payStatus==='취소'?'color:#dc2626;background:#fef2f2;border:1px solid #fecaca':'color:#b45309;background:#fffbeb;border:1px solid #fde68a';
+  return`<div class="cust-visit-row">
+    <span class="cust-visit-date">${ev.date}</span>
+    <span class="cust-visit-title" title="${esc(ev.rawTitle)}">${esc(ev.title||ev.rawTitle)}</span>
+    <span class="cust-visit-br" style="color:${bc2}">${esc(normalizeBranch(ev.branch))}</span>
+    <span class="cust-visit-status" style="${stStyle}">${ev.payStatus}</span>
+    <span class="cust-visit-amt">${fa(Number(ev.netIn)||0)}</span>
+    <button class="rawbtn" onclick="event.stopPropagation();openRaw('${ev.id}',event)">원문</button>
+  </div>`;
+}
 async function renderCustomers(){
   const el=document.getElementById('cust-content');
   if(!el)return;
@@ -1988,15 +2016,34 @@ async function renderCustomers(){
 
   const allCountableVisits=rows.flatMap(r=>r.countableVisits);
   const evCntTotal=allCountableVisits.length;
-  const typeCounts={};
+  const typeGroups={};
   allCountableVisits.forEach(ev=>{
     const t=canonicalEventType(nameFromTitle(ev.rawTitle))||'기타';
-    typeCounts[t]=(typeCounts[t]||0)+1;
+    if(!typeGroups[t])typeGroups[t]={count:0,evs:[]};
+    typeGroups[t].count++;
+    typeGroups[t].evs.push(ev);
   });
-  const typeTop=Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  // 1건뿐인 행사 종류(+원래 '기타'로 분류된 것)는 모아서 '기타'로 묶고, 클릭하면 내역을 펼쳐서 보여준다
+  let etcCount=0,etcEvs=[];
+  const mainTypeCounts=[];
+  Object.entries(typeGroups).forEach(([t,v])=>{
+    if(t==='기타'||v.count<=1){etcCount+=v.count;etcEvs=etcEvs.concat(v.evs);}
+    else mainTypeCounts.push([t,v.count]);
+  });
+  if(etcCount>0)mainTypeCounts.push(['기타',etcCount]);
+  const typeTop=mainTypeCounts.sort((a,b)=>b[1]-a[1]).slice(0,6);
   const typeListHtml=typeTop.length
-    ?typeTop.map(([t,c])=>`<div class="ak-br-row"><span class="ak-br-name">${esc(t)}</span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${evCntTotal?Math.round(c/evCntTotal*100):0}%</span></span></div>`).join('')
+    ?typeTop.map(([t,c])=>{
+      const pct=evCntTotal?Math.round(c/evCntTotal*100):0;
+      if(t==='기타'){
+        return`<button type="button" class="ak-br-row ak-br-row-btn" onclick="toggleTypeEtc()"><span class="ak-br-name">기타 <span class="ak-br-toggle">▾</span></span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${pct}%</span></span></button>`;
+      }
+      return`<div class="ak-br-row"><span class="ak-br-name">${esc(t)}</span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${pct}%</span></span></div>`;
+    }).join('')
     :'<div style="font-size:12px;color:#b0b8c4">데이터 없음</div>';
+  const typeEtcDetailHtml=etcEvs.length
+    ?etcEvs.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(custVisitRowHtml).join('')
+    :'';
 
   const methodCounts={세금계산서:0,현금:0,카드:0,기타:0};
   allCountableVisits.forEach(ev=>{methodCounts[paymentMethodFor(ev)]++;});
@@ -2019,6 +2066,7 @@ async function renderCustomers(){
       <div class="cust-kpi-label">행사 종류 TOP ${typeTop.length} <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div>
       <hr class="ak-divider" style="margin:8px 0">
       <div class="ak-branches">${typeListHtml}</div>
+      ${etcEvs.length?`<div class="type-etc-detail" id="type-etc-detail"><div class="cust-visit-hdr">기타 행사 내역 (${etcEvs.length}건)</div>${typeEtcDetailHtml}</div>`:''}
     </div>`;
   function sortTh(key,label,cls=''){
     const active=custSortKey===key;
@@ -2073,18 +2121,7 @@ async function renderCustomers(){
     <tr class="cust-detail" id="${pid}"><td colspan="8"><div class="cust-detail-inner">
       <div class="cust-visits">
         <div class="cust-visit-hdr">대관 이력 (${r.visits.length}건)</div>
-        ${r.visits.map(ev=>{
-          const bc2=normalizeBranch(ev.branch)==='문래점'?'#0369a1':'#c2410c';
-          const stStyle=ev.payStatus==='완납'?'color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0':ev.payStatus==='취소'?'color:#dc2626;background:#fef2f2;border:1px solid #fecaca':'color:#b45309;background:#fffbeb;border:1px solid #fde68a';
-          return`<div class="cust-visit-row">
-            <span class="cust-visit-date">${ev.date}</span>
-            <span class="cust-visit-title" title="${esc(ev.rawTitle)}">${esc(ev.title||ev.rawTitle)}</span>
-            <span class="cust-visit-br" style="color:${bc2}">${esc(normalizeBranch(ev.branch))}</span>
-            <span class="cust-visit-status" style="${stStyle}">${ev.payStatus}</span>
-            <span class="cust-visit-amt">${fa(Number(ev.netIn)||0)}</span>
-            <button class="rawbtn" onclick="event.stopPropagation();openRaw('${ev.id}',event)">원문</button>
-          </div>`;
-        }).join('')}
+        ${r.visits.map(custVisitRowHtml).join('')}
       </div>
     </div></td></tr>`;
   });
@@ -2113,6 +2150,9 @@ function toggleCustDetail(phone){
   if(!row||!det)return;
   const isOpen=det.classList.toggle('open');
   row.classList.toggle('open',isOpen);
+}
+function toggleTypeEtc(){
+  document.getElementById('type-etc-detail')?.classList.toggle('open');
 }
 function custSort(key){
   if(custSortKey===key)custSortAsc=!custSortAsc;
@@ -2325,7 +2365,11 @@ function renderChart(){
       if(pMo>=0&&pMo<12){payByMo[pMo]+=p.amount;brMap[b].pay+=p.amount;brPayByMo[b][pMo]+=p.amount;payYears.add(p.date.slice(0,4));}
     });
 
-    if(e.payStatus==='예약금 입금'&&(!year||e.date.slice(0,4)===year)){brMap[b].out+=pendingBalanceAmount(e);brMap[b].outCnt++;}
+    if(e.payStatus==='예약금 입금'){
+      // 잔금은 행사일 1개월 전까지 받으므로 잔금기한(행사일-1개월) 연도 기준으로 집계
+      const due=addMonthsClamped(e.date,-1);
+      if(due&&(!year||due.slice(0,4)===year)){brMap[b].out+=pendingBalanceAmount(e);brMap[b].outCnt++;}
+    }
   });
 
   const payYearLabel=(()=>{
