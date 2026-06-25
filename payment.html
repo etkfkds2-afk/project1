@@ -287,9 +287,14 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .type-top-row .cust-inline-inp{height:18px;font-size:10px;padding:0 4px}
 .type-etc-detail{display:none;margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);max-height:260px;overflow-y:auto}
 .type-etc-detail.open{display:block}
-.type-etc-detail .cust-visit-row{flex-wrap:wrap;row-gap:4px}
-.type-etc-detail .cust-visit-title{flex:1 1 100%;white-space:normal}
-.type-etc-detail .cust-visit-date{width:auto}
+.cv-compact{display:block!important;padding:6px 0}
+.cv-compact .cv-line1{display:flex;gap:8px;align-items:baseline;margin-bottom:3px}
+.cv-compact .cv-line1 .cust-visit-date{width:auto;flex-shrink:0}
+.cv-compact .cv-line1 .cust-visit-title{flex:1;min-width:0}
+.cv-compact .cv-line2{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.cv-compact .cust-visit-br{width:auto;flex-shrink:0}
+.cv-compact .cust-visit-status{width:auto;flex-shrink:0}
+.cv-compact .cust-visit-amt{width:auto;flex-shrink:0;text-align:left}
 .type-group-edit-btn{margin-left:8px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer}
 .type-group-edit-btn:hover{color:var(--blue);border-color:var(--blue)}
 .type-group-editor{display:none;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
@@ -314,6 +319,12 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 /* 차트 */
 .an-chart-body{padding:20px 22px 16px;position:relative;height:340px}
 /* 실입금 테이블 */
+.half-table{width:100%;border-collapse:collapse;font-size:13px}
+.half-table th{padding:9px 14px;text-align:left;font-size:11px;font-weight:800;color:#6b7280;background:#f8fafc;border-bottom:1px solid var(--line);white-space:nowrap}
+.half-table th.r,.half-table td.r{text-align:right}
+.half-table td{padding:10px 14px;border-bottom:1px solid #f1f3f6;font-variant-numeric:tabular-nums}
+.half-table .half-total{font-weight:800}
+.half-table .half-grand td{background:#f8fafc;font-weight:800;border-top:2px solid var(--line)}
 .cf-table{width:100%;border-collapse:collapse;font-size:13px}
 .cf-thead th{padding:9px 14px;text-align:left;font-size:11px;font-weight:800;color:#6b7280;background:#f8fafc;border-bottom:1px solid var(--line);white-space:nowrap}
 .cf-thead th.r{text-align:right}
@@ -537,6 +548,13 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
       <div class="an-sec-sub">입금날짜 기준 월별 실제 수령액</div>
     </div>
     <div class="an-chart-body"><canvas id="revenueChart"></canvas></div>
+  </div>
+  <div class="an-section">
+    <div class="an-sec-hdr">
+      <div class="an-sec-title">반기별 실수익</div>
+      <div class="an-sec-sub">입금날짜 기준 · 상반기(1~6월) / 하반기(7~12월)</div>
+    </div>
+    <div id="half-year-content"></div>
   </div>
   <div class="an-section">
     <div class="an-sec-hdr">
@@ -1847,6 +1865,40 @@ function cashflowByMonth(year){
   return{byMonth,order,grandTotal};
 }
 
+function renderHalfYearTable(byMonth,order){
+  const el=document.getElementById('half-year-content');
+  if(!el)return;
+  const BR_ORDER=['문래점','신논현점'];
+  const halves={};
+  order.forEach(({key,mo,year:secYear})=>{
+    const half=mo<6?'상반기':'하반기';
+    const hk=`${secYear}-${half}`;
+    if(!halves[hk])halves[hk]={yr:secYear,half,amt:0,cnt:0,br:{}};
+    (byMonth[key]||[]).forEach(p=>{
+      const h=halves[hk];
+      h.amt+=p.amount;h.cnt++;
+      const b=normalizeBranch(p.e.branch);
+      if(!h.br[b])h.br[b]={amt:0,cnt:0};
+      h.br[b].amt+=p.amount;h.br[b].cnt++;
+    });
+  });
+  const keys=Object.keys(halves).sort((a,b)=>{
+    const ha=halves[a],hb=halves[b];
+    return ha.yr===hb.yr?(ha.half==='상반기'?0:1)-(hb.half==='상반기'?0:1):ha.yr.localeCompare(hb.yr);
+  });
+  if(!keys.length){el.innerHTML='<div style="padding:16px 20px;color:#9ca3af;font-size:13px">데이터 없음</div>';return;}
+  const grand=keys.reduce((s,k)=>s+halves[k].amt,0);
+  const grandCnt=keys.reduce((s,k)=>s+halves[k].cnt,0);
+  let html=`<table class="half-table"><thead><tr><th>기간</th>${BR_ORDER.map(b=>`<th class="r">${b}</th>`).join('')}<th class="r">합계</th><th class="r">건수</th></tr></thead><tbody>`;
+  keys.forEach(k=>{
+    const h=halves[k];
+    html+=`<tr><td>${h.yr}년 ${h.half}</td>${BR_ORDER.map(b=>`<td class="r">${fa(h.br[b]?.amt||0)}</td>`).join('')}<td class="r half-total">${fa(h.amt)}</td><td class="r">${h.cnt}건</td></tr>`;
+  });
+  html+=`<tr class="half-grand"><td>합계</td>${BR_ORDER.map(b=>`<td class="r">${fa(keys.reduce((s,k)=>s+(halves[k].br[b]?.amt||0),0))}</td>`).join('')}<td class="r half-total">${fa(grand)}</td><td class="r">${grandCnt}건</td></tr>`;
+  html+='</tbody></table>';
+  el.innerHTML=html;
+}
+
 function doCashflowExport(){
   downloadExcelWorkbook(buildCashflowWorkbook(),`올댓마인드_월별실수익_${selectedYearLabel()}.xls`);
 }
@@ -2135,17 +2187,32 @@ async function loadCustomerData(){
   customerAllData=all;
   return all;
 }
-function custVisitRowHtml(ev,typeNames){
+function custVisitRowHtml(ev,typeNames,compact){
   const bc2=normalizeBranch(ev.branch)==='문래점'?'#0369a1':'#c2410c';
   const stStyle=ev.payStatus==='완납'?'color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0':ev.payStatus==='취소'?'color:#dc2626;background:#fef2f2;border:1px solid #fecaca':'color:#b45309;background:#fffbeb;border:1px solid #fde68a';
+  const branchSpan=`<span class="cust-visit-br" style="color:${bc2}">${esc(normalizeBranch(ev.branch))}</span>`;
+  const statusSpan=`<span class="cust-visit-status" style="${stStyle}">${ev.payStatus}</span>`;
+  const amtSpan=`<span class="cust-visit-amt">${fa(Number(ev.netIn)||0)}</span>`;
+  const selectHtml=typeNames?typeOverrideSelectHtml(ev,typeNames):'';
+  const rawBtn=`<button class="rawbtn" onclick="event.stopPropagation();openRaw('${ev.id}',event)">원문</button>`;
+  if(compact){
+    // 좁은 카드 안에서는 날짜+제목 한 줄, 나머지(지점/상태/금액/분류/원문)를 한 줄로 묶어 세로로 길어지지 않게 함
+    return`<div class="cust-visit-row cv-compact">
+      <div class="cv-line1">
+        <span class="cust-visit-date">${ev.date}</span>
+        <span class="cust-visit-title" title="${esc(ev.rawTitle)}">${esc(ev.title||ev.rawTitle)}</span>
+      </div>
+      <div class="cv-line2">${branchSpan}${statusSpan}${amtSpan}${selectHtml}${rawBtn}</div>
+    </div>`;
+  }
   return`<div class="cust-visit-row">
     <span class="cust-visit-date">${ev.date}</span>
     <span class="cust-visit-title" title="${esc(ev.rawTitle)}">${esc(ev.title||ev.rawTitle)}</span>
-    <span class="cust-visit-br" style="color:${bc2}">${esc(normalizeBranch(ev.branch))}</span>
-    <span class="cust-visit-status" style="${stStyle}">${ev.payStatus}</span>
-    <span class="cust-visit-amt">${fa(Number(ev.netIn)||0)}</span>
-    ${typeNames?typeOverrideSelectHtml(ev,typeNames):''}
-    <button class="rawbtn" onclick="event.stopPropagation();openRaw('${ev.id}',event)">원문</button>
+    ${branchSpan}
+    ${statusSpan}
+    ${amtSpan}
+    ${selectHtml}
+    ${rawBtn}
   </div>`;
 }
 async function renderCustomers(){
@@ -2215,7 +2282,7 @@ async function renderCustomers(){
     }).join('')
     :'<div style="font-size:12px;color:#b0b8c4">데이터 없음</div>';
   const typeDetailHtml=typeTop.map(([t,v],i)=>
-    `<div class="type-etc-detail" id="type-detail-${i}"><div class="cust-visit-hdr">${esc(t)} 내역 (${v.count}건)</div>${v.evs.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(ev=>custVisitRowHtml(ev,typeNames)).join('')}</div>`
+    `<div class="type-etc-detail" id="type-detail-${i}"><div class="cust-visit-hdr">${esc(t)} 내역 (${v.count}건)</div>${v.evs.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(ev=>custVisitRowHtml(ev,typeNames,true)).join('')}</div>`
   ).join('');
 
   const methodCounts={세금계산서:0,현금:0,카드:0,기타:0};
@@ -2662,6 +2729,7 @@ function renderChart(){
   // ── 실입금 테이블 ─────────────────────────────────
   const {byMonth,order:cfOrder,grandTotal}=cashflowByMonth(year);
   document.getElementById('an-cf-total').textContent=fa(grandTotal);
+  renderHalfYearTable(byMonth,cfOrder);
 
   let html=`<table class="cf-table">
     <thead class="cf-thead"><tr>
