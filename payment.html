@@ -287,14 +287,13 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .type-top-row .cust-inline-inp{height:18px;font-size:10px;padding:0 4px}
 .type-etc-detail{display:none;margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);max-height:260px;overflow-y:auto}
 .type-etc-detail.open{display:block}
-.cv-compact{display:block!important;padding:6px 0}
-.cv-compact .cv-line1{display:flex;gap:8px;align-items:baseline;margin-bottom:3px}
-.cv-compact .cv-line1 .cust-visit-date{width:auto;flex-shrink:0}
-.cv-compact .cv-line1 .cust-visit-title{flex:1;min-width:0}
-.cv-compact .cv-line2{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.cv-compact .cust-visit-br{width:auto;flex-shrink:0}
-.cv-compact .cust-visit-status{width:auto;flex-shrink:0}
-.cv-compact .cust-visit-amt{width:auto;flex-shrink:0;text-align:left}
+.cv-compact{flex-wrap:nowrap;align-items:center;gap:4px;padding:4px 0;font-size:11px}
+.cv-compact .cust-visit-date{width:30px;font-size:9px;white-space:nowrap;flex-shrink:0}
+.cv-compact .cust-visit-title{flex:0 1 56px;min-width:20px;font-size:11px}
+.cv-compact .cust-visit-br{width:26px;font-size:9px;white-space:nowrap;flex-shrink:0}
+.cv-compact .cust-visit-status{width:28px;font-size:8px;padding:1px 2px;white-space:nowrap;flex-shrink:0}
+.cv-compact .cust-visit-amt{width:58px;font-size:10px;white-space:nowrap;flex-shrink:0}
+.cv-compact .rawbtn{height:18px;padding:0 4px;font-size:9px;flex-shrink:0}
 .type-group-edit-btn{margin-left:8px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer}
 .type-group-edit-btn:hover{color:var(--blue);border-color:var(--blue)}
 .type-group-editor{display:none;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
@@ -411,7 +410,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-visit-br{font-size:11px;font-weight:700;width:60px;flex-shrink:0}
 .cust-visit-amt{font-weight:800;font-size:13px;font-variant-numeric:tabular-nums;color:#111827;text-align:right;width:100px;flex-shrink:0}
 .cust-visit-status{font-size:11px;font-weight:700;border-radius:4px;padding:2px 5px;white-space:nowrap;flex-shrink:0;width:62px;text-align:center;box-sizing:border-box}
-.type-override-select{font-size:11px;color:#4b5563;border:1px solid var(--line);border-radius:6px;padding:2px 4px;max-width:110px;flex-shrink:0;background:#fff}
+.type-override-select{height:24px;font-size:11px;color:#4b5563;border:1px solid var(--line);border-radius:6px;padding:0 4px;min-width:0;max-width:110px;flex-shrink:0;background:#fff}
 .cust-loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px}
 .cust-row.filtered-out{display:none!important}
 .cust-detail.filtered-out{display:none!important}
@@ -2027,12 +2026,13 @@ function setEventTypeOverride(id,value){
   saveRemoteTypeOverrides();
   renderCustomers();
 }
-function typeOverrideSelectHtml(ev,typeNames){
+function typeOverrideSelectHtml(ev,typeNames,compact){
   const current=eventTypeOverrides[ev.id]||'';
-  return`<select class="type-override-select" onclick="event.stopPropagation()" onchange="setEventTypeOverride('${ev.id}',this.value)" title="이 행사의 분류를 직접 지정">
-    <option value=""${current?'':' selected'}>분류: 자동</option>
+  const style=compact?' style="width:56px;min-width:0;height:18px;font-size:9px;padding:0 2px"':'';
+  return`<select class="type-override-select"${style} onclick="event.stopPropagation()" onchange="setEventTypeOverride('${ev.id}',this.value)" title="이 행사의 분류를 직접 지정">
+    <option value=""${current?'':' selected'}>${compact?'자동':'분류: 자동'}</option>
     ${typeNames.map(n=>`<option value="${esc(n)}"${current===n?' selected':''}>${esc(n)}</option>`).join('')}
-    <option value="__new__">+ 새 분류로 지정</option>
+    <option value="__new__">${compact?'+ 새 분류':'+ 새 분류로 지정'}</option>
   </select>`;
 }
 function startTypeCanonEdit(i,name,e){
@@ -2193,18 +2193,23 @@ function custVisitRowHtml(ev,typeNames,compact){
   const branchSpan=`<span class="cust-visit-br" style="color:${bc2}">${esc(normalizeBranch(ev.branch))}</span>`;
   const statusSpan=`<span class="cust-visit-status" style="${stStyle}">${ev.payStatus}</span>`;
   const amtSpan=`<span class="cust-visit-amt">${fa(Number(ev.netIn)||0)}</span>`;
-  const selectHtml=typeNames?typeOverrideSelectHtml(ev,typeNames):'';
   const rawBtn=`<button class="rawbtn" onclick="event.stopPropagation();openRaw('${ev.id}',event)">원문</button>`;
   if(compact){
-    // 좁은 카드 안에서는 날짜+제목 한 줄, 나머지(지점/상태/금액/분류/원문)를 한 줄로 묶어 세로로 길어지지 않게 함
+    // 좁은 카드 안에서도 한 줄에 다 들어가도록 날짜는 월-일만, 지점은 '점' 생략, 분류 select/버튼도 축소
+    const shortDate=ev.date.slice(5);
+    const shortBranch=esc(normalizeBranch(ev.branch).replace('점',''));
+    const compactSelect=typeNames?typeOverrideSelectHtml(ev,typeNames,true):'';
     return`<div class="cust-visit-row cv-compact">
-      <div class="cv-line1">
-        <span class="cust-visit-date">${ev.date}</span>
-        <span class="cust-visit-title" title="${esc(ev.rawTitle)}">${esc(ev.title||ev.rawTitle)}</span>
-      </div>
-      <div class="cv-line2">${branchSpan}${statusSpan}${amtSpan}${selectHtml}${rawBtn}</div>
+      <span class="cust-visit-date">${shortDate}</span>
+      <span class="cust-visit-title" title="${esc(ev.rawTitle)}">${esc(ev.title||ev.rawTitle)}</span>
+      <span class="cust-visit-br" style="color:${bc2}">${shortBranch}</span>
+      <span class="cust-visit-status" style="${stStyle}">${ev.payStatus}</span>
+      <span class="cust-visit-amt">${fa(Number(ev.netIn)||0)}</span>
+      ${compactSelect}
+      ${rawBtn}
     </div>`;
   }
+  const selectHtml=typeNames?typeOverrideSelectHtml(ev,typeNames):'';
   return`<div class="cust-visit-row">
     <span class="cust-visit-date">${ev.date}</span>
     <span class="cust-visit-title" title="${esc(ev.rawTitle)}">${esc(ev.title||ev.rawTitle)}</span>
