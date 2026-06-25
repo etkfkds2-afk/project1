@@ -289,11 +289,11 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .type-etc-detail.open{display:block}
 .cust-visit-row.cv-compact{flex-wrap:nowrap;align-items:center;gap:5px;padding:5px 0;font-size:12px}
 .cv-compact .cust-visit-date{width:34px;font-size:10px;white-space:nowrap;flex-shrink:0}
-.cv-compact .cust-visit-title{flex:1 1 56px;min-width:20px;font-size:12px}
-.cv-compact .cust-visit-br{width:30px;font-size:10px;white-space:nowrap;flex-shrink:0}
-.cv-compact .cust-visit-status{width:32px;font-size:9px;padding:1px 3px;white-space:nowrap;flex-shrink:0}
-.cv-compact .cust-visit-amt{width:64px;font-size:11px;white-space:nowrap;flex-shrink:0}
-.cv-compact .rawbtn{height:19px;padding:0 5px;font-size:10px;flex-shrink:0}
+.cv-compact .cust-visit-title{flex:0 1 46px;min-width:20px;font-size:12px}
+.cv-compact .cust-visit-br{width:34px;font-size:10px;white-space:nowrap;flex-shrink:0}
+.cv-compact .cust-visit-status{width:36px;font-size:9px;padding:1px 3px;white-space:nowrap;flex-shrink:0}
+.cv-compact .cust-visit-amt{width:70px;font-size:11px;white-space:nowrap;flex-shrink:0}
+.cv-compact .rawbtn{height:19px;padding:0 6px;font-size:10px;flex-shrink:0}
 .type-group-edit-btn{margin-left:8px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer}
 .type-group-edit-btn:hover{color:var(--blue);border-color:var(--blue)}
 .type-group-editor{display:none;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
@@ -2029,7 +2029,7 @@ function setEventTypeOverride(id,value){
 }
 function typeOverrideSelectHtml(ev,typeNames,compact){
   const current=eventTypeOverrides[ev.id]||'';
-  const style=compact?' style="width:60px;min-width:0;height:19px;font-size:10px;padding:0 2px"':'';
+  const style=compact?' style="width:66px;min-width:0;height:19px;font-size:10px;padding:0 2px"':'';
   return`<select class="type-override-select"${style} onclick="event.stopPropagation()" onchange="setEventTypeOverride('${ev.id}',this.value)" title="이 행사의 분류를 직접 지정">
     <option value=""${current?'':' selected'}>${compact?'자동':'분류: 자동'}</option>
     ${typeNames.map(n=>`<option value="${esc(n)}"${current===n?' selected':''}>${esc(n)}</option>`).join('')}
@@ -2262,9 +2262,6 @@ async function renderCustomers(){
     typeGroups[t].count++;
     typeGroups[t].evs.push(ev);
   });
-  const typeNames=[...new Set([...activeTypeGroups().map(g=>g.canon),...Object.keys(typeGroups)])]
-    .filter(t=>t!=='기타').sort((a,b)=>a.localeCompare(b,'ko'));
-  typeNames.push('기타');
   // 1건뿐인 행사 종류(+원래 '기타'로 분류된 것)는 모아서 '기타'로 묶는다.
   // 단, 사용자가 직접 이 분류로 지정한 건이 있으면(수동 지정) 1건이어도 묶지 않는다
   let etcCount=0,etcEvs=[];
@@ -2274,14 +2271,23 @@ async function renderCustomers(){
     if(t!=='기타'&&(v.count>1||manuallyAssigned))mainGroups.push([t,v]);
     else{etcCount+=v.count;etcEvs=etcEvs.concat(v.evs);}
   });
-  if(etcCount>0)mainGroups.push(['기타',{count:etcCount,evs:etcEvs}]);
-  const typeTop=mainGroups.sort((a,b)=>b[1].count-a[1].count).slice(0,10);
-  // 행 클릭 시 내역이 대관이력처럼 펼쳐지고, 기타가 아니면 분류명 글자를 클릭해 바로 수정(비우면 삭제)할 수 있다
+  // TOP10 안에 못 들어간 나머지(11위 이후)는 '미분류'로 몰아넣어서 화면에서 통째로 사라지지 않게 함
+  const sortedKept=mainGroups.sort((a,b)=>b[1].count-a[1].count);
+  const typeTop=sortedKept.slice(0,10);
+  let unclassCount=0,unclassEvs=[];
+  sortedKept.slice(10).forEach(([,v])=>{unclassCount+=v.count;unclassEvs=unclassEvs.concat(v.evs);});
+  if(etcCount>0)typeTop.push(['기타',{count:etcCount,evs:etcEvs}]);
+  if(unclassCount>0)typeTop.push(['미분류',{count:unclassCount,evs:unclassEvs}]);
+  // 분류 지정 드롭다운에는 지금 TOP10에 보이는 분류명만 + 기타/미분류만 보여줘서 안 쓰는 옛 분류로 목록이 지저분해지지 않게 함
+  const typeNames=typeTop.map(([t])=>t).filter(t=>t!=='기타'&&t!=='미분류').sort((a,b)=>a.localeCompare(b,'ko'));
+  typeNames.push('기타','미분류');
+  // 행 클릭 시 내역이 대관이력처럼 펼쳐지고, 기타/미분류가 아니면 분류명 글자를 클릭해 바로 수정(비우면 삭제)할 수 있다
   const typeListHtml=typeTop.length
     ?typeTop.map(([t,v],i)=>{
       const pct=evCntTotal?Math.round(v.count/evCntTotal*100):0;
       const nameJs=escJsAttr(t);
-      const nameSpan=t==='기타'
+      const isBucket=t==='기타'||t==='미분류';
+      const nameSpan=isBucket
         ?`<span class="ak-br-name">${esc(t)}</span>`
         :`<span class="ak-br-name type-canon-editable" id="type-canon-${i}" title="클릭해서 분류명 수정(비우면 삭제)" onclick="event.stopPropagation();startTypeCanonEdit(${i},'${nameJs}',event)">${esc(t)}</span>`;
       return`<div class="ak-br-row ak-br-row-btn type-top-row" onclick="toggleTypeDetail(${i})" role="button" tabindex="0">${nameSpan}<span class="ak-br-val">${v.count}건<span class="ak-br-cnt">${pct}%</span> <span class="ak-br-toggle">▾</span></span></div>`;
