@@ -280,6 +280,19 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .ak-br-toggle{font-size:9px;color:var(--muted)}
 .type-etc-detail{display:none;margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);max-height:260px;overflow-y:auto}
 .type-etc-detail.open{display:block}
+.type-group-edit-btn{margin-left:8px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer}
+.type-group-edit-btn:hover{color:var(--blue);border-color:var(--blue)}
+.type-group-editor{display:none;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
+.type-group-editor.open{display:block}
+.type-group-hdr{font-size:11px;font-weight:800;color:#6b7280;margin-bottom:6px}
+.type-group-list{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;margin-bottom:8px}
+.type-group-row{display:flex;align-items:center;gap:8px;font-size:12px;background:var(--bg);border-radius:6px;padding:5px 8px}
+.type-group-canon{font-weight:700;min-width:64px;flex-shrink:0}
+.type-group-keys{flex:1;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.type-group-del{border:none;background:none;color:#dc2626;cursor:pointer;font-size:11px;padding:2px 4px;flex-shrink:0}
+.type-group-add{display:flex;gap:6px}
+.type-group-add input{flex:1;min-width:0;font-size:12px;padding:5px 7px;border:1px solid var(--line);border-radius:6px}
+.type-group-add button{border:none;background:var(--blue);color:#fff;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0}
 /* 섹션 공통 */
 .an-section{background:var(--panel);border-radius:10px;border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
 .an-section:last-child{margin-bottom:0}
@@ -569,6 +582,7 @@ const CALS=[
   {id:'1824a066dc6b3d4d7f89ae11beaf22d7f24c78856a04552a3a03ce3200b7fbd2@group.calendar.google.com',name:'신논현점'}
 ];
 const TOOL='mcp__7562d3df-f0a0-4481-87e0-f6c4660717b3__list_events';
+const DEFAULT_YEAR=document.getElementById('sy')?.value||'';
 let allData=[], ov={}, contacts={};
 let ovHistory=[], contactsHistory=[], _undoing=false;
 let customerAllData=null;
@@ -1895,8 +1909,69 @@ const EVENT_TYPE_GROUPS=[
   {canon:'청년 미팅 행사',keys:['청년 미팅 행사']},
   {canon:'해커톤',keys:['해커톤']}
 ];
+const TYPE_GROUPS_KEY='event_type_groups';
+let customTypeGroups=null; // null이면 아직 원격에서 로드 전(기본값 사용), 로드 후엔 사용자가 추가/삭제한 분류 목록
+let remoteTypeGroupsReady=false;
+let typeGroupEditorOpen=false;
+function activeTypeGroups(){
+  return Array.isArray(customTypeGroups)?customTypeGroups:EVENT_TYPE_GROUPS;
+}
+async function loadRemoteTypeGroups(){
+  try{
+    const res=await fetch(`${OV_API}?key=${encodeURIComponent(TYPE_GROUPS_KEY)}`,{cache:'no-store'});
+    if(res.ok){
+      const data=await res.json();
+      if(Array.isArray(data?.value))customTypeGroups=data.value;
+    }
+  }catch(e){}
+  if(!Array.isArray(customTypeGroups))customTypeGroups=EVENT_TYPE_GROUPS.map(g=>({canon:g.canon,keys:g.keys.slice()}));
+  remoteTypeGroupsReady=true;
+}
+function saveRemoteTypeGroups(){
+  fetch(OV_API,{method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({key:TYPE_GROUPS_KEY,value:customTypeGroups})
+  }).catch(e=>console.warn('행사 종류 분류 저장 실패',e));
+}
+function addTypeGroup(){
+  const nameInp=document.getElementById('type-group-add-name');
+  const keysInp=document.getElementById('type-group-add-keys');
+  const canon=(nameInp?.value||'').trim();
+  const keys=(keysInp?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if(!canon||!keys.length)return;
+  if(!Array.isArray(customTypeGroups))customTypeGroups=EVENT_TYPE_GROUPS.map(g=>({canon:g.canon,keys:g.keys.slice()}));
+  customTypeGroups.unshift({canon,keys});
+  saveRemoteTypeGroups();
+  typeGroupEditorOpen=true;
+  renderCustomers();
+}
+function removeTypeGroup(idx){
+  if(!Array.isArray(customTypeGroups))return;
+  customTypeGroups.splice(idx,1);
+  saveRemoteTypeGroups();
+  typeGroupEditorOpen=true;
+  renderCustomers();
+}
+function toggleTypeGroupEditor(){
+  typeGroupEditorOpen=!typeGroupEditorOpen;
+  document.getElementById('type-group-editor')?.classList.toggle('open',typeGroupEditorOpen);
+}
+function typeGroupEditorHtml(){
+  const groups=activeTypeGroups();
+  const rows=groups.map((g,i)=>`<div class="type-group-row">
+      <span class="type-group-canon">${esc(g.canon)}</span>
+      <span class="type-group-keys" title="${esc(g.keys.join(', '))}">${esc(g.keys.join(', '))}</span>
+      <button type="button" class="type-group-del" onclick="removeTypeGroup(${i})">삭제</button>
+    </div>`).join('');
+  return`<div class="type-group-hdr">분류 규칙 관리 <span style="font-weight:500">— 제목에 키워드가 포함되면 그 분류로 묶입니다</span></div>
+    <div class="type-group-list">${rows||'<div style="font-size:12px;color:#b0b8c4">분류 없음</div>'}</div>
+    <div class="type-group-add">
+      <input type="text" id="type-group-add-name" placeholder="분류명 (예: 전시)">
+      <input type="text" id="type-group-add-keys" placeholder="키워드(쉼표로 구분, 예: 전시,展示)">
+      <button type="button" onclick="addTypeGroup()">추가</button>
+    </div>`;
+}
 function canonicalEventType(t){
-  for(const{canon,keys}of EVENT_TYPE_GROUPS){
+  for(const{canon,keys}of activeTypeGroups()){
     if(keys.some(k=>t.includes(k)))return canon;
   }
   return t;
@@ -1989,6 +2064,7 @@ async function renderCustomers(){
   if(!el)return;
   el.innerHTML='<div class="cust-loading"><div class="spin"></div>캘린더 데이터 불러오는 중...</div>';
   if(!remoteContactsReady)await loadRemoteContacts();
+  if(!remoteTypeGroupsReady)await loadRemoteTypeGroups();
   const data=await loadCustomerData();
   const map=buildCustomerMap(data);
   let rows=Object.values(map).map(c=>{
@@ -2063,10 +2139,11 @@ async function renderCustomers(){
       <div class="ak-branches">${methodListHtml}</div>
     </div>
     <div class="cust-kpi-card" style="flex:1 1 320px">
-      <div class="cust-kpi-label">행사 종류 TOP ${typeTop.length} <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span></div>
+      <div class="cust-kpi-label">행사 종류 TOP ${typeTop.length} <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span><button type="button" class="type-group-edit-btn" onclick="toggleTypeGroupEditor()" title="분류 규칙 관리">⚙ 분류관리</button></div>
       <hr class="ak-divider" style="margin:8px 0">
       <div class="ak-branches">${typeListHtml}</div>
       ${etcEvs.length?`<div class="type-etc-detail" id="type-etc-detail"><div class="cust-visit-hdr">기타 행사 내역 (${etcEvs.length}건)</div>${typeEtcDetailHtml}</div>`:''}
+      <div class="type-group-editor ${typeGroupEditorOpen?'open':''}" id="type-group-editor">${typeGroupEditorHtml()}</div>
     </div>`;
   function sortTh(key,label,cls=''){
     const active=custSortKey===key;
@@ -2318,17 +2395,20 @@ function switchView(v){
 }
 
 function goHome(){
+  const sy=document.getElementById('sy');
   const sm=document.getElementById('sm');
   const sb=document.getElementById('sb');
   const ss=document.getElementById('ss');
   const sq=document.getElementById('sq');
-  let changed=false;
+  let yearChanged=false,changed=false;
+  if(sy&&sy.value!==DEFAULT_YEAR){sy.value=DEFAULT_YEAR;yearChanged=true;}
   if(sm&&sm.value){sm.value='';changed=true;}
   if(sb&&sb.value){sb.value='';changed=true;}
   if(ss&&ss.value){ss.value='';changed=true;}
   if(sq&&sq.value){sq.value='';changed=true;}
   switchView('table');
-  if(changed)render();
+  if(yearChanged)loadAll(); // 연도가 바뀌면 데이터 자체를 다시 불러와야 함
+  else if(changed)render();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
