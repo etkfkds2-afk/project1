@@ -2099,27 +2099,25 @@ async function renderCustomers(){
     typeGroups[t].count++;
     typeGroups[t].evs.push(ev);
   });
-  // 1건뿐인 행사 종류(+원래 '기타'로 분류된 것)는 모아서 '기타'로 묶고, 클릭하면 내역을 펼쳐서 보여준다
+  // 1건뿐인 행사 종류(+원래 '기타'로 분류된 것)는 모아서 '기타'로 묶는다
   let etcCount=0,etcEvs=[];
-  const mainTypeCounts=[];
+  const mainGroups=[];
   Object.entries(typeGroups).forEach(([t,v])=>{
     if(t==='기타'||v.count<=1){etcCount+=v.count;etcEvs=etcEvs.concat(v.evs);}
-    else mainTypeCounts.push([t,v.count]);
+    else mainGroups.push([t,v]);
   });
-  if(etcCount>0)mainTypeCounts.push(['기타',etcCount]);
-  const typeTop=mainTypeCounts.sort((a,b)=>b[1]-a[1]).slice(0,6);
+  if(etcCount>0)mainGroups.push(['기타',{count:etcCount,evs:etcEvs}]);
+  const typeTop=mainGroups.sort((a,b)=>b[1].count-a[1].count).slice(0,6);
+  // 모든 행사 종류 행을 클릭하면 해당 내역이 대관이력처럼 펼쳐진다
   const typeListHtml=typeTop.length
-    ?typeTop.map(([t,c])=>{
-      const pct=evCntTotal?Math.round(c/evCntTotal*100):0;
-      if(t==='기타'){
-        return`<button type="button" class="ak-br-row ak-br-row-btn" onclick="toggleTypeEtc()"><span class="ak-br-name">기타 <span class="ak-br-toggle">▾</span></span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${pct}%</span></span></button>`;
-      }
-      return`<div class="ak-br-row"><span class="ak-br-name">${esc(t)}</span><span class="ak-br-val">${c}건<span class="ak-br-cnt">${pct}%</span></span></div>`;
+    ?typeTop.map(([t,v],i)=>{
+      const pct=evCntTotal?Math.round(v.count/evCntTotal*100):0;
+      return`<button type="button" class="ak-br-row ak-br-row-btn" onclick="toggleTypeDetail(${i})"><span class="ak-br-name">${esc(t)} <span class="ak-br-toggle">▾</span></span><span class="ak-br-val">${v.count}건<span class="ak-br-cnt">${pct}%</span></span></button>`;
     }).join('')
     :'<div style="font-size:12px;color:#b0b8c4">데이터 없음</div>';
-  const typeEtcDetailHtml=etcEvs.length
-    ?etcEvs.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(custVisitRowHtml).join('')
-    :'';
+  const typeDetailHtml=typeTop.map(([t,v],i)=>
+    `<div class="type-etc-detail" id="type-detail-${i}"><div class="cust-visit-hdr">${esc(t)} 내역 (${v.count}건)</div>${v.evs.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(custVisitRowHtml).join('')}</div>`
+  ).join('');
 
   const methodCounts={세금계산서:0,현금:0,카드:0,기타:0};
   allCountableVisits.forEach(ev=>{methodCounts[paymentMethodFor(ev)]++;});
@@ -2142,7 +2140,7 @@ async function renderCustomers(){
       <div class="cust-kpi-label">행사 종류 TOP ${typeTop.length} <span style="font-weight:500;color:var(--muted)">(${yrLabel})</span><button type="button" class="type-group-edit-btn" onclick="toggleTypeGroupEditor()" title="분류 규칙 관리">⚙ 분류관리</button></div>
       <hr class="ak-divider" style="margin:8px 0">
       <div class="ak-branches">${typeListHtml}</div>
-      ${etcEvs.length?`<div class="type-etc-detail" id="type-etc-detail"><div class="cust-visit-hdr">기타 행사 내역 (${etcEvs.length}건)</div>${typeEtcDetailHtml}</div>`:''}
+      ${typeDetailHtml}
       <div class="type-group-editor ${typeGroupEditorOpen?'open':''}" id="type-group-editor">${typeGroupEditorHtml()}</div>
     </div>`;
   function sortTh(key,label,cls=''){
@@ -2228,8 +2226,13 @@ function toggleCustDetail(phone){
   const isOpen=det.classList.toggle('open');
   row.classList.toggle('open',isOpen);
 }
-function toggleTypeEtc(){
-  document.getElementById('type-etc-detail')?.classList.toggle('open');
+function toggleTypeDetail(i){
+  const id=`type-detail-${i}`;
+  const target=document.getElementById(id);
+  if(!target)return;
+  const willOpen=!target.classList.contains('open');
+  document.querySelectorAll('.type-etc-detail.open').forEach(el=>{if(el.id!==id)el.classList.remove('open');});
+  target.classList.toggle('open',willOpen);
 }
 function custSort(key){
   if(custSortKey===key)custSortAsc=!custSortAsc;
