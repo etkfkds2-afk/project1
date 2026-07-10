@@ -414,6 +414,61 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .cust-loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px}
 .cust-row.filtered-out{display:none!important}
 .cust-detail.filtered-out{display:none!important}
+/* ── 예약관리 ── */
+#view-reservation{padding:20px 28px 48px;display:none}
+.resv-toolbar{display:none}
+.resv-token{width:210px}
+.resv-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.resv-card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--line-strong);border-radius:8px;box-shadow:0 4px 14px rgba(15,23,42,.04);overflow:hidden}
+.resv-card:hover{box-shadow:var(--shadow);border-color:var(--line-strong)}
+.resv-card.munrae{border-top-color:#2563eb}.resv-card.sinnonhyeon{border-top-color:#ea580c}
+.resv-card-top{padding:16px 18px 10px}
+.resv-name{font-size:18px;font-weight:850;color:#111827;margin-bottom:10px;line-height:1.25}
+.resv-row{display:flex;gap:8px;font-size:13px;line-height:1.5}
+.resv-row .lbl{width:46px;flex:none;color:#9ca3af;font-size:11px;font-weight:800}
+.resv-row .val{min-width:0;color:#1f2937;overflow-wrap:anywhere}
+.resv-badges{padding:0 18px 12px;display:flex;gap:5px;flex-wrap:wrap}
+.resv-badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#f3f4f6;color:#4b5563}
+.resv-badge.munrae{background:#eff6ff;color:#1d4ed8}.resv-badge.sinnonhyeon{background:#fff7ed;color:#c2410c}
+.resv-badge.ok{background:#ecfdf5;color:#047857}.resv-badge.warn{background:#fffbeb;color:#92400e}.resv-badge.bad{background:#fef2f2;color:#991b1b}
+.resv-estimate{margin:0 18px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden}
+.resv-estimate pre{padding:13px 15px;font:inherit;font-size:12px;line-height:1.75;color:#374151;white-space:pre-wrap;max-height:150px;overflow:hidden}
+.resv-estimate pre.open{max-height:none}
+.resv-estimate button{width:100%;height:30px;border:0;border-top:1px solid #e2e8f0;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:700;cursor:pointer}
+.resv-actions{padding:0 18px 16px;display:flex;gap:8px}
+.resv-actions button{flex:1;min-height:38px;border:0;border-radius:6px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;padding:8px 10px}
+.resv-actions button:first-child{background:#2563eb}.resv-actions button:last-child{background:#16a34a}
+.resv-actions button:disabled{opacity:.35;cursor:default}
+.resv-msg{text-align:center;color:#64748b;font-size:12px;min-height:18px;padding:0 18px 10px}
+.resv-empty{grid-column:1/-1;text-align:center;padding:70px 20px;color:#9ca3af;background:#fff;border:1px solid var(--line);border-radius:8px}
+.resv-modal-card{width:min(620px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:8px;box-shadow:0 25px 60px rgba(0,0,0,.28)}
+.resv-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.resv-field{display:flex;flex-direction:column;gap:4px}
+.resv-field.wide{grid-column:1/-1}
+.resv-field label{font-size:12px;font-weight:800;color:#6b7280}
+.resv-field input,.resv-field textarea{border:1px solid var(--line-strong);border-radius:6px;padding:9px 10px;font:inherit;outline:none}
+.resv-field input:focus,.resv-field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.resv-field textarea{min-height:150px;resize:vertical;line-height:1.65}
+.resv-modal-status{min-height:22px;text-align:center;color:#6b7280;font-size:13px;padding:0 20px 10px}
+.resv-modal-ft{display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--line)}
+.resv-modal-ft button{height:40px;border:0;border-radius:6px;font-size:13px;font-weight:800;cursor:pointer;padding:0 14px}
+.resv-modal-ft .cancel{background:#f3f4f6;color:#374151}.resv-modal-ft .preview{background:#fff;color:#374151;border:1px solid var(--line-strong)}
+.resv-modal-ft .send{flex:1;background:#111827;color:#fff}.resv-modal-ft .send.dep{background:#2563eb}.resv-modal-ft .send.paid{background:#16a34a}
+.resv-preview-card{width:min(720px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:8px;box-shadow:0 25px 60px rgba(0,0,0,.28)}
+.resv-preview-tabs{display:flex;gap:6px}
+.resv-preview-tabs button{height:28px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:#4b5563;font-size:12px;font-weight:800;padding:0 10px;cursor:pointer}
+.resv-preview-tabs button.active{background:#111827;color:#fff;border-color:#111827}
+#resv-preview-frame{width:100%;border:0;display:block;min-height:520px}
+@media (max-width:760px){
+  #view-reservation{padding:16px 20px 34px}
+  .resv-list{grid-template-columns:1fr}
+  .resv-toolbar{display:none}
+  .resv-token{width:100%;flex-basis:100%}
+  .resv-modal-grid{grid-template-columns:1fr}
+  .resv-modal-ft{flex-wrap:wrap}
+  .resv-modal-ft button{flex:1 1 calc(50% - 5px)}
+  .resv-modal-ft .send{flex-basis:100%}
+}
 </style>
 </head>
 <body class="locked">
@@ -430,7 +485,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <div id="app" class="app">
 <div class="hdr">
   <div class="hdr-title">
-    <div class="sub">캘린더 연동 · 입금 현황 · 분석 · 고객관리</div>
+    <div class="sub">캘린더 연동 · 입금 현황 · 분석 · 고객관리 · 예약관리</div>
     <div class="brandline">
       <button class="homebtn" type="button" onclick="goHome()" title="홈" aria-label="홈">
         <svg class="homeico" viewBox="0 0 24 24" aria-hidden="true">
@@ -450,6 +505,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <button class="vtab active" id="tab-table" onclick="switchView('table')">테이블</button>
     <button class="vtab" id="tab-chart" onclick="switchView('chart')">분석</button>
     <button class="vtab" id="tab-customer" onclick="switchView('customer')">고객관리</button>
+    <button class="vtab" id="tab-reservation" onclick="switchView('reservation')">예약관리</button>
   </div>
   <div id="toolbar-controls" style="display:contents">
   <select id="sy" onchange="loadAll()">
@@ -495,6 +551,23 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <button class="btn btn-undo undobtn" onclick="undoLast()" disabled>뒤로가기</button>
     <button class="btn btn-danger" onclick="resetAllCustomerNames()">이름 일괄 리셋</button>
     <button class="btn btn-reload" onclick="customerAllData=null;remoteContactsReady=false;renderCustomers()">새로고침</button>
+  </div>
+  <div id="resv-toolbar-inner" class="resv-toolbar">
+    <input id="resv-token" class="search resv-token" type="password" autocomplete="off" placeholder="Wix API 토큰" oninput="saveReservationTokenInput()">
+    <select id="resv-branch" onchange="renderReservations()">
+      <option value="all">전체 지점</option>
+      <option value="munrae">문래점</option>
+      <option value="sinnonhyeon">신논현점</option>
+    </select>
+    <select id="resv-status" onchange="renderReservations()">
+      <option value="all">전체 상태</option>
+      <option value="접수">접수</option>
+      <option value="예약확정">예약확정</option>
+      <option value="미입금">미입금</option>
+    </select>
+    <input class="search" id="resv-search" placeholder="이름·연락처·이메일 검색" oninput="renderReservations()">
+    <div class="sp"></div>
+    <button class="btn btn-reload" onclick="loadReservations()">새로고침</button>
   </div>
 </div>
 <div id="view-table">
@@ -575,6 +648,11 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   <div id="cust-kpi" class="cust-kpi"></div>
   <div id="cust-content"><div class="cust-loading"><div class="spin"></div>고객 데이터 로딩 중...</div></div>
 </div>
+<div id="view-reservation">
+  <div id="resv-list" class="resv-list">
+    <div class="resv-empty">Wix API 토큰을 입력한 뒤 새로고침을 누르세요.</div>
+  </div>
+</div>
 <div id="rawModal" class="modal" onclick="closeRaw(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
     <div class="modal-hd">
@@ -585,6 +663,42 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
       <div id="rawMeta" class="rawmeta"></div>
       <div id="rawDesc" class="rawdesc"></div>
     </div>
+  </div>
+</div>
+<div id="resvModal" class="modal" onclick="closeReservationBg(event)">
+  <div class="resv-modal-card" onclick="event.stopPropagation()">
+    <div class="modal-hd">
+      <h2 id="resv-modal-title">예약 메일 발송</h2>
+      <button class="mini" onclick="closeReservationModal()">닫기</button>
+    </div>
+    <div class="modal-bd">
+      <div class="resv-modal-grid">
+        <div class="resv-field"><label>이름</label><input id="resv-name" type="text"></div>
+        <div class="resv-field"><label>연락처</label><input id="resv-phone" type="text"></div>
+        <div class="resv-field wide"><label>이메일</label><input id="resv-email" type="text"></div>
+        <div class="resv-field wide"><label>행사 종류</label><input id="resv-event-type" type="text"></div>
+        <div class="resv-field wide"><label>견적 합계</label><textarea id="resv-estimate"></textarea></div>
+      </div>
+    </div>
+    <div class="resv-modal-status" id="resv-modal-status"></div>
+    <div class="resv-modal-ft">
+      <button class="cancel" onclick="closeReservationModal()">취소</button>
+      <button class="preview" onclick="openReservationPreview()">미리보기</button>
+      <button class="send" id="resv-send-btn" onclick="sendReservationMail()">메일 발송</button>
+    </div>
+  </div>
+</div>
+<div id="resvPreviewModal" class="modal" onclick="closeReservationPreviewBg(event)">
+  <div class="resv-preview-card" onclick="event.stopPropagation()">
+    <div class="modal-hd">
+      <h2>이메일 미리보기</h2>
+      <div class="resv-preview-tabs">
+        <button id="resv-preview-dep" class="active" onclick="switchReservationPreview('deposit')">예약금</button>
+        <button id="resv-preview-paid" onclick="switchReservationPreview('fullyPaid')">완납</button>
+      </div>
+      <button class="mini" onclick="closeReservationPreview()">닫기</button>
+    </div>
+    <iframe id="resv-preview-frame" src="about:blank"></iframe>
   </div>
 </div>
 
@@ -2553,6 +2667,238 @@ function saveContactField(phone,key,val){
   }
 }
 
+/* ── 예약관리 ── */
+const RESV_BASES={
+  munrae:'https://www.allthatmind.com/_functions',
+  sinnonhyeon:'https://allthatmind2.wixsite.com/website/_functions'
+};
+const RESV_TOKEN_KEY='atm_reservation_api_token';
+let reservationItems=[];
+let reservationLoaded=false;
+let activeReservationId=null;
+let activeReservationType='deposit';
+let activeReservationBase=RESV_BASES.munrae;
+let reservationPreviewType='deposit';
+
+function initReservationToken(){
+  const inp=document.getElementById('resv-token');
+  if(inp&&!inp.value)inp.value=localStorage.getItem(RESV_TOKEN_KEY)||'';
+}
+function reservationToken(){
+  return(document.getElementById('resv-token')?.value||'').trim();
+}
+function saveReservationTokenInput(){
+  try{localStorage.setItem(RESV_TOKEN_KEY,reservationToken())}catch(e){}
+}
+function reservationBranch(it){
+  const branchName=String(it.branchName||'').trim();
+  const total=String(it.total||it.estimateText||'');
+  if(branchName.includes('신논현')||total.includes('신논현'))return'sinnonhyeon';
+  if(branchName.includes('문래')||total.includes('문래'))return'munrae';
+  return it._branch||'munrae';
+}
+function reservationBranchLabel(branch){
+  return branch==='sinnonhyeon'?'신논현점':'문래점';
+}
+async function fetchReservationBranch(branch,base,token){
+  const res=await fetch(`${base}/reservations`,{headers:{Authorization:`Bearer ${token}`}});
+  if(!res.ok)throw new Error(`${reservationBranchLabel(branch)} HTTP ${res.status}`);
+  const data=await res.json();
+  return(data.items||[]).map(item=>({...item,_base:base,_branch:branch}));
+}
+async function loadReservations(){
+  initReservationToken();
+  const token=reservationToken();
+  const list=document.getElementById('resv-list');
+  if(!token){
+    list.innerHTML='<div class="resv-empty">Wix API 토큰을 입력한 뒤 새로고침을 누르세요.</div>';
+    return;
+  }
+  saveReservationTokenInput();
+  list.innerHTML='<div class="resv-empty"><div class="spin"></div>예약 데이터를 불러오는 중...</div>';
+  try{
+    const results=await Promise.all([
+      fetchReservationBranch('munrae',RESV_BASES.munrae,token),
+      fetchReservationBranch('sinnonhyeon',RESV_BASES.sinnonhyeon,token)
+    ]);
+    reservationItems=results.flat().sort((a,b)=>new Date(b._createdDate||0)-new Date(a._createdDate||0));
+    reservationLoaded=true;
+    renderReservations();
+  }catch(e){
+    list.innerHTML=`<div class="resv-empty">예약 데이터를 불러오지 못했습니다.<br>${esc(e.message)}</div>`;
+  }
+}
+function reservationBadgeClass(status){
+  if(/전액|완납|예약확정/.test(status))return'ok';
+  if(/예약금/.test(status))return'warn';
+  if(/미입금|취소|오류/.test(status))return'bad';
+  return'';
+}
+function renderReservations(){
+  initReservationToken();
+  const list=document.getElementById('resv-list');
+  const branch=document.getElementById('resv-branch')?.value||'all';
+  const status=document.getElementById('resv-status')?.value||'all';
+  const query=(document.getElementById('resv-search')?.value||'').toLowerCase();
+  if(!reservationLoaded){
+    list.innerHTML='<div class="resv-empty">Wix API 토큰을 입력한 뒤 새로고침을 누르세요.</div>';
+    return;
+  }
+  const rows=reservationItems.filter(item=>{
+    const itemBranch=reservationBranch(item);
+    if(branch!=='all'&&itemBranch!==branch)return false;
+    if(status!=='all'&&item.status!==status&&item.paymentStatus!==status)return false;
+    if(query&&!`${item.name||''} ${item.phone||''} ${item.email||''}`.toLowerCase().includes(query))return false;
+    return true;
+  });
+  if(!rows.length){
+    list.innerHTML='<div class="resv-empty">조건에 맞는 예약이 없습니다.</div>';
+    return;
+  }
+  list.innerHTML=rows.map(reservationCardHtml).join('');
+}
+function reservationCardHtml(item){
+  const id=escJsAttr(item._id);
+  const branch=reservationBranch(item);
+  const depositSent=item.depositMailSent===true;
+  const paidSent=item.fullyPaidMailSent===true;
+  const estimate=String(item.total||'');
+  return`<div class="resv-card ${branch}" id="resv-card-${id}">
+    <div class="resv-card-top">
+      <div class="resv-name">${esc(item.name)||'이름 없음'}</div>
+      <div class="resv-row"><span class="lbl">연락처</span><span class="val">${esc(item.phone)||'-'}</span></div>
+      <div class="resv-row"><span class="lbl">이메일</span><span class="val">${esc(item.email)||'-'}</span></div>
+      <div class="resv-row"><span class="lbl">행사명</span><span class="val">${esc(item.eventType)||'-'}</span></div>
+    </div>
+    <div class="resv-badges">
+      <span class="resv-badge ${branch}">${reservationBranchLabel(branch)}</span>
+      ${item.status?`<span class="resv-badge ${reservationBadgeClass(item.status)}">${esc(item.status)}</span>`:''}
+      ${item.paymentStatus?`<span class="resv-badge ${reservationBadgeClass(item.paymentStatus)}">${esc(item.paymentStatus)}</span>`:''}
+      ${depositSent?'<span class="resv-badge ok">예약금 발송</span>':''}
+      ${paidSent?'<span class="resv-badge ok">완납 발송</span>':''}
+    </div>
+    ${estimate?`<div class="resv-estimate"><pre id="resv-est-${id}">${esc(estimate)}</pre><button onclick="toggleReservationEstimate('${id}')">더보기</button></div>`:''}
+    <div class="resv-actions">
+      <button ${depositSent?'disabled':''} onclick="openReservationModal('${id}','deposit')">${depositSent?'예약금 발송완료':'수정 후 예약금 메일'}</button>
+      <button ${paidSent?'disabled':''} onclick="openReservationModal('${id}','fullyPaid')">${paidSent?'완납 발송완료':'수정 후 완납 메일'}</button>
+    </div>
+    <div class="resv-msg" id="resv-msg-${id}"></div>
+  </div>`;
+}
+function toggleReservationEstimate(id){
+  const pre=document.getElementById(`resv-est-${id}`);
+  if(!pre)return;
+  const opened=pre.classList.toggle('open');
+  const btn=pre.nextElementSibling;
+  if(btn)btn.textContent=opened?'접기':'더보기';
+}
+function openReservationModal(id,type){
+  const item=reservationItems.find(row=>row._id===id);
+  if(!item)return;
+  activeReservationId=id;
+  activeReservationType=type;
+  activeReservationBase=item._base||RESV_BASES[reservationBranch(item)]||RESV_BASES.munrae;
+  document.getElementById('resv-modal-title').textContent=type==='deposit'?'예약금 메일 발송 전 수정':'완납 메일 발송 전 수정';
+  document.getElementById('resv-name').value=item.name||'';
+  document.getElementById('resv-phone').value=item.phone||'';
+  document.getElementById('resv-email').value=item.email||'';
+  document.getElementById('resv-event-type').value=item.eventType||'';
+  document.getElementById('resv-estimate').value=item.total||'';
+  document.getElementById('resv-modal-status').textContent='수정한 내용이 CMS에 저장된 뒤 그 값으로 Wix 메일이 발송됩니다.';
+  const btn=document.getElementById('resv-send-btn');
+  btn.disabled=false;
+  btn.className=`send ${type==='deposit'?'dep':'paid'}`;
+  btn.textContent=type==='deposit'?'수정값 저장 + 예약금 메일 발송':'수정값 저장 + 완납 메일 발송';
+  document.getElementById('resvModal').classList.add('show');
+}
+function closeReservationModal(){
+  document.getElementById('resvModal').classList.remove('show');
+  activeReservationId=null;
+}
+function closeReservationBg(e){
+  if(e.target===document.getElementById('resvModal'))closeReservationModal();
+}
+function reservationOverrides(){
+  return{
+    name:document.getElementById('resv-name').value,
+    phone:document.getElementById('resv-phone').value,
+    email:document.getElementById('resv-email').value,
+    eventType:document.getElementById('resv-event-type').value,
+    total:document.getElementById('resv-estimate').value
+  };
+}
+async function sendReservationMail(){
+  if(!activeReservationId||!activeReservationType)return;
+  const token=reservationToken();
+  const overrides=reservationOverrides();
+  const label=activeReservationType==='deposit'?'예약금 확인 메일':'완납 확인 메일';
+  if(!token){
+    document.getElementById('resv-modal-status').textContent='Wix API 토큰을 먼저 입력하세요.';
+    return;
+  }
+  if(!confirm(`수정한 내용으로 ${label}을 고객에게 발송할까요?\n\n받는 사람: ${overrides.email||'(이메일 없음)'}\n예약자명: ${overrides.name||'(이름 없음)'}`))return;
+  const endpoint=activeReservationType==='deposit'?'confirmDeposit':'confirmFullyPaid';
+  const btn=document.getElementById('resv-send-btn');
+  const status=document.getElementById('resv-modal-status');
+  btn.disabled=true;
+  status.textContent='처리 중...';
+  try{
+    const res=await fetch(`${activeReservationBase}/${endpoint}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+      body:JSON.stringify({reservationId:activeReservationId,overrides})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok)throw new Error(data.error||`HTTP ${res.status}`);
+    if(data.alreadySent){
+      status.textContent='이미 발송된 예약입니다.';
+      btn.disabled=false;
+      return;
+    }
+    if(!data.ok)throw new Error(data.error||'발송 오류');
+    const item=reservationItems.find(row=>row._id===activeReservationId);
+    if(item){
+      Object.assign(item,overrides);
+      if(activeReservationType==='deposit'){item.depositMailSent=true;item.status='예약확정';item.paymentStatus='예약금입금';}
+      if(activeReservationType==='fullyPaid'){item.fullyPaidMailSent=true;item.status='예약확정';item.paymentStatus='전액결제';}
+    }
+    status.textContent='발송 완료';
+    setTimeout(()=>{closeReservationModal();renderReservations();},900);
+  }catch(e){
+    status.textContent=`발송 실패: ${e.message}`;
+    btn.disabled=false;
+  }
+}
+function openReservationPreview(){
+  reservationPreviewType=activeReservationType||'deposit';
+  renderReservationPreview();
+  document.getElementById('resvPreviewModal').classList.add('show');
+}
+function closeReservationPreview(){
+  document.getElementById('resvPreviewModal').classList.remove('show');
+}
+function closeReservationPreviewBg(e){
+  if(e.target===document.getElementById('resvPreviewModal'))closeReservationPreview();
+}
+function switchReservationPreview(type){
+  reservationPreviewType=type;
+  renderReservationPreview();
+}
+function renderReservationPreview(){
+  document.getElementById('resv-preview-dep').classList.toggle('active',reservationPreviewType==='deposit');
+  document.getElementById('resv-preview-paid').classList.toggle('active',reservationPreviewType==='fullyPaid');
+  const frame=document.getElementById('resv-preview-frame');
+  frame.srcdoc=buildReservationEmailHtml(reservationOverrides(),reservationPreviewType);
+  frame.onload=()=>{try{frame.style.height=(frame.contentDocument.body.scrollHeight+40)+'px'}catch(e){}};
+}
+function buildReservationEmailHtml(row,type){
+  const isDeposit=type==='deposit';
+  const mailTitle=isDeposit?'예약금 납부 확인':'완납 확인';
+  const bottomText=isDeposit?'예약금 납부 확인되었습니다.\n\n잔금+청소보증금은 이용일 한 달 전까지 납부 부탁드립니다.':'총 납부 예정 금액이 완납 처리 되었습니다.';
+  const plain=`안녕하세요. ${row.name||''}님.\n\n예약 관련 안내드립니다.\n\n[고객정보]\n\n• 예약자명: ${row.name||''}\n\n• 행사종류: ${row.eventType||''}\n\n• 전화번호: ${row.phone||''}\n\n• 이메일: ${row.email||''}\n\n\n${row.total||''}\n\n\n${bottomText}\n\n감사합니다.`;
+  return`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,'Apple SD Gothic Neo','맑은 고딕',sans-serif;color:#1f2937"><div style="background:#f4f4f4;padding:28px 14px"><div style="max-width:680px;margin:0 auto 10px;color:#6b7280;font-size:12px;line-height:1.5">Wix Triggered Email 미리보기 · ${esc(mailTitle)}</div><table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:680px;margin:0 auto;background:#fff;border:1px solid #dfe3e8;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden"><tr><td style="height:6px;background:#111827;font-size:0;line-height:0">&nbsp;</td></tr><tr><td style="padding:26px 34px 16px;border-bottom:1px solid #eef0f3"><div style="font-size:20px;font-weight:700;color:#111827">올댓마인드</div><div style="font-size:13px;color:#6b7280;margin-top:6px">${esc(mailTitle)} 안내 메일</div></td></tr><tr><td style="padding:30px 34px 34px;background:#fff"><pre style="white-space:pre-wrap;margin:0;font-family:Arial,'Apple SD Gothic Neo','맑은 고딕',sans-serif;font-size:15px;line-height:1.85;color:#222">${esc(plain)}</pre></td></tr></table></div></body></html>`;
+}
+
 function switchView(v){
   currentView=v;
   if(v==='customer'){
@@ -2564,14 +2910,22 @@ function switchView(v){
   document.getElementById('view-table').style.display=v==='table'?'block':'none';
   document.getElementById('view-chart').style.display=v==='chart'?'block':'none';
   document.getElementById('view-customer').style.display=v==='customer'?'block':'none';
-  document.getElementById('toolbar-controls').style.display=v==='customer'?'none':'contents';
+  document.getElementById('view-reservation').style.display=v==='reservation'?'block':'none';
+  document.getElementById('toolbar-controls').style.display=(v==='customer'||v==='reservation')?'none':'contents';
   document.getElementById('cust-toolbar-inner').style.display=v==='customer'?'contents':'none';
+  document.getElementById('resv-toolbar-inner').style.display=v==='reservation'?'contents':'none';
   document.querySelectorAll('.table-only-filter').forEach(el=>{el.style.display=v==='table'?'':'none';});
   document.getElementById('tab-table').classList.toggle('active',v==='table');
   document.getElementById('tab-chart').classList.toggle('active',v==='chart');
   document.getElementById('tab-customer').classList.toggle('active',v==='customer');
+  document.getElementById('tab-reservation').classList.toggle('active',v==='reservation');
   if(v==='chart')renderChart();
   if(v==='customer')renderCustomers();
+  if(v==='reservation'){
+    initReservationToken();
+    if(reservationLoaded)renderReservations();
+    else if(reservationToken())loadReservations();
+  }
   updateUndoBtn();
 }
 
