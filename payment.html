@@ -713,6 +713,7 @@ const GOOGLE_CLIENT_KEY='atm_google_client_id_v2';
 const OV_KEY='payment_overrides';
 const GC_KEY='google_client_id';
 const CONTACTS_KEY='customer_contacts';
+const RESV_KEY='reservation_api_token';
 const OV_API='/api/overrides';
 const MANUAL_ROWS_KEY='__manualRows';
 const GOOGLE_DEFAULT_CLIENT_ID='';
@@ -985,7 +986,7 @@ async function unlockApp(e){
   err.textContent='';
   const pass=input.value;
   const isAdminPassword=user.value.trim()===ACCESS_USER&&await sha256(pass)===ACCESS_HASH;
-  const isReservationToken=await validateReservationLoginToken(pass);
+  const isReservationToken=isAdminPassword?false:await validateReservationLoginToken(pass);
   if(isAdminPassword||isReservationToken){
     sessionStorage.setItem(ACCESS_KEY,'1');
     if(isReservationToken)sessionStorage.setItem(RESV_SESSION_TOKEN_KEY,pass);
@@ -2687,13 +2688,56 @@ const RESV_BASES={
 };
 let reservationItems=[];
 let reservationLoaded=false;
+let remoteReservationToken=null;
+let remoteReservationTokenLoaded=false;
 let activeReservationId=null;
 let activeReservationType='deposit';
 let activeReservationBase=RESV_BASES.munrae;
 let reservationPreviewType='deposit';
 
 function reservationToken(){
-  return sessionStorage.getItem(RESV_SESSION_TOKEN_KEY)||'';
+  return remoteReservationToken||sessionStorage.getItem(RESV_SESSION_TOKEN_KEY)||'';
+}
+async function loadRemoteReservationToken(){
+  if(remoteReservationTokenLoaded)return remoteReservationToken;
+  remoteReservationTokenLoaded=true;
+  try{
+    const res=await fetch(`${OV_API}?key=${encodeURIComponent(RESV_KEY)}`,{cache:'no-store'});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    const token=String(data?.value?.token||'').trim();
+    remoteReservationToken=token||null;
+  }catch(e){
+    remoteReservationToken=null;
+    console.warn('예약관리 토큰 설정을 불러오지 못했습니다.',e);
+  }
+  return remoteReservationToken;
+}
+function reservationSetupHtml(message){
+  return `<div class="resv-empty">${message}<br><button class="btn btn-reload" style="margin-top:14px" onclick="configureReservationToken()">예약관리 연결 설정</button></div>`;
+}
+async function configureReservationToken(){
+  const token=prompt('예약관리 API 토큰을 입력하세요. 한 번 저장하면 다음부터는 기존 로그인으로 예약관리를 불러옵니다.');
+  if(!token||!token.trim())return;
+  const list=document.getElementById('resv-list');
+  list.innerHTML='<div class="resv-empty"><div class="spin"></div>예약관리 연결을 확인하는 중...</div>';
+  const clean=token.trim();
+  const ok=await validateReservationLoginToken(clean);
+  if(!ok){
+    list.innerHTML=reservationSetupHtml('예약관리 API 토큰 인증에 실패했습니다.');
+    return;
+  }
+  try{
+    const res=await fetch(OV_API,{method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key:RESV_KEY,value:{token:clean}})});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    remoteReservationToken=clean;
+    remoteReservationTokenLoaded=true;
+    reservationLoaded=false;
+    loadReservations();
+  }catch(e){
+    list.innerHTML=reservationSetupHtml(`예약관리 토큰 저장에 실패했습니다.<br>${esc(e.message)}`);
+  }
 }
 function reservationBranch(it){
   const branchName=String(it.branchName||'').trim();
@@ -2712,10 +2756,12 @@ async function fetchReservationBranch(branch,base,token){
   return(data.items||[]).map(item=>({...item,_base:base,_branch:branch}));
 }
 async function loadReservations(){
-  const token=reservationToken();
   const list=document.getElementById('resv-list');
+  list.innerHTML='<div class="resv-empty"><div class="spin"></div>예약관리 연결을 확인하는 중...</div>';
+  await loadRemoteReservationToken();
+  const token=reservationToken();
   if(!token){
-    list.innerHTML='<div class="resv-empty">예약관리는 예약관리 API 토큰으로 다시 로그인해야 불러올 수 있습니다.</div>';
+    list.innerHTML=reservationSetupHtml('예약관리 연결 토큰이 아직 저장되어 있지 않습니다.');
     return;
   }
   list.innerHTML='<div class="resv-empty"><div class="spin"></div>예약 데이터를 불러오는 중...</div>';
@@ -2729,8 +2775,13 @@ async function loadReservations(){
     renderReservations();
   }catch(e){
     if(/HTTP (400|401|403)/.test(e.message)){
-      sessionStorage.removeItem(RESV_SESSION_TOKEN_KEY);
-      list.innerHTML='<div class="resv-empty">예약관리 API 인증이 맞지 않습니다.<br>로그아웃 후 예약관리 API 토큰으로 다시 로그인하세요.</div>';
+      if(remoteReservationToken){
+        remoteReservationToken=null;
+        remoteReservationTokenLoaded=false;
+      }else{
+        sessionStorage.removeItem(RESV_SESSION_TOKEN_KEY);
+      }
+      list.innerHTML=reservationSetupHtml('저장된 예약관리 API 토큰 인증이 맞지 않습니다.');
     }else{
       list.innerHTML=`<div class="resv-empty">예약 데이터를 불러오지 못했습니다.<br>${esc(e.message)}</div>`;
     }
@@ -2930,8 +2981,7 @@ function switchView(v){
   if(v==='customer')renderCustomers();
   if(v==='reservation'){
     if(reservationLoaded)renderReservations();
-    else if(reservationToken())loadReservations();
-    else renderReservations();
+    else loadReservations();
   }
   updateUndoBtn();
 }
@@ -3186,10 +3236,7 @@ function toggleCfMo(id,hdr){
 }
 
 
-if(sessionStorage.getItem(ACCESS_KEY)==='1'){
-  if(sessionStorage.getItem(RESV_SESSION_TOKEN_KEY))showApp();
-  else sessionStorage.removeItem(ACCESS_KEY);
-}
+if(sessionStorage.getItem(ACCESS_KEY)==='1')showApp();
 </script>
 </body>
 </html>
