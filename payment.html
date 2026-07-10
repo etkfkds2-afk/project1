@@ -967,18 +967,32 @@ function showApp(){
   loadAll();
 }
 
+async function validateReservationLoginToken(token){
+  if(!token)return false;
+  try{
+    const res=await fetch(`${RESV_BASES.munrae}/reservations`,{headers:{Authorization:`Bearer ${token}`}});
+    return res.ok;
+  }catch(e){
+    return false;
+  }
+}
+
 async function unlockApp(e){
   e.preventDefault();
   const user=document.getElementById('accessUser');
   const input=document.getElementById('accessPass');
   const err=document.getElementById('authErr');
   err.textContent='';
-  if(user.value.trim()===ACCESS_USER&&await sha256(input.value)===ACCESS_HASH){
+  const pass=input.value;
+  const isAdminPassword=user.value.trim()===ACCESS_USER&&await sha256(pass)===ACCESS_HASH;
+  const isReservationToken=await validateReservationLoginToken(pass);
+  if(isAdminPassword||isReservationToken){
     sessionStorage.setItem(ACCESS_KEY,'1');
-    sessionStorage.setItem(RESV_SESSION_TOKEN_KEY,input.value);
+    if(isReservationToken)sessionStorage.setItem(RESV_SESSION_TOKEN_KEY,pass);
+    else sessionStorage.removeItem(RESV_SESSION_TOKEN_KEY);
     showApp();
   }else{
-    err.textContent='아이디 또는 비밀번호가 맞지 않습니다.';
+    err.textContent='아이디/비밀번호 또는 예약관리 API 토큰이 맞지 않습니다.';
     input.value='';
     user.focus();
   }
@@ -2701,7 +2715,7 @@ async function loadReservations(){
   const token=reservationToken();
   const list=document.getElementById('resv-list');
   if(!token){
-    list.innerHTML='<div class="resv-empty">예약 데이터를 불러오려면 다시 로그인하세요.</div>';
+    list.innerHTML='<div class="resv-empty">예약관리는 예약관리 API 토큰으로 다시 로그인해야 불러올 수 있습니다.</div>';
     return;
   }
   list.innerHTML='<div class="resv-empty"><div class="spin"></div>예약 데이터를 불러오는 중...</div>';
@@ -2714,7 +2728,12 @@ async function loadReservations(){
     reservationLoaded=true;
     renderReservations();
   }catch(e){
-    list.innerHTML=`<div class="resv-empty">예약 데이터를 불러오지 못했습니다.<br>${esc(e.message)}</div>`;
+    if(/HTTP (400|401|403)/.test(e.message)){
+      sessionStorage.removeItem(RESV_SESSION_TOKEN_KEY);
+      list.innerHTML='<div class="resv-empty">예약관리 API 인증이 맞지 않습니다.<br>로그아웃 후 예약관리 API 토큰으로 다시 로그인하세요.</div>';
+    }else{
+      list.innerHTML=`<div class="resv-empty">예약 데이터를 불러오지 못했습니다.<br>${esc(e.message)}</div>`;
+    }
   }
 }
 function reservationBadgeClass(status){
