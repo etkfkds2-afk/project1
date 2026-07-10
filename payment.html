@@ -417,7 +417,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 /* ── 예약관리 ── */
 #view-reservation{padding:20px 28px 48px;display:none}
 .resv-toolbar{display:none}
-.resv-token{width:210px}
 .resv-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
 .resv-card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--line-strong);border-radius:8px;box-shadow:0 4px 14px rgba(15,23,42,.04);overflow:hidden}
 .resv-card:hover{box-shadow:var(--shadow);border-color:var(--line-strong)}
@@ -463,7 +462,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
   #view-reservation{padding:16px 20px 34px}
   .resv-list{grid-template-columns:1fr}
   .resv-toolbar{display:none}
-  .resv-token{width:100%;flex-basis:100%}
   .resv-modal-grid{grid-template-columns:1fr}
   .resv-modal-ft{flex-wrap:wrap}
   .resv-modal-ft button{flex:1 1 calc(50% - 5px)}
@@ -553,7 +551,6 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     <button class="btn btn-reload" onclick="customerAllData=null;remoteContactsReady=false;renderCustomers()">새로고침</button>
   </div>
   <div id="resv-toolbar-inner" class="resv-toolbar">
-    <input id="resv-token" class="search resv-token" type="password" autocomplete="off" placeholder="Wix API 토큰" oninput="saveReservationTokenInput()">
     <select id="resv-branch" onchange="renderReservations()">
       <option value="all">전체 지점</option>
       <option value="munrae">문래점</option>
@@ -650,7 +647,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 </div>
 <div id="view-reservation">
   <div id="resv-list" class="resv-list">
-    <div class="resv-empty">Wix API 토큰을 입력한 뒤 새로고침을 누르세요.</div>
+    <div class="resv-empty">예약관리 탭을 열면 예약 데이터를 불러옵니다.</div>
   </div>
 </div>
 <div id="rawModal" class="modal" onclick="closeRaw(event)">
@@ -711,6 +708,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 const ACCESS_USER='boss';
 const ACCESS_HASH='585821c6e0290e4ad6f01a88007d4c05875a0d59ffc50bd9bf95499d654c353c';
 const ACCESS_KEY='atm_payment_access_ok';
+const RESV_SESSION_TOKEN_KEY='atm_reservation_session_token';
 const GOOGLE_CLIENT_KEY='atm_google_client_id_v2';
 const OV_KEY='payment_overrides';
 const GC_KEY='google_client_id';
@@ -977,6 +975,7 @@ async function unlockApp(e){
   err.textContent='';
   if(user.value.trim()===ACCESS_USER&&await sha256(input.value)===ACCESS_HASH){
     sessionStorage.setItem(ACCESS_KEY,'1');
+    sessionStorage.setItem(RESV_SESSION_TOKEN_KEY,input.value);
     showApp();
   }else{
     err.textContent='아이디 또는 비밀번호가 맞지 않습니다.';
@@ -2672,7 +2671,6 @@ const RESV_BASES={
   munrae:'https://www.allthatmind.com/_functions',
   sinnonhyeon:'https://allthatmind2.wixsite.com/website/_functions'
 };
-const RESV_TOKEN_KEY='atm_reservation_api_token';
 let reservationItems=[];
 let reservationLoaded=false;
 let activeReservationId=null;
@@ -2680,15 +2678,8 @@ let activeReservationType='deposit';
 let activeReservationBase=RESV_BASES.munrae;
 let reservationPreviewType='deposit';
 
-function initReservationToken(){
-  const inp=document.getElementById('resv-token');
-  if(inp&&!inp.value)inp.value=localStorage.getItem(RESV_TOKEN_KEY)||'';
-}
 function reservationToken(){
-  return(document.getElementById('resv-token')?.value||'').trim();
-}
-function saveReservationTokenInput(){
-  try{localStorage.setItem(RESV_TOKEN_KEY,reservationToken())}catch(e){}
+  return sessionStorage.getItem(RESV_SESSION_TOKEN_KEY)||'';
 }
 function reservationBranch(it){
   const branchName=String(it.branchName||'').trim();
@@ -2707,14 +2698,12 @@ async function fetchReservationBranch(branch,base,token){
   return(data.items||[]).map(item=>({...item,_base:base,_branch:branch}));
 }
 async function loadReservations(){
-  initReservationToken();
   const token=reservationToken();
   const list=document.getElementById('resv-list');
   if(!token){
-    list.innerHTML='<div class="resv-empty">Wix API 토큰을 입력한 뒤 새로고침을 누르세요.</div>';
+    list.innerHTML='<div class="resv-empty">예약 데이터를 불러오려면 다시 로그인하세요.</div>';
     return;
   }
-  saveReservationTokenInput();
   list.innerHTML='<div class="resv-empty"><div class="spin"></div>예약 데이터를 불러오는 중...</div>';
   try{
     const results=await Promise.all([
@@ -2735,13 +2724,12 @@ function reservationBadgeClass(status){
   return'';
 }
 function renderReservations(){
-  initReservationToken();
   const list=document.getElementById('resv-list');
   const branch=document.getElementById('resv-branch')?.value||'all';
   const status=document.getElementById('resv-status')?.value||'all';
   const query=(document.getElementById('resv-search')?.value||'').toLowerCase();
   if(!reservationLoaded){
-    list.innerHTML='<div class="resv-empty">Wix API 토큰을 입력한 뒤 새로고침을 누르세요.</div>';
+    list.innerHTML='<div class="resv-empty">예약관리 탭을 열면 예약 데이터를 불러옵니다.</div>';
     return;
   }
   const rows=reservationItems.filter(item=>{
@@ -2833,7 +2821,7 @@ async function sendReservationMail(){
   const overrides=reservationOverrides();
   const label=activeReservationType==='deposit'?'예약금 확인 메일':'완납 확인 메일';
   if(!token){
-    document.getElementById('resv-modal-status').textContent='Wix API 토큰을 먼저 입력하세요.';
+    document.getElementById('resv-modal-status').textContent='예약 데이터를 보내려면 다시 로그인하세요.';
     return;
   }
   if(!confirm(`수정한 내용으로 ${label}을 고객에게 발송할까요?\n\n받는 사람: ${overrides.email||'(이메일 없음)'}\n예약자명: ${overrides.name||'(이름 없음)'}`))return;
@@ -2922,9 +2910,9 @@ function switchView(v){
   if(v==='chart')renderChart();
   if(v==='customer')renderCustomers();
   if(v==='reservation'){
-    initReservationToken();
     if(reservationLoaded)renderReservations();
     else if(reservationToken())loadReservations();
+    else renderReservations();
   }
   updateUndoBtn();
 }
