@@ -3167,7 +3167,10 @@ function toggleCfMo(id,hdr){
 }
 
 
-if(sessionStorage.getItem(ACCESS_KEY)==='1')showApp();
+if(sessionStorage.getItem(ACCESS_KEY)==='1'){
+  if(sessionStorage.getItem(RESV_SESSION_TOKEN_KEY))showApp();
+  else sessionStorage.removeItem(ACCESS_KEY);
+}
 </script>
 </body>
 </html>
