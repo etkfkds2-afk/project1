@@ -52,6 +52,10 @@ function Show-ReservationToast {
   $notify.Dispose()
 }
 
+function Show-TestToast {
+  Show-ReservationToast -Title "Allthatmind notifier test" -Message "Notification display test. If you see this, Windows alerts work."
+}
+
 function Get-ReservationBranch {
   param($Item)
   if ($Item._branch -eq "sinnonhyeon") { return "Sinnonhyeon" }
@@ -108,6 +112,7 @@ while ($true) {
   try {
     $reservations = @(Get-Reservations -Config $config)
     $newItems = @()
+    Write-Log "Polling ok. ReservationCount=$($reservations.Count) SeenCount=$($seen.Count)"
 
     foreach ($item in $reservations) {
       $id = [string]$item._id
@@ -129,6 +134,9 @@ while ($true) {
         Show-ReservationToast -Title "Allthatmind new reservation" -Message "$branch`n$name / $phone`n$eventType"
         Write-Log "New reservation notified: $id / $branch / $name"
       }
+    }
+    if (!$NotifyExisting -and !$hadSeenFile -and $newItems.Count -gt 0) {
+      Write-Log "Initial seed completed without notifications. SeededCount=$($newItems.Count)"
     }
     $hadSeenFile = $true
   } catch {

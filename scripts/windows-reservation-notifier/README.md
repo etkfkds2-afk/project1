@@ -6,7 +6,11 @@
 
 압축을 푼 뒤 `install-notifier.bat`를 더블클릭합니다.
 
-설치 중 `예약관리 API 토큰`을 입력하면 작업 스케줄러에 `AllthatmindReservationNotifier`가 등록되고 바로 실행됩니다. 설치 창은 결과를 확인할 수 있도록 마지막에 멈춥니다.
+설치 중 `Enter reservation API token`이 나오면 예약관리 API 토큰을 입력합니다. 작업 스케줄러에 `AllthatmindReservationNotifier`가 등록되고 바로 실행됩니다. 설치 창은 결과를 확인할 수 있도록 마지막에 멈춥니다.
+
+설치 직후 테스트 알림이 한 번 표시됩니다. 테스트 알림만 다시 확인하려면 `test-notifier.bat`를 더블클릭합니다.
+
+작업 상태와 최근 로그를 확인하려면 `check-notifier.bat`를 더블클릭합니다.
 
 ## 동작
 

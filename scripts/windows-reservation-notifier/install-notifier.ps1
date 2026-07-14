@@ -45,3 +45,9 @@ Start-ScheduledTask -TaskName $taskName
 Write-Host "Install complete: $taskName"
 Write-Host "Config file: $configPath"
 Write-Host "Reservation notifier has started."
+Write-Host "A test notification will be shown now."
+
+$testNotifierPath = Join-Path $scriptDir "test-notifier.ps1"
+if (Test-Path $testNotifierPath) {
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $testNotifierPath
+}
