@@ -4,14 +4,9 @@
 
 ## 설치
 
-PowerShell을 열고 이 폴더에서 실행합니다.
+압축을 푼 뒤 `install-notifier.bat`를 더블클릭합니다.
 
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-.\install-notifier.ps1
-```
-
-설치 중 `예약관리 API 토큰`을 입력하면 작업 스케줄러에 `AllthatmindReservationNotifier`가 등록되고 바로 실행됩니다.
+설치 중 `예약관리 API 토큰`을 입력하면 작업 스케줄러에 `AllthatmindReservationNotifier`가 등록되고 바로 실행됩니다. 설치 창은 결과를 확인할 수 있도록 마지막에 멈춥니다.
 
 ## 동작
 
