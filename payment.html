@@ -976,6 +976,9 @@ function showApp(){
   document.body.classList.remove('locked');
   document.getElementById('authScreen').style.display='none';
   loadAll();
+  const params=new URLSearchParams(location.search);
+  const targetView=params.get('view')||location.hash.replace(/^#/,'');
+  if(targetView==='reservation')setTimeout(()=>switchView('reservation'),0);
 }
 
 async function validateReservationLoginToken(token){

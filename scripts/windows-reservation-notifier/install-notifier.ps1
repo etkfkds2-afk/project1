@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 $taskName = "AllthatmindReservationNotifier"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
