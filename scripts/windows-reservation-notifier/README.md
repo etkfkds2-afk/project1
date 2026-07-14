@@ -1,0 +1,30 @@
+# 올댓마인드 예약관리 Windows 알림
+
+대관관리 페이지나 브라우저를 열지 않아도, Windows 로그인 후 백그라운드에서 Wix 예약관리 API를 확인해 새 예약신청 알림을 띄웁니다.
+
+## 설치
+
+PowerShell을 열고 이 폴더에서 실행합니다.
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+.\install-notifier.ps1
+```
+
+설치 중 `예약관리 API 토큰`을 입력하면 작업 스케줄러에 `AllthatmindReservationNotifier`가 등록되고 바로 실행됩니다.
+
+## 동작
+
+- 60초마다 문래점/신논현점 예약 API를 확인합니다.
+- 처음 실행 시 기존 예약은 본 예약으로 저장합니다.
+- 이후 새 예약 `_id`가 발견되면 Windows 알림을 띄웁니다.
+- 알림 기록은 `%APPDATA%\AllthatmindReservationNotifier\seen-reservations.json`에 저장됩니다.
+- 로그는 `%APPDATA%\AllthatmindReservationNotifier\notifier.log`에 저장됩니다.
+
+## 제거
+
+```powershell
+.\uninstall-notifier.ps1
+```
+
+작업 스케줄러 등록만 제거합니다. 토큰 설정과 알림 기록 파일은 남겨둡니다.
