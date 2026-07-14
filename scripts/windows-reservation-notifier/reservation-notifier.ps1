@@ -54,13 +54,14 @@ function Show-ReservationToast {
 
 function Get-ReservationBranch {
   param($Item)
+  if ($Item._branch -eq "sinnonhyeon") { return "Sinnonhyeon" }
+  if ($Item._branch -eq "munrae") { return "Munrae" }
   $branchName = [string]$Item.branchName
   $total = [string]$Item.total
   if (!$total) { $total = [string]$Item.estimateText }
-  if ($branchName.Contains("신논현") -or $total.Contains("신논현")) { return "신논현점" }
-  if ($branchName.Contains("문래") -or $total.Contains("문래")) { return "문래점" }
-  if ($Item._branch -eq "sinnonhyeon") { return "신논현점" }
-  return "문래점"
+  if ($branchName.Contains("Sinnonhyeon") -or $total.Contains("Sinnonhyeon")) { return "Sinnonhyeon" }
+  if ($branchName.Contains("Munrae") -or $total.Contains("Munrae")) { return "Munrae" }
+  return "Munrae"
 }
 
 function Get-Reservations {
@@ -122,10 +123,10 @@ while ($true) {
     if ($NotifyExisting -or $hadSeenFile) {
       foreach ($item in $newItems) {
         $branch = Get-ReservationBranch -Item $item
-        $name = if ($item.name) { [string]$item.name } else { "이름 없음" }
-        $phone = if ($item.phone) { [string]$item.phone } else { "연락처 없음" }
-        $eventType = if ($item.eventType) { [string]$item.eventType } else { "행사명 없음" }
-        Show-ReservationToast -Title "올댓마인드 새 예약신청" -Message "$branch`n$name / $phone`n$eventType"
+        $name = if ($item.name) { [string]$item.name } else { "No name" }
+        $phone = if ($item.phone) { [string]$item.phone } else { "No phone" }
+        $eventType = if ($item.eventType) { [string]$item.eventType } else { "No event type" }
+        Show-ReservationToast -Title "Allthatmind new reservation" -Message "$branch`n$name / $phone`n$eventType"
         Write-Log "New reservation notified: $id / $branch / $name"
       }
     }

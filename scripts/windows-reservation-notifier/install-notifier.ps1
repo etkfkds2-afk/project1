@@ -12,9 +12,9 @@ if (!(Test-Path $notifierPath)) {
 
 New-Item -ItemType Directory -Force -Path $appDir | Out-Null
 
-$token = Read-Host "예약관리 API 토큰을 입력하세요"
+$token = Read-Host "Enter reservation API token"
 if ([string]::IsNullOrWhiteSpace($token)) {
-  throw "예약관리 API 토큰이 비어 있습니다."
+  throw "Reservation API token is empty."
 }
 
 $config = @{
@@ -39,9 +39,9 @@ $action = New-ScheduledTaskAction -Execute $powershell -Argument $argument
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
 
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description "올댓마인드 예약관리 새 예약 Windows 알림" -Force | Out-Null
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description "Allthatmind reservation notifier" -Force | Out-Null
 Start-ScheduledTask -TaskName $taskName
 
-Write-Host "설치 완료: $taskName"
-Write-Host "설정 파일: $configPath"
-Write-Host "알림 감시가 지금 시작되었습니다."
+Write-Host "Install complete: $taskName"
+Write-Host "Config file: $configPath"
+Write-Host "Reservation notifier has started."
