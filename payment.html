@@ -421,6 +421,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .resv-card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--line-strong);border-radius:8px;box-shadow:0 4px 14px rgba(15,23,42,.04);overflow:hidden}
 .resv-card:hover{box-shadow:var(--shadow);border-color:var(--line-strong)}
 .resv-card.munrae{border-top-color:#2563eb}.resv-card.sinnonhyeon{border-top-color:#ea580c}
+.resv-card.hidden-resv{opacity:.58}
 .resv-card-top{padding:16px 18px 10px}
 .resv-name{font-size:18px;font-weight:850;color:#111827;margin-bottom:10px;line-height:1.25}
 .resv-row{display:flex;gap:8px;font-size:13px;line-height:1.5}
@@ -438,6 +439,9 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .resv-actions button{flex:1;min-height:38px;border:0;border-radius:6px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;padding:8px 10px}
 .resv-actions button:first-child{background:#2563eb}.resv-actions button:last-child{background:#16a34a}
 .resv-actions button:disabled{opacity:.35;cursor:default}
+.resv-card-tools{padding:0 18px 14px;display:flex;justify-content:flex-end}
+.resv-hide-btn{height:30px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;padding:0 10px}
+.resv-hide-btn.restore{border-color:#bbf7d0;background:#f0fdf4;color:#15803d}
 .resv-msg{text-align:center;color:#64748b;font-size:12px;min-height:18px;padding:0 18px 10px}
 .resv-empty{grid-column:1/-1;text-align:center;padding:70px 20px;color:#9ca3af;background:#fff;border:1px solid var(--line);border-radius:8px}
 .resv-modal-card{width:min(620px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:8px;box-shadow:0 25px 60px rgba(0,0,0,.28)}
@@ -561,6 +565,11 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
       <option value="접수">접수</option>
       <option value="예약확정">예약확정</option>
       <option value="미입금">미입금</option>
+    </select>
+    <select id="resv-visible" onchange="renderReservations()">
+      <option value="visible">표시 예약</option>
+      <option value="hidden">숨김 예약</option>
+      <option value="all">전체 예약</option>
     </select>
     <input class="search" id="resv-search" placeholder="이름·연락처·이메일 검색" oninput="renderReservations()">
     <div class="sp"></div>
@@ -714,6 +723,7 @@ const OV_KEY='payment_overrides';
 const GC_KEY='google_client_id';
 const CONTACTS_KEY='customer_contacts';
 const RESV_KEY='reservation_api_token';
+const RESV_HIDDEN_KEY='reservation_hidden_ids';
 const OV_API='/api/overrides';
 const MANUAL_ROWS_KEY='__manualRows';
 const GOOGLE_DEFAULT_CLIENT_ID='';
@@ -2694,6 +2704,8 @@ let activeReservationId=null;
 let activeReservationType='deposit';
 let activeReservationBase=RESV_BASES.munrae;
 let reservationPreviewType='deposit';
+let reservationHiddenIds=new Set();
+let reservationHiddenLoaded=false;
 
 function reservationToken(){
   return remoteReservationToken||sessionStorage.getItem(RESV_SESSION_TOKEN_KEY)||'';
@@ -2715,6 +2727,31 @@ async function loadRemoteReservationToken(){
 }
 function reservationSetupHtml(message){
   return `<div class="resv-empty">${message}<br><button class="btn btn-reload" style="margin-top:14px" onclick="configureReservationToken()">예약관리 연결 설정</button></div>`;
+}
+async function loadReservationHiddenIds(){
+  if(reservationHiddenLoaded)return;
+  reservationHiddenLoaded=true;
+  try{
+    const res=await fetch(`${OV_API}?key=${encodeURIComponent(RESV_HIDDEN_KEY)}`,{cache:'no-store'});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    const ids=Array.isArray(data?.value?.ids)?data.value.ids:[];
+    reservationHiddenIds=new Set(ids.map(String).filter(Boolean));
+  }catch(e){
+    reservationHiddenIds=new Set();
+    console.warn('예약관리 숨김 목록을 불러오지 못했습니다.',e);
+  }
+}
+async function saveReservationHiddenIds(){
+  try{
+    const res=await fetch(OV_API,{method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key:RESV_HIDDEN_KEY,value:{ids:[...reservationHiddenIds]}})});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+  }catch(e){
+    console.warn('예약관리 숨김 목록 저장에 실패했습니다.',e);
+    const list=document.getElementById('resv-list');
+    if(list)list.insertAdjacentHTML('afterbegin',`<div class="resv-empty" style="padding:16px;margin-bottom:12px">숨김 상태 저장에 실패했습니다.<br>${esc(e.message)}</div>`);
+  }
 }
 async function configureReservationToken(){
   const token=prompt('예약관리 API 토큰을 입력하세요. 한 번 저장하면 다음부터는 기존 로그인으로 예약관리를 불러옵니다.');
@@ -2758,7 +2795,7 @@ async function fetchReservationBranch(branch,base,token){
 async function loadReservations(){
   const list=document.getElementById('resv-list');
   list.innerHTML='<div class="resv-empty"><div class="spin"></div>예약관리 연결을 확인하는 중...</div>';
-  await loadRemoteReservationToken();
+  await Promise.all([loadRemoteReservationToken(),loadReservationHiddenIds()]);
   const token=reservationToken();
   if(!token){
     list.innerHTML=reservationSetupHtml('예약관리 연결 토큰이 아직 저장되어 있지 않습니다.');
@@ -2797,20 +2834,24 @@ function renderReservations(){
   const list=document.getElementById('resv-list');
   const branch=document.getElementById('resv-branch')?.value||'all';
   const status=document.getElementById('resv-status')?.value||'all';
+  const visible=document.getElementById('resv-visible')?.value||'visible';
   const query=(document.getElementById('resv-search')?.value||'').toLowerCase();
   if(!reservationLoaded){
     list.innerHTML='<div class="resv-empty">예약관리 탭을 열면 예약 데이터를 불러옵니다.</div>';
     return;
   }
   const rows=reservationItems.filter(item=>{
+    const hidden=reservationHiddenIds.has(String(item._id||''));
     const itemBranch=reservationBranch(item);
+    if(visible==='visible'&&hidden)return false;
+    if(visible==='hidden'&&!hidden)return false;
     if(branch!=='all'&&itemBranch!==branch)return false;
     if(status!=='all'&&item.status!==status&&item.paymentStatus!==status)return false;
     if(query&&!`${item.name||''} ${item.phone||''} ${item.email||''}`.toLowerCase().includes(query))return false;
     return true;
   });
   if(!rows.length){
-    list.innerHTML='<div class="resv-empty">조건에 맞는 예약이 없습니다.</div>';
+    list.innerHTML=`<div class="resv-empty">${visible==='hidden'?'숨긴 예약이 없습니다.':'조건에 맞는 예약이 없습니다.'}</div>`;
     return;
   }
   list.innerHTML=rows.map(reservationCardHtml).join('');
@@ -2820,8 +2861,9 @@ function reservationCardHtml(item){
   const branch=reservationBranch(item);
   const depositSent=item.depositMailSent===true;
   const paidSent=item.fullyPaidMailSent===true;
+  const hidden=reservationHiddenIds.has(String(item._id||''));
   const estimate=String(item.total||'');
-  return`<div class="resv-card ${branch}" id="resv-card-${id}">
+  return`<div class="resv-card ${branch} ${hidden?'hidden-resv':''}" id="resv-card-${id}">
     <div class="resv-card-top">
       <div class="resv-name">${esc(item.name)||'이름 없음'}</div>
       <div class="resv-row"><span class="lbl">연락처</span><span class="val">${esc(item.phone)||'-'}</span></div>
@@ -2832,6 +2874,7 @@ function reservationCardHtml(item){
       <span class="resv-badge ${branch}">${reservationBranchLabel(branch)}</span>
       ${item.status?`<span class="resv-badge ${reservationBadgeClass(item.status)}">${esc(item.status)}</span>`:''}
       ${item.paymentStatus?`<span class="resv-badge ${reservationBadgeClass(item.paymentStatus)}">${esc(item.paymentStatus)}</span>`:''}
+      ${hidden?'<span class="resv-badge bad">숨김</span>':''}
       ${depositSent?'<span class="resv-badge ok">예약금 발송</span>':''}
       ${paidSent?'<span class="resv-badge ok">완납 발송</span>':''}
     </div>
@@ -2840,8 +2883,27 @@ function reservationCardHtml(item){
       <button ${depositSent?'disabled':''} onclick="openReservationModal('${id}','deposit')">${depositSent?'예약금 발송완료':'수정 후 예약금 메일'}</button>
       <button ${paidSent?'disabled':''} onclick="openReservationModal('${id}','fullyPaid')">${paidSent?'완납 발송완료':'수정 후 완납 메일'}</button>
     </div>
+    <div class="resv-card-tools">
+      <button class="resv-hide-btn ${hidden?'restore':''}" onclick="toggleReservationHidden('${id}',event)">${hidden?'복원':'숨김'}</button>
+    </div>
     <div class="resv-msg" id="resv-msg-${id}"></div>
   </div>`;
+}
+async function toggleReservationHidden(id,e){
+  if(e)e.stopPropagation();
+  const clean=String(id||'');
+  if(!clean)return;
+  const hidden=reservationHiddenIds.has(clean);
+  const item=reservationItems.find(row=>row._id===clean);
+  const name=item?.name||'이름 없음';
+  const msg=hidden
+    ?`"${name}" 예약을 다시 표시할까요?`
+    :`"${name}" 예약 카드를 숨길까요?\n\nWix CMS 데이터는 삭제되지 않습니다.`;
+  if(!confirm(msg))return;
+  if(hidden)reservationHiddenIds.delete(clean);
+  else reservationHiddenIds.add(clean);
+  renderReservations();
+  await saveReservationHiddenIds();
 }
 function toggleReservationEstimate(id){
   const pre=document.getElementById(`resv-est-${id}`);
