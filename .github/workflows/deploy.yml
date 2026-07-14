@@ -27,6 +27,7 @@ jobs:
           mkdir dist
           cp index.html dist/index.html
           cp payment.html dist/payment.html
+          cp allthatmind-reservation-notifier.zip dist/allthatmind-reservation-notifier.zip
       - name: Ensure Cloudflare Pages production branch
         run: |
           curl --fail-with-body -X PATCH "https://api.cloudflare.com/client/v4/accounts/af27f3bbca2209ff9cb2c77a2e47184a/pages/projects/project1" \
