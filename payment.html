@@ -449,14 +449,15 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .resv-field{display:flex;flex-direction:column;gap:4px}
 .resv-field.wide{grid-column:1/-1}
 .resv-field label{font-size:12px;font-weight:800;color:#6b7280}
-.resv-field input,.resv-field textarea{border:1px solid var(--line-strong);border-radius:6px;padding:9px 10px;font:inherit;outline:none}
-.resv-field input:focus,.resv-field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.resv-field input,.resv-field textarea,.resv-field select{border:1px solid var(--line-strong);border-radius:6px;padding:9px 10px;font:inherit;outline:none}
+.resv-field input:focus,.resv-field textarea:focus,.resv-field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .resv-field textarea{min-height:150px;resize:vertical;line-height:1.65}
 .resv-modal-status{min-height:22px;text-align:center;color:#6b7280;font-size:13px;padding:0 20px 10px}
 .resv-modal-ft{display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--line)}
 .resv-modal-ft button{height:40px;border:0;border-radius:6px;font-size:13px;font-weight:800;cursor:pointer;padding:0 14px}
 .resv-modal-ft .cancel{background:#f3f4f6;color:#374151}.resv-modal-ft .preview{background:#fff;color:#374151;border:1px solid var(--line-strong)}
 .resv-modal-ft .send{flex:1;background:#111827;color:#fff}.resv-modal-ft .send.dep{background:#2563eb}.resv-modal-ft .send.paid{background:#16a34a}
+.resv-modal-ft .save{background:#111827;color:#fff}.resv-modal-ft .save.dep{background:#2563eb}.resv-modal-ft .save.paid{background:#16a34a}
 .resv-preview-card{width:min(720px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:8px;box-shadow:0 25px 60px rgba(0,0,0,.28)}
 .resv-preview-tabs{display:flex;gap:6px}
 .resv-preview-tabs button{height:28px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:#4b5563;font-size:12px;font-weight:800;padding:0 10px;cursor:pointer}
@@ -573,6 +574,7 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
     </select>
     <input class="search" id="resv-search" placeholder="이름·연락처·이메일 검색" oninput="renderReservations()">
     <div class="sp"></div>
+    <button class="btn btn-add" onclick="openReservationCreateModal()">신규 예약</button>
     <button class="btn btn-reload" onclick="loadReservations()">새로고침</button>
   </div>
 </div>
@@ -691,6 +693,37 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
       <button class="cancel" onclick="closeReservationModal()">취소</button>
       <button class="preview" onclick="openReservationPreview()">미리보기</button>
       <button class="send" id="resv-send-btn" onclick="sendReservationMail()">메일 발송</button>
+    </div>
+  </div>
+</div>
+<div id="resvCreateModal" class="modal" onclick="closeReservationCreateBg(event)">
+  <div class="resv-modal-card" onclick="event.stopPropagation()">
+    <div class="modal-hd">
+      <h2>신규 예약 작성</h2>
+      <button class="mini" onclick="closeReservationCreateModal()">닫기</button>
+    </div>
+    <div class="modal-bd">
+      <div class="resv-modal-grid">
+        <div class="resv-field">
+          <label>지점</label>
+          <select id="resv-create-branch">
+            <option value="munrae">문래점</option>
+            <option value="sinnonhyeon">신논현점</option>
+          </select>
+        </div>
+        <div class="resv-field"><label>이름</label><input id="resv-create-name" type="text"></div>
+        <div class="resv-field"><label>연락처</label><input id="resv-create-phone" type="text"></div>
+        <div class="resv-field"><label>이메일</label><input id="resv-create-email" type="text"></div>
+        <div class="resv-field wide"><label>행사 종류</label><input id="resv-create-event-type" type="text"></div>
+        <div class="resv-field wide"><label>견적 합계</label><textarea id="resv-create-estimate"></textarea></div>
+      </div>
+    </div>
+    <div class="resv-modal-status" id="resv-create-status"></div>
+    <div class="resv-modal-ft">
+      <button class="cancel" onclick="closeReservationCreateModal()">취소</button>
+      <button class="save" onclick="createReservationFromModal()">저장</button>
+      <button class="save dep" onclick="createReservationFromModal('deposit')">저장 + 예약금 메일</button>
+      <button class="save paid" onclick="createReservationFromModal('fullyPaid')">저장 + 완납 메일</button>
     </div>
   </div>
 </div>
@@ -2940,6 +2973,110 @@ function closeReservationModal(){
 }
 function closeReservationBg(e){
   if(e.target===document.getElementById('resvModal'))closeReservationModal();
+}
+function openReservationCreateModal(){
+  document.getElementById('resv-create-branch').value=document.getElementById('resv-branch')?.value&&document.getElementById('resv-branch').value!=='all'
+    ?document.getElementById('resv-branch').value
+    :'munrae';
+  document.getElementById('resv-create-name').value='';
+  document.getElementById('resv-create-phone').value='';
+  document.getElementById('resv-create-email').value='';
+  document.getElementById('resv-create-event-type').value='';
+  document.getElementById('resv-create-estimate').value='';
+  document.getElementById('resv-create-status').textContent='신규 예약은 Wix CMS에 새 항목으로 저장됩니다.';
+  document.getElementById('resvCreateModal').classList.add('show');
+  setTimeout(()=>document.getElementById('resv-create-name')?.focus(),0);
+}
+function closeReservationCreateModal(){
+  document.getElementById('resvCreateModal').classList.remove('show');
+}
+function closeReservationCreateBg(e){
+  if(e.target===document.getElementById('resvCreateModal'))closeReservationCreateModal();
+}
+function reservationCreatePayload(){
+  const branch=document.getElementById('resv-create-branch').value||'munrae';
+  const branchLabel=reservationBranchLabel(branch);
+  return{
+    branch,
+    item:{
+      name:document.getElementById('resv-create-name').value.trim(),
+      phone:document.getElementById('resv-create-phone').value.trim(),
+      email:document.getElementById('resv-create-email').value.trim(),
+      eventType:document.getElementById('resv-create-event-type').value.trim(),
+      total:document.getElementById('resv-create-estimate').value.trim(),
+      estimateText:document.getElementById('resv-create-estimate').value.trim(),
+      branchName:branchLabel,
+      status:'접수',
+      paymentStatus:'미입금'
+    }
+  };
+}
+function normalizeCreatedReservation(data,item,branch,base){
+  const raw=data?.item||data?.reservation||data?.created||data?.data||data;
+  const id=raw?._id||raw?.id||data?.reservationId||data?.id;
+  if(!id)throw new Error('Wix 생성 응답에 예약 ID가 없습니다.');
+  return{...item,...raw,_id:id,_base:base,_branch:branch};
+}
+async function postReservationCreate(base,token,item){
+  const endpoints=['createReservation','reservations'];
+  let lastError=null;
+  for(const endpoint of endpoints){
+    try{
+      const res=await fetch(`${base}/${endpoint}`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+        body:JSON.stringify({item,reservation:item})
+      });
+      const data=await res.json().catch(()=>({}));
+      if(res.ok&&data?.ok!==false)return data;
+      lastError=new Error(data.error||`${endpoint} HTTP ${res.status}`);
+      if(![404,405].includes(res.status))break;
+    }catch(e){
+      lastError=e;
+      break;
+    }
+  }
+  throw lastError||new Error('예약 생성 API 호출에 실패했습니다.');
+}
+async function createReservationFromModal(mailType){
+  const token=reservationToken();
+  const statusEl=document.getElementById('resv-create-status');
+  if(!token){
+    statusEl.textContent='예약을 생성하려면 다시 로그인하세요.';
+    return;
+  }
+  const {branch,item}=reservationCreatePayload();
+  if(!item.name){
+    statusEl.textContent='이름을 입력하세요.';
+    document.getElementById('resv-create-name').focus();
+    return;
+  }
+  if(mailType&&!item.email){
+    statusEl.textContent='메일 발송을 하려면 이메일을 입력하세요.';
+    document.getElementById('resv-create-email').focus();
+    return;
+  }
+  const buttons=[...document.querySelectorAll('#resvCreateModal .resv-modal-ft button')];
+  buttons.forEach(btn=>btn.disabled=true);
+  statusEl.textContent='Wix CMS에 신규 예약을 저장하는 중...';
+  const base=RESV_BASES[branch]||RESV_BASES.munrae;
+  try{
+    const data=await postReservationCreate(base,token,item);
+    const created=normalizeCreatedReservation(data,item,branch,base);
+    reservationItems=[created,...reservationItems.filter(row=>row._id!==created._id)]
+      .sort((a,b)=>new Date(b._createdDate||0)-new Date(a._createdDate||0));
+    reservationLoaded=true;
+    closeReservationCreateModal();
+    renderReservations();
+    if(mailType){
+      openReservationModal(created._id,mailType);
+      document.getElementById('resv-modal-status').textContent='신규 예약이 저장되었습니다. 메일 내용을 확인한 뒤 발송하세요.';
+    }
+  }catch(e){
+    statusEl.innerHTML=`신규 예약 저장 실패: ${esc(e.message)}<br>Wix backend에 예약 생성 API(createReservation 또는 reservations POST)가 필요합니다.`;
+  }finally{
+    buttons.forEach(btn=>btn.disabled=false);
+  }
 }
 function reservationOverrides(){
   return{
