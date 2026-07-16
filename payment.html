@@ -434,7 +434,10 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 .resv-estimate{margin:0 18px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden}
 .resv-estimate pre{padding:13px 15px;font:inherit;font-size:12px;line-height:1.75;color:#374151;white-space:pre-wrap;max-height:150px;overflow:hidden}
 .resv-estimate pre.open{max-height:none}
-.resv-estimate button{width:100%;height:30px;border:0;border-top:1px solid #e2e8f0;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:700;cursor:pointer}
+.resv-estimate-tools{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #e2e8f0}
+.resv-estimate-tools button{height:30px;border:0;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:700;cursor:pointer}
+.resv-estimate-tools button+button{border-left:1px solid #e2e8f0}
+.resv-estimate-tools button:hover{background:#e8eef6;color:#334155}
 .resv-actions{padding:0 18px 16px;display:flex;gap:8px}
 .resv-actions button{flex:1;min-height:38px;border:0;border-radius:6px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;padding:8px 10px}
 .resv-actions button:first-child{background:#2563eb}.resv-actions button:last-child{background:#16a34a}
@@ -2932,7 +2935,7 @@ function reservationCardHtml(item){
       ${depositSent?'<span class="resv-badge ok">예약금 발송</span>':''}
       ${paidSent?'<span class="resv-badge ok">완납 발송</span>':''}
     </div>
-    ${estimate?`<div class="resv-estimate"><pre id="resv-est-${id}">${esc(estimate)}</pre><button onclick="toggleReservationEstimate('${id}')">더보기</button></div>`:''}
+    ${estimate?`<div class="resv-estimate"><pre id="resv-est-${id}">${esc(estimate)}</pre><div class="resv-estimate-tools"><button onclick="toggleReservationEstimate('${id}')">더보기</button><button onclick="copyReservationEstimate('${id}',event)">복사</button></div></div>`:''}
     <div class="resv-actions">
       <button ${depositSent?'disabled':''} onclick="openReservationModal('${id}','deposit')">${depositSent?'예약금 발송완료':'수정 후 예약금 메일'}</button>
       <button ${paidSent?'disabled':''} onclick="openReservationModal('${id}','fullyPaid')">${paidSent?'완납 발송완료':'수정 후 완납 메일'}</button>
@@ -2963,8 +2966,43 @@ function toggleReservationEstimate(id){
   const pre=document.getElementById(`resv-est-${id}`);
   if(!pre)return;
   const opened=pre.classList.toggle('open');
-  const btn=pre.nextElementSibling;
+  const btn=pre.nextElementSibling?.querySelector('button');
   if(btn)btn.textContent=opened?'접기':'더보기';
+}
+function reservationEstimateTextById(id){
+  const item=reservationItems.find(row=>row._id===id);
+  return item?reservationDisplayEstimate(item):(document.getElementById(`resv-est-${id}`)?.innerText||'');
+}
+async function copyReservationEstimate(id,e){
+  if(e)e.stopPropagation();
+  const text=reservationEstimateTextById(id);
+  if(!text)return;
+  const btn=e?.currentTarget;
+  const original=btn?.textContent;
+  const done=ok=>{
+    if(!btn)return;
+    btn.textContent=ok?'복사됨':'복사 실패';
+    setTimeout(()=>{btn.textContent=original||'복사';},1300);
+  };
+  try{
+    if(navigator.clipboard&&window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+    }else{
+      const area=document.createElement('textarea');
+      area.value=text;
+      area.setAttribute('readonly','');
+      area.style.position='fixed';
+      area.style.left='-9999px';
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      area.remove();
+    }
+    done(true);
+  }catch(err){
+    console.warn('예약정보 복사 실패',err);
+    done(false);
+  }
 }
 function openReservationModal(id,type){
   const item=reservationItems.find(row=>row._id===id);
