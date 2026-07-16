@@ -2869,13 +2869,9 @@ function reservationBadgeClass(status){
 function reservationCustomerBlock(item){
   const lines=[
     '[고객정보]',
-    '',
     `• 예약자명: ${item.name||''}`,
-    '',
     `• 행사명: ${item.eventType||''}`,
-    '',
     `• 전화번호: ${item.phone||''}`,
-    '',
     `• 이메일: ${item.email||''}`
   ];
   return lines.join('\n');
@@ -2885,7 +2881,6 @@ function reservationDisplayEstimate(item){
   if(!estimate)return'';
   if(/^\s*\[고객정보\]/.test(estimate))return estimate;
   return`${reservationCustomerBlock(item)}
-
 
 ${estimate}`;
 }
