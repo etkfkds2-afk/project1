@@ -128,6 +128,23 @@ test('테이블 CSV는 현재 화면 컬럼 기준으로 내보낸다', async ({
   expect(csv).not.toContain('잔금수납액');
 });
 
+test('예약관리 상세 표시에는 고객정보를 예약정보 위에 붙인다', async ({ page }) => {
+  const display = await page.evaluate(() => reservationDisplayEstimate({
+    name: '홍길동',
+    eventType: '세미나',
+    phone: '010-1234-5678',
+    email: 'hong@example.com',
+    total: '[예약 정보]\n• 지점: 문래점'
+  }));
+
+  expect(display).toContain('[고객정보]');
+  expect(display.indexOf('[고객정보]')).toBeLessThan(display.indexOf('[예약 정보]'));
+  expect(display).toContain('• 예약자명: 홍길동');
+  expect(display).toContain('• 행사명: 세미나');
+  expect(display).toContain('• 전화번호: 010-1234-5678');
+  expect(display).toContain('• 이메일: hong@example.com');
+});
+
 test('분석 내보내기는 전체실수익내역 시트와 월별 시트를 만든다', async ({ page }) => {
   const workbook = await page.evaluate(() => {
     allData = [

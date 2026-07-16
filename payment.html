@@ -2866,6 +2866,29 @@ function reservationBadgeClass(status){
   if(/미입금|취소|오류/.test(status))return'bad';
   return'';
 }
+function reservationCustomerBlock(item){
+  const lines=[
+    '[고객정보]',
+    '',
+    `• 예약자명: ${item.name||''}`,
+    '',
+    `• 행사명: ${item.eventType||''}`,
+    '',
+    `• 전화번호: ${item.phone||''}`,
+    '',
+    `• 이메일: ${item.email||''}`
+  ];
+  return lines.join('\n');
+}
+function reservationDisplayEstimate(item){
+  const estimate=String(item.total||'');
+  if(!estimate)return'';
+  if(/^\s*\[고객정보\]/.test(estimate))return estimate;
+  return`${reservationCustomerBlock(item)}
+
+
+${estimate}`;
+}
 function renderReservations(){
   const list=document.getElementById('resv-list');
   const branch=document.getElementById('resv-branch')?.value||'all';
@@ -2898,7 +2921,7 @@ function reservationCardHtml(item){
   const depositSent=item.depositMailSent===true;
   const paidSent=item.fullyPaidMailSent===true;
   const hidden=reservationHiddenIds.has(String(item._id||''));
-  const estimate=String(item.total||'');
+  const estimate=reservationDisplayEstimate(item);
   return`<div class="resv-card ${branch} ${hidden?'hidden-resv':''}" id="resv-card-${id}">
     <div class="resv-card-top">
       <div class="resv-name">${esc(item.name)||'이름 없음'}</div>
