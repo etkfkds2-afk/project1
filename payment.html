@@ -750,17 +750,15 @@ select:focus,.search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2/dist/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
 <script>
-const ACCESS_USER='boss';
-const ACCESS_HASH='585821c6e0290e4ad6f01a88007d4c05875a0d59ffc50bd9bf95499d654c353c';
 const ACCESS_KEY='atm_payment_access_ok';
-const RESV_SESSION_TOKEN_KEY='atm_reservation_session_token';
 const GOOGLE_CLIENT_KEY='atm_google_client_id_v2';
 const OV_KEY='payment_overrides';
 const GC_KEY='google_client_id';
 const CONTACTS_KEY='customer_contacts';
-const RESV_KEY='reservation_api_token';
 const RESV_HIDDEN_KEY='reservation_hidden_ids';
 const OV_API='/api/overrides';
+const AUTH_API='/api/auth';
+const RESV_API='/api/reservations';
 const MANUAL_ROWS_KEY='__manualRows';
 const GOOGLE_DEFAULT_CLIENT_ID='';
 const GOOGLE_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
@@ -1002,12 +1000,6 @@ function applyOverrides(row,o){
   return row;
 }
 
-async function sha256(text){
-  const data=new TextEncoder().encode(text);
-  const buf=await crypto.subtle.digest('SHA-256',data);
-  return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
 function showApp(){
   document.body.classList.remove('locked');
   document.getElementById('authScreen').style.display='none';
@@ -1017,16 +1009,6 @@ function showApp(){
   if(targetView==='reservation')setTimeout(()=>switchView('reservation'),0);
 }
 
-async function validateReservationLoginToken(token){
-  if(!token)return false;
-  try{
-    const res=await fetch(`${RESV_BASES.munrae}/reservations`,{headers:{Authorization:`Bearer ${token}`}});
-    return res.ok;
-  }catch(e){
-    return false;
-  }
-}
-
 async function unlockApp(e){
   e.preventDefault();
   const user=document.getElementById('accessUser');
@@ -1034,14 +1016,12 @@ async function unlockApp(e){
   const err=document.getElementById('authErr');
   err.textContent='';
   const pass=input.value;
-  const isAdminPassword=user.value.trim()===ACCESS_USER&&await sha256(pass)===ACCESS_HASH;
-  const isReservationToken=isAdminPassword?false:await validateReservationLoginToken(pass);
-  if(isAdminPassword||isReservationToken){
+  try{
+    const res=await fetch(AUTH_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user.value.trim(),password:pass})});
+    if(!res.ok)throw new Error('invalid');
     sessionStorage.setItem(ACCESS_KEY,'1');
-    if(isReservationToken)sessionStorage.setItem(RESV_SESSION_TOKEN_KEY,pass);
-    else sessionStorage.removeItem(RESV_SESSION_TOKEN_KEY);
     showApp();
-  }else{
+  }catch(e){
     err.textContent='아이디/비밀번호 또는 예약관리 API 토큰이 맞지 않습니다.';
     input.value='';
     user.focus();
@@ -2747,21 +2727,12 @@ let reservationHiddenIds=new Set();
 let reservationHiddenLoaded=false;
 
 function reservationToken(){
-  return remoteReservationToken||sessionStorage.getItem(RESV_SESSION_TOKEN_KEY)||'';
+  return remoteReservationToken||'server-session';
 }
 async function loadRemoteReservationToken(){
   if(remoteReservationTokenLoaded)return remoteReservationToken;
   remoteReservationTokenLoaded=true;
-  try{
-    const res=await fetch(`${OV_API}?key=${encodeURIComponent(RESV_KEY)}`,{cache:'no-store'});
-    if(!res.ok)throw new Error(`HTTP ${res.status}`);
-    const data=await res.json();
-    const token=String(data?.value?.token||'').trim();
-    remoteReservationToken=token||null;
-  }catch(e){
-    remoteReservationToken=null;
-    console.warn('예약관리 토큰 설정을 불러오지 못했습니다.',e);
-  }
+  remoteReservationToken='server-session';
   return remoteReservationToken;
 }
 function reservationSetupHtml(message){
@@ -2797,17 +2768,11 @@ async function configureReservationToken(){
   if(!token||!token.trim())return;
   const list=document.getElementById('resv-list');
   list.innerHTML='<div class="resv-empty"><div class="spin"></div>예약관리 연결을 확인하는 중...</div>';
-  const clean=token.trim();
-  const ok=await validateReservationLoginToken(clean);
-  if(!ok){
-    list.innerHTML=reservationSetupHtml('예약관리 API 토큰 인증에 실패했습니다.');
-    return;
-  }
   try{
-    const res=await fetch(OV_API,{method:'PUT',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:RESV_KEY,value:{token:clean}})});
-    if(!res.ok)throw new Error(`HTTP ${res.status}`);
-    remoteReservationToken=clean;
+    const res=await fetch(RESV_API,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'configureToken',token:token.trim()})});
+    if(!res.ok)throw new Error(res.status===401?'예약관리 API 토큰 인증에 실패했습니다.':`HTTP ${res.status}`);
+    remoteReservationToken='server-session';
     remoteReservationTokenLoaded=true;
     reservationLoaded=false;
     loadReservations();
@@ -2826,7 +2791,7 @@ function reservationBranchLabel(branch){
   return branch==='sinnonhyeon'?'신논현점':'문래점';
 }
 async function fetchReservationBranch(branch,base,token){
-  const res=await fetch(`${base}/reservations`,{headers:{Authorization:`Bearer ${token}`}});
+  const res=await fetch(`${RESV_API}?branch=${encodeURIComponent(branch)}`,{cache:'no-store'});
   if(!res.ok)throw new Error(`${reservationBranchLabel(branch)} HTTP ${res.status}`);
   const data=await res.json();
   return(data.items||[]).map(item=>({...item,_base:base,_branch:branch}));
@@ -2851,12 +2816,8 @@ async function loadReservations(){
     renderReservations();
   }catch(e){
     if(/HTTP (400|401|403)/.test(e.message)){
-      if(remoteReservationToken){
-        remoteReservationToken=null;
-        remoteReservationTokenLoaded=false;
-      }else{
-        sessionStorage.removeItem(RESV_SESSION_TOKEN_KEY);
-      }
+      remoteReservationToken=null;
+      remoteReservationTokenLoaded=false;
       list.innerHTML=reservationSetupHtml('저장된 예약관리 API 토큰 인증이 맞지 않습니다.');
     }else{
       list.innerHTML=`<div class="resv-empty">예약 데이터를 불러오지 못했습니다.<br>${esc(e.message)}</div>`;
@@ -3078,10 +3039,11 @@ async function postReservationCreate(base,token,item){
   let lastError=null;
   for(const endpoint of endpoints){
     try{
-      const res=await fetch(`${base}/${endpoint}`,{
+      const branch=Object.entries(RESV_BASES).find(([,value])=>value===base)?.[0]||'munrae';
+      const res=await fetch(RESV_API,{
         method:'POST',
-        headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
-        body:JSON.stringify({item,reservation:item})
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({branch,endpoint,payload:{item,reservation:item}})
       });
       const data=await res.json().catch(()=>({}));
       if(res.ok&&data?.ok!==false)return data;
@@ -3159,10 +3121,11 @@ async function sendReservationMail(){
   btn.disabled=true;
   status.textContent='처리 중...';
   try{
-    const res=await fetch(`${activeReservationBase}/${endpoint}`,{
+    const branch=Object.entries(RESV_BASES).find(([,value])=>value===activeReservationBase)?.[0]||'munrae';
+    const res=await fetch(RESV_API,{
       method:'POST',
-      headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
-      body:JSON.stringify({reservationId:activeReservationId,overrides})
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({branch,endpoint,payload:{reservationId:activeReservationId,overrides}})
     });
     const data=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(data.error||`HTTP ${res.status}`);
@@ -3494,7 +3457,12 @@ function toggleCfMo(id,hdr){
 }
 
 
-if(sessionStorage.getItem(ACCESS_KEY)==='1')showApp();
+if(sessionStorage.getItem(ACCESS_KEY)==='1'){
+  fetch(AUTH_API,{cache:'no-store'}).then(res=>{
+    if(res.ok)showApp();
+    else sessionStorage.removeItem(ACCESS_KEY);
+  }).catch(()=>sessionStorage.removeItem(ACCESS_KEY));
+}
 </script>
 </body>
 </html>
