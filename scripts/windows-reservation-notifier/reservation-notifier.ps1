@@ -9,6 +9,7 @@ $appDir = Join-Path $env:APPDATA "AllthatmindReservationNotifier"
 $configPath = Join-Path $appDir "config.json"
 $seenPath = Join-Path $appDir "seen-reservations.json"
 $logPath = Join-Path $appDir "notifier.log"
+$statusPath = Join-Path $appDir "status.json"
 
 function Write-Log {
   param([string]$Message)
@@ -30,6 +31,25 @@ function Read-JsonFile {
 function Save-JsonFile {
   param($Path, $Value)
   $Value | ConvertTo-Json -Depth 8 | Set-Content -Path $Path -Encoding UTF8
+}
+
+function Save-Status {
+  param(
+    [string]$State,
+    [string]$Message,
+    $Branches = @{},
+    [Nullable[datetime]]$LastSuccess = $null,
+    [Nullable[datetime]]$LastNotification = $null
+  )
+  Save-JsonFile -Path $statusPath -Value @{
+    state = $State
+    message = $Message
+    processId = $PID
+    updatedAt = (Get-Date).ToString("o")
+    lastSuccessAt = if ($LastSuccess) { $LastSuccess.Value.ToString("o") } else { $null }
+    lastNotificationAt = if ($LastNotification) { $LastNotification.Value.ToString("o") } else { $null }
+    branches = $Branches
+  }
 }
 
 function Show-ReservationToast {
@@ -83,17 +103,28 @@ function Get-Reservations {
 
   $headers = @{ Authorization = "Bearer $($Config.token)" }
   $items = @()
+  $branchStatus = @{}
 
   foreach ($branch in $Config.branches) {
     $url = "$($branch.baseUrl.TrimEnd('/'))/reservations"
-    $response = Invoke-RestMethod -Method Get -Uri $url -Headers $headers -TimeoutSec 30
-    foreach ($item in @($response.items)) {
-      $item | Add-Member -NotePropertyName "_branch" -NotePropertyValue $branch.name -Force
-      $items += $item
+    try {
+      $started = Get-Date
+      $response = Invoke-RestMethod -Method Get -Uri $url -Headers $headers -TimeoutSec 30
+      $branchItems = @($response.items)
+      foreach ($item in $branchItems) {
+        $item | Add-Member -NotePropertyName "_branch" -NotePropertyValue $branch.name -Force
+        $items += $item
+      }
+      $elapsed = [math]::Round(((Get-Date) - $started).TotalMilliseconds)
+      $branchStatus[$branch.name] = @{ ok = $true; count = $branchItems.Count; elapsedMs = $elapsed; error = $null }
+    } catch {
+      $message = $_.Exception.Message
+      $branchStatus[$branch.name] = @{ ok = $false; count = 0; elapsedMs = $null; error = $message }
+      Write-Log "Branch polling failed: $($branch.name) / $message"
     }
   }
 
-  return $items
+  return @{ items = $items; branches = $branchStatus }
 }
 
 New-Item -ItemType Directory -Force -Path $appDir | Out-Null
@@ -117,19 +148,32 @@ foreach ($id in @($seenData.ids)) {
 }
 
 Write-Log "Reservation notifier started. PollSeconds=$PollSeconds NotifyExisting=$NotifyExisting"
+$lastSuccess = $null
+$lastNotification = $null
+Save-Status -State "starting" -Message "Notifier started."
 
 while ($true) {
   try {
-    $reservations = @(Get-Reservations -Config $config)
+    $pollResult = Get-Reservations -Config $config
+    $reservations = @($pollResult.items)
+    $successfulBranches = @($pollResult.branches.GetEnumerator() | Where-Object { $_.Value.ok })
+    if ($successfulBranches.Count -eq 0) {
+      throw "All reservation API branches failed."
+    }
     $newItems = @()
-    Write-Log "Polling ok. ReservationCount=$($reservations.Count) SeenCount=$($seen.Count)"
+    $lastSuccess = Get-Date
+    Write-Log "Polling ok. SuccessfulBranches=$($successfulBranches.Count) ReservationCount=$($reservations.Count) SeenCount=$($seen.Count)"
 
     foreach ($item in $reservations) {
       $id = [string]$item._id
       if (!$id) { continue }
-      if (!$seen.ContainsKey($id)) {
-        $seen[$id] = $true
+      $branchKey = [string]$item._branch
+      $seenKey = "${branchKey}::$id"
+      if (!$seen.ContainsKey($seenKey) -and !$seen.ContainsKey($id)) {
+        $seen[$seenKey] = $true
         $newItems += $item
+      } elseif (!$seen.ContainsKey($seenKey)) {
+        $seen[$seenKey] = $true
       }
     }
 
@@ -142,6 +186,7 @@ while ($true) {
         $phone = if ($item.phone) { [string]$item.phone } else { "연락처 없음" }
         $eventType = if ($item.eventType) { [string]$item.eventType } else { "행사명 없음" }
         Show-ReservationToast -Title "올댓마인드 새 예약신청" -Message "[새 예약 도착]`n$branch`n$name / $phone`n$eventType"
+        $lastNotification = Get-Date
         Write-Log "New reservation notified: $id / $branch / $name"
       }
     }
@@ -149,8 +194,13 @@ while ($true) {
       Write-Log "Initial seed completed without notifications. SeededCount=$($newItems.Count)"
     }
     $hadSeenFile = $true
+    $partialFailure = @($pollResult.branches.GetEnumerator() | Where-Object { !$_.Value.ok }).Count -gt 0
+    $state = if ($partialFailure) { "degraded" } else { "healthy" }
+    $message = if ($partialFailure) { "One or more branches failed; healthy branches continue polling." } else { "All branches polled successfully." }
+    Save-Status -State $state -Message $message -Branches $pollResult.branches -LastSuccess $lastSuccess -LastNotification $lastNotification
   } catch {
     Write-Log "Polling failed: $($_.Exception.Message)"
+    Save-Status -State "error" -Message $_.Exception.Message -Branches $(if ($pollResult) { $pollResult.branches } else { @{} }) -LastSuccess $lastSuccess -LastNotification $lastNotification
   }
 
   Start-Sleep -Seconds $PollSeconds
